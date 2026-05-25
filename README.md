@@ -1,34 +1,144 @@
 # Social Manager
 
-Clean rebuild of the Social Community Manager product.
+Clean rebuild of the legacy Social Community Manager product.
 
-## Current Scope
+This repository is a deliberate architectural reconstruction of the original product while preserving the founder-recognizable frontend experience and command-center UX.
 
-This implementation only covers Phase 0 and Sprint 1:
+The legacy repository contained:
+- inconsistent structure
+- broken workflow coupling
+- frontend/backend entanglement
+- missing boundaries
+- orchestration confusion
+- unstable scaling patterns
 
-- backend foundation
-- database + migrations
-- workspace-scoped API structure
-- workspaces
-- members
-- brand profiles
-- audience segments
-- workflow run tracking foundation
-- strategy workflow stub
-- frontend app shell
-- onboarding workspace setup
-- brand profile page
-- audience segments page
+This rebuild intentionally separates:
+- workflows
+- persistence
+- transport contracts
+- frontend state
+- operational UI
 
-It does not yet include publishing, analytics, supervisor chat, or multi-agent UX.
+while aggressively preserving the visual identity and product atmosphere of the deployed system.
 
-## Stack
+---
 
-- Backend: FastAPI, SQLAlchemy 2.x, Alembic, Pydantic Settings
-- Database: PostgreSQL-ready configuration
-- Frontend: React, TypeScript, Vite, React Router, TanStack Query, Tailwind CSS
+# Current Product State
 
-## Folder Layout
+The rebuild now includes:
+
+- reconstructed command-center frontend UX
+- workspace onboarding
+- brand profile workflows
+- audience segment workflows
+- strategy generation workflows
+- content planning workflows
+- draft generation workflows
+- review queue foundations
+- publishing queue foundations
+- workflow timelines
+- revision/version continuity
+- assistant rail UX
+- operational dashboard surfaces
+- deterministic workflow execution
+- typed API contracts
+- workflow lineage persistence
+- activity event tracking
+
+The frontend is visually reconstructed to closely resemble the deployed legacy product while using a cleaner architecture underneath.
+
+---
+
+# Current Reality
+
+The system is intentionally in a:
+- frontend deployment
+- product reconstruction
+- workflow stabilization
+
+phase.
+
+Some systems are:
+- mocked
+- deterministic
+- frontend-assisted
+- placeholder operational flows
+
+This is intentional during the rebuild phase.
+
+The goal currently is:
+- believable product UX
+- founder-facing parity
+- stable workflow architecture
+- clean extensibility
+
+NOT:
+- production-scale infrastructure
+- distributed orchestration
+- realtime systems
+
+---
+
+# Architecture Philosophy
+
+This rebuild intentionally avoids recreating the legacy product’s architectural problems.
+
+## DO NOT reintroduce
+
+- giant mutable frontend state
+- fake multi-agent orchestration
+- websocket/event complexity
+- monolithic providers
+- hidden cross-panel synchronization
+- frontend/backend coupling
+- giant supervisor state blobs
+- dashboard overload
+- fake AI orchestration semantics
+
+## ALWAYS preserve
+
+- typed API boundaries
+- modular workflows
+- workspace-scoped services
+- deterministic workflows
+- isolated persistence boundaries
+- frontend visual fidelity
+- premium cinematic minimalism
+- restrained operational UX
+- workflow continuity
+- modular frontend composition
+
+Read:
+- `ARCHITECTURE_RULES.md`
+- `PROJECT_STATUS.md`
+
+before making major changes.
+
+---
+
+# Stack
+
+## Backend
+- FastAPI
+- SQLAlchemy 2.x
+- Alembic
+- Pydantic Settings
+
+## Frontend
+- React
+- TypeScript
+- Vite
+- React Router
+- TanStack Query
+- Tailwind CSS
+
+## Database
+- PostgreSQL-ready
+- SQLite-compatible for local verification
+
+---
+
+# Folder Layout
 
 ```text
 social-manager/
@@ -44,6 +154,7 @@ social-manager/
       services/
       workflows/
     tests/
+
   frontend/
     src/
       app/
@@ -51,11 +162,18 @@ social-manager/
       features/
       lib/
       styles/
+
   scripts/
+
+  README.md
+  PROJECT_STATUS.md
+  ARCHITECTURE_RULES.md
   .env.example
 ```
 
-## Environment Setup
+---
+
+# Environment Setup
 
 Create a root `.env` file from `.env.example`:
 
@@ -63,7 +181,9 @@ Create a root `.env` file from `.env.example`:
 Copy-Item .env.example .env
 ```
 
-## Backend Setup
+---
+
+# Backend Setup
 
 ```powershell
 cd backend
@@ -74,7 +194,9 @@ alembic upgrade head
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Frontend Setup
+---
+
+# Frontend Setup
 
 ```powershell
 cd frontend
@@ -82,55 +204,162 @@ npm install
 npm run dev
 ```
 
-`frontend/vite.config.ts` reads environment variables from the repo root, so `VITE_API_BASE_URL` can stay in the shared root `.env`.
+`frontend/vite.config.ts` reads environment variables from the repo root.
 
-## Key Routes
+---
 
-### System
+# Frontend Direction
+
+The deployed legacy frontend is considered the visual source of truth.
+
+Frontend work should preserve:
+- cinematic minimalism
+- restrained spacing
+- premium dark command-center feel
+- strong focal hierarchy
+- sparse operational surfaces
+- emotionally convincing UX
+
+Avoid:
+- generic SaaS dashboard energy
+- operational overload
+- excessive widgets
+- equal-weight panel density
+- overexplaining workflows visually
+
+The goal is emotional parity with the deployed product.
+
+---
+
+# Current Backend Capabilities
+
+Implemented:
+- workspace-scoped APIs
+- workflow runs
+- strategy workflows
+- planning workflows
+- draft workflows
+- review lifecycle foundations
+- activity timelines
+- revision/version continuity
+- publishing queue foundations
+- workflow lineage persistence
+
+Current workflows are deterministic and typed.
+
+Real provider integrations are intentionally deferred.
+
+---
+
+# Current Frontend Capabilities
+
+Implemented:
+- command-center shell
+- sidebar/topbar reconstruction
+- assistant rail
+- strategy workspace
+- planning workspace
+- review queue
+- publishing queue
+- operational dashboard surfaces
+- workflow continuity UX
+- activity surfaces
+- mock operational interactions
+
+The frontend prioritizes:
+- visual fidelity
+- product feel
+- deployment readiness
+- founder-facing parity
+
+---
+
+# Not Yet Implemented
+
+The following systems are intentionally incomplete or mocked:
+
+- real LLM provider integrations
+- OAuth/provider publishing
+- production auth/RBAC
+- websocket/realtime systems
+- distributed orchestration
+- analytics ingestion
+- real social publishing
+- production observability
+- CI/CD hardening
+- scalable worker infrastructure
+
+---
+
+# Key API Areas
+
+## System
 
 - `GET /health`
 - `GET /api/v1/health`
 - `GET /api/v1/system/status`
 
-### Workspaces
+## Workspaces
 
 - `POST /api/v1/workspaces`
 - `GET /api/v1/workspaces/{workspace_id}`
 
-### Brand Profile
+## Brand Profiles
 
 - `GET /api/v1/workspaces/{workspace_id}/brand-profile`
 - `PUT /api/v1/workspaces/{workspace_id}/brand-profile`
 
-### Audience Segments
+## Audience Segments
 
 - `GET /api/v1/workspaces/{workspace_id}/audience-segments`
 - `POST /api/v1/workspaces/{workspace_id}/audience-segments`
 - `PUT /api/v1/workspaces/{workspace_id}/audience-segments/{segment_id}`
 - `DELETE /api/v1/workspaces/{workspace_id}/audience-segments/{segment_id}`
 
-### Workflow Runs
+## Workflow Runs
 
 - `GET /api/v1/workspaces/{workspace_id}/workflow-runs`
 - `GET /api/v1/workflow-runs/{workflow_run_id}`
+
+## Strategy Workflows
+
 - `POST /api/v1/workspaces/{workspace_id}/strategy-runs`
 
-## Migrations
+## Activity
 
-Initial migration:
+- `GET /api/v1/workspaces/{workspace_id}/activity`
+- `GET /api/v1/workspaces/{workspace_id}/activity/summary`
 
-- `0001_phase0_foundation`
+## Publishing Queue
 
-It creates:
+- `GET /api/v1/workspaces/{workspace_id}/drafts/publishing-queue`
+- `POST /api/v1/drafts/{draft_id}/publish-ready`
+- `POST /api/v1/drafts/{draft_id}/publish`
 
-- `workspaces`
-- `members`
-- `brand_profiles`
-- `audience_segments`
-- `workflow_runs`
+---
 
-## Notes
+# Verification
 
-- The strategy workflow is intentionally a typed stub for Sprint 1.
-- Database access is workspace-scoped through route structure and services.
-- The frontend only integrates with routes that actually exist.
+Verified:
+- frontend build
+- backend migrations
+- workflow persistence
+- SQLite migration flow
+- route registration
+- deterministic workflow execution
+
+Not fully production-verified:
+- PostgreSQL deployment
+- production hosting
+- OAuth/provider flows
+- realtime infrastructure
+
+---
+
+# Important Notes
+
+- The rebuild intentionally removed fake orchestration complexity.
+- Workflows are intentionally deterministic during reconstruction.
+- Frontend visual fidelity currently matters more than backend completeness.
+- Preserve product restraint and premium feel during future frontend work.
+- Read `ARCHITECTURE_RULES.md` before major refactors.

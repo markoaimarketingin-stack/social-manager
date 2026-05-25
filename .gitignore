@@ -21,3 +21,11 @@ frontend/.vite/
 
 logs/
 tmp/
+verification.db
+*.sqlite3
+*.sqlite
+.env.development
+.env.production
+.idea/
+frontend/.env
+backend/.env
