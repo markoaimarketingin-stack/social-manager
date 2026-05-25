@@ -3,7 +3,10 @@ import { NavLink } from "react-router-dom";
 const navigationGroups = (workspaceId: string) => [
   {
     title: "Orchestrator",
-    items: [{ label: "Social Supervisor", to: `/workspaces/${workspaceId}`, icon: "SV" }],
+    items: [
+      { label: "Social Supervisor", to: `/workspaces/${workspaceId}`, icon: "SV" },
+      { label: "Dashboard", to: `/workspaces/${workspaceId}`, icon: "DB" },
+    ],
   },
   {
     title: "Specialist Agents",
@@ -34,7 +37,7 @@ const navigationGroups = (workspaceId: string) => [
 
 export function Sidebar({ workspaceId }: { workspaceId: string }) {
   return (
-    <div className="left-sidebar flex w-full flex-col px-4 py-4">
+    <div className="left-sidebar flex h-full w-full flex-col overflow-hidden px-4 py-4">
       <div className="border-b border-white/5 px-2 pb-4">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black shadow-inset">

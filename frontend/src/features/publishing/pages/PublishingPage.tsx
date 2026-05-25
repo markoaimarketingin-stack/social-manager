@@ -1,7 +1,7 @@
-import { useWorkspaceContext } from "../../workspace/hooks/useWorkspaceContext";
 import { Panel } from "../../../components/ui/Panel";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
 import { StatusPill } from "../../../components/ui/StatusPill";
+import { useWorkspaceContext } from "../../workspace/hooks/useWorkspaceContext";
 
 const platformHealth = [
   { platform: "Instagram", state: "Connected", tone: "success" as const },
@@ -10,96 +10,84 @@ const platformHealth = [
 ];
 
 export function PublishingPage() {
-  const { publishingQueueQuery, activityQuery } = useWorkspaceContext();
+  const { publishingQueueQuery, reviewQueueQuery, activityQuery } = useWorkspaceContext();
   const publishingQueue = publishingQueueQuery.data ?? [];
-  const recentPublishActivity = (activityQuery.data ?? []).filter((item) =>
-    ["publish_ready", "published"].includes(item.event_type),
-  );
+  const reviewQueue = reviewQueueQuery.data ?? [];
+  const leadDraft = publishingQueue[0] ?? null;
+  const recentPublishActivity = (activityQuery.data ?? [])
+    .filter((item) => ["publish_ready", "published"].includes(item.event_type))
+    .slice(0, 2);
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-5 py-10 lg:px-8">
+    <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden px-5 py-6 lg:px-8">
       <SectionHeading
         eyebrow="Publishing queue"
-        title="Stage publish-ready work like the deployed product"
-        description="This is a visual parity surface first: scheduled drafts, platform health, and publishing receipts feel operational even while provider integrations remain intentionally deferred."
+        title="Stage publish-ready work"
+        description="A compact, single-screen publishing surface with queue state and platform posture."
       />
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <Panel eyebrow="Queue" title="Ready to schedule or publish">
-          <div className="mt-5 space-y-4">
-            {publishingQueue.map((draft) => (
-              <div key={draft.id} className="rounded-3xl border border-line bg-white/5 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-semibold text-white">{draft.title}</p>
-                    <p className="mt-2 text-sm text-white/55">
-                      {draft.scheduled_publish_at
-                        ? `Scheduled for ${new Date(draft.scheduled_publish_at).toLocaleString()}`
-                        : "Waiting for a scheduled slot"}
-                    </p>
-                  </div>
-                  <StatusPill label={draft.review_status.replace(/_/g, " ")} tone="success" />
-                </div>
-                <p className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-4 text-sm leading-7 text-white/70">
-                  {draft.caption}
-                </p>
-              </div>
-            ))}
-            {!publishingQueue.length ? (
-              <div className="rounded-3xl border border-dashed border-line p-6 text-sm text-white/55">
-                No publish-ready drafts yet. Approve one in the review queue to populate this surface.
-              </div>
-            ) : null}
-          </div>
-        </Panel>
-
-        <Panel eyebrow="Platform status" title="Publishing posture">
-          <div className="mt-5 space-y-4">
-            {platformHealth.map((item) => (
-              <div key={item.platform} className="rounded-3xl border border-line bg-white/5 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-lg font-semibold">{item.platform}</p>
-                  <StatusPill label={item.state} tone={item.tone} />
-                </div>
-                <p className="mt-3 text-sm text-white/60">
-                  {item.platform === "Instagram"
-                    ? "Founder-demo ready with mock publishing receipts and scheduled queue visuals."
-                    : item.platform === "LinkedIn"
-                      ? "Visible in the queue, using typed mock publishing until provider setup lands."
-                      : "Placeholder status preserved for parity without adding OAuth complexity."}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Panel>
+      <div className="mt-5 grid gap-4 md:grid-cols-4">
+        <div className="rounded-3xl border border-line bg-white/5 p-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">In review</p>
+          <p className="mt-2 text-3xl font-semibold text-white">{reviewQueue.length}</p>
+        </div>
+        <div className="rounded-3xl border border-line bg-white/5 p-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Publish-ready</p>
+          <p className="mt-2 text-3xl font-semibold text-white">{publishingQueue.length}</p>
+        </div>
+        <div className="rounded-3xl border border-line bg-white/5 p-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Latest state</p>
+          <p className="mt-2 text-sm font-semibold text-white">
+            {leadDraft?.review_status.replace(/_/g, " ") ?? "Queue idle"}
+          </p>
+        </div>
+        <div className="rounded-3xl border border-line bg-white/5 p-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Platforms</p>
+          <p className="mt-2 text-sm font-semibold text-white">3 tracked</p>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel eyebrow="Timeline" title="Recent publish actions">
-          <div className="mt-5 space-y-3">
-            {recentPublishActivity.slice(0, 6).map((event) => (
-              <div key={event.id} className="rounded-3xl border border-line bg-white/5 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">{event.summary}</p>
-                  <StatusPill label={event.event_type.replace(/_/g, " ")} tone="neutral" />
+      <div className="mt-5 grid min-h-0 flex-1 gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <Panel eyebrow="Queue" title="Ready to schedule or publish" className="min-h-0 overflow-hidden">
+          {leadDraft ? (
+            <div className="mt-4 rounded-3xl border border-line bg-white/5 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold text-white">{leadDraft.title}</p>
+                  <p className="mt-1 text-sm text-white/55">
+                    {leadDraft.scheduled_publish_at
+                      ? `Scheduled for ${new Date(leadDraft.scheduled_publish_at).toLocaleString()}`
+                      : "Waiting for a scheduled slot"}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-white/35">
-                  {new Date(event.created_at).toLocaleString()}
-                </p>
+                <StatusPill label={leadDraft.review_status.replace(/_/g, " ")} tone="success" />
               </div>
-            ))}
-          </div>
+              <p className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-4 text-sm leading-7 text-white/70">
+                {leadDraft.caption}
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-3xl border border-dashed border-line p-6 text-sm text-white/55">
+              No publish-ready drafts yet. Approve one in the review queue.
+            </div>
+          )}
         </Panel>
 
-        <Panel eyebrow="Receipts" title="Mock publishing confirmations">
-          <div className="mt-5 space-y-4">
-            {publishingQueue.map((draft) => (
-              <div key={draft.id} className="rounded-3xl border border-line bg-white/5 p-5">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Receipt preview</p>
-                <p className="mt-3 text-sm leading-7 text-white/70">
-                  {draft.mock_publishing_receipt
-                    ? JSON.stringify(draft.mock_publishing_receipt)
-                    : "A mock receipt appears after publish action so the product feels complete for demo."}
+        <Panel eyebrow="Platform status" title="Publishing posture" className="min-h-0 overflow-hidden">
+          <div className="mt-4 space-y-3">
+            {platformHealth.map((item) => (
+              <div key={item.platform} className="rounded-3xl border border-line bg-white/5 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-base font-semibold">{item.platform}</p>
+                  <StatusPill label={item.state} tone={item.tone} />
+                </div>
+              </div>
+            ))}
+            {recentPublishActivity.map((event) => (
+              <div key={event.id} className="rounded-3xl border border-line bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white">{event.summary}</p>
+                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-white/35">
+                  {new Date(event.created_at).toLocaleString()}
                 </p>
               </div>
             ))}
