@@ -1,0 +1,16 @@
+export const queryKeys = {
+  health: ["health"] as const,
+  workspace: (workspaceId: string) => ["workspace", workspaceId] as const,
+  brandProfile: (workspaceId: string) => ["brandProfile", workspaceId] as const,
+  audienceSegments: (workspaceId: string) => ["audienceSegments", workspaceId] as const,
+  strategies: (workspaceId: string) => ["strategies", workspaceId] as const,
+  latestStrategy: (workspaceId: string) => ["latestStrategy", workspaceId] as const,
+  contentPlans: (workspaceId: string) => ["contentPlans", workspaceId] as const,
+  latestContentPlan: (workspaceId: string) => ["latestContentPlan", workspaceId] as const,
+  drafts: (workspaceId: string) => ["drafts", workspaceId] as const,
+  reviewQueue: (workspaceId: string) => ["reviewQueue", workspaceId] as const,
+  publishingQueue: (workspaceId: string) => ["publishingQueue", workspaceId] as const,
+  workflowRuns: (workspaceId: string) => ["workflowRuns", workspaceId] as const,
+  activity: (workspaceId: string) => ["activity", workspaceId] as const,
+  activitySummary: (workspaceId: string) => ["activitySummary", workspaceId] as const,
+};
