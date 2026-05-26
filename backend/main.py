@@ -26,6 +26,7 @@ from social_manager.routers.users import router as users_router, get_current_use
 from social_manager.routers.publishing import router as publishing_router
 from social_manager.routers.strategy import router as strategy_router
 from social_manager.routers.chat import router as chat_router
+from social_manager.routers.v1_compat import router as v1_compat_router
 from social_manager.db import SocialConnectionRepository, SessionLocal
 
 from fastapi import UploadFile, File
@@ -75,7 +76,7 @@ app.add_middleware(
         "https://social-community-manager-git-dev-arpit-fixes.vercel.app",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 # ===== REQUEST/RESPONSE MODELS =====
@@ -579,6 +580,9 @@ app.include_router(auth_router)
 app.include_router(publishing_router)
 app.include_router(strategy_router)
 app.include_router(chat_router)
+
+# ===== V1 COMPATIBILITY ROUTER (FOR NEW FRONTEND) =====
+app.include_router(v1_compat_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=settings.port, reload=False)
