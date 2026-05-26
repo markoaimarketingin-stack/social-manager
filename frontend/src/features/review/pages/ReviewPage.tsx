@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Panel } from "../../../components/ui/Panel";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
@@ -22,6 +22,7 @@ const reviewTone = (status: string) =>
       : "neutral";
 
 export function ReviewPage() {
+  const queryClient = useQueryClient();
   const {
     workspaceId,
     reviewQueueQuery,
@@ -61,16 +62,43 @@ export function ReviewPage() {
   const updateDraftMutation = useMutation({
     mutationFn: ({ draftId, payload }: { draftId: string; payload: UpdateDraftRequest }) =>
       apiPut<PostDraft, UpdateDraftRequest>(`/api/v1/drafts/${draftId}`, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.drafts(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.reviewQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publishingQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
+      ]);
+    },
   });
 
   const markPublishReadyMutation = useMutation({
     mutationFn: ({ draftId, payload }: { draftId: string; payload: MarkDraftPublishReadyRequest }) =>
       apiPost<PostDraft, MarkDraftPublishReadyRequest>(`/api/v1/drafts/${draftId}/publish-ready`, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.drafts(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.reviewQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publishingQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
+      ]);
+    },
   });
 
   const publishDraftMutation = useMutation({
     mutationFn: ({ draftId, payload }: { draftId: string; payload: PublishDraftRequest }) =>
       apiPost<PostDraft, PublishDraftRequest>(`/api/v1/drafts/${draftId}/publish`, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.drafts(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.reviewQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publishingQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
+      ]);
+    },
   });
 
   const compactDrafts = drafts.slice(0, 3);

@@ -15,7 +15,7 @@ export const strategyPreview = {
   ],
   snapshots: [
     { label: "Positioning direction", value: "Founder-recognizable preview" },
-    { label: "Workflow engine", value: "Typed stub backed by workflow_runs" },
-    { label: "AI orchestration", value: "Deferred until later phases" },
+    { label: "Workflow engine", value: "Typed workflow_runs contract" },
+    { label: "AI orchestration", value: "Ready for backend provider wiring" },
   ],
 };

@@ -97,3 +97,24 @@ export type MarkDraftPublishReadyRequest = {
 export type PublishDraftRequest = {
   reviewer_member_id?: string | null;
 };
+
+export type UploadKnowledgeBaseDocumentRequest = {
+  file_name: string;
+  category: "brand_voice" | "campaign_brief" | "audience" | "competitors" | "social_strategy" | "asset";
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by_member_id?: string | null;
+};
+
+export type QueueTrainingRequest = {
+  document_ids: string[];
+  category: UploadKnowledgeBaseDocumentRequest["category"];
+  requested_by_member_id?: string | null;
+};
+
+export type AssistantCommandRequest = {
+  prompt: string;
+  route_context: string;
+  mode: "ask" | "agent";
+  attached_document_ids?: string[];
+};

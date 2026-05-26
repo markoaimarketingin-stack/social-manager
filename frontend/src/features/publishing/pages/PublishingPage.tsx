@@ -1,22 +1,43 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Panel } from "../../../components/ui/Panel";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
 import { StatusPill } from "../../../components/ui/StatusPill";
+import { apiPost } from "../../../lib/api/client";
+import type { PostDraft } from "../../../lib/api/types/domain";
+import type { PublishDraftRequest } from "../../../lib/api/types/requests";
+import { queryKeys } from "../../../lib/query/keys";
 import { useWorkspaceContext } from "../../workspace/hooks/useWorkspaceContext";
 
 const platformHealth = [
   { platform: "Instagram", state: "Connected", tone: "success" as const },
-  { platform: "LinkedIn", state: "Mock queue", tone: "neutral" as const },
+  { platform: "LinkedIn", state: "Queue ready", tone: "neutral" as const },
   { platform: "X", state: "Not linked", tone: "warning" as const },
 ];
 
 export function PublishingPage() {
-  const { publishingQueueQuery, reviewQueueQuery, activityQuery } = useWorkspaceContext();
+  const queryClient = useQueryClient();
+  const { workspaceId, publishingQueueQuery, reviewQueueQuery, activityQuery } = useWorkspaceContext();
   const publishingQueue = publishingQueueQuery.data ?? [];
   const reviewQueue = reviewQueueQuery.data ?? [];
   const leadDraft = publishingQueue[0] ?? null;
   const recentPublishActivity = (activityQuery.data ?? [])
     .filter((item) => ["publish_ready", "published"].includes(item.event_type))
     .slice(0, 2);
+
+  const publishMutation = useMutation({
+    mutationFn: ({ draftId, payload }: { draftId: string; payload: PublishDraftRequest }) =>
+      apiPost<PostDraft, PublishDraftRequest>(`/api/v1/drafts/${draftId}/publish`, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.drafts(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publishingQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.reviewQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
+      ]);
+    },
+  });
 
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden px-5 py-6 lg:px-8">
@@ -65,6 +86,14 @@ export function PublishingPage() {
               <p className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-4 text-sm leading-7 text-white/70">
                 {leadDraft.caption}
               </p>
+              <button
+                type="button"
+                disabled={publishMutation.isPending}
+                onClick={() => publishMutation.mutate({ draftId: leadDraft.id, payload: {} })}
+                className="mt-4 rounded-full bg-white px-5 py-2.5 text-xs font-bold text-black shadow-lg shadow-white/5 transition-all hover:bg-white/90 disabled:opacity-60"
+              >
+                {publishMutation.isPending ? "Publishing..." : "Publish now"}
+              </button>
             </div>
           ) : (
             <div className="mt-4 rounded-3xl border border-dashed border-line p-6 text-sm text-white/55">

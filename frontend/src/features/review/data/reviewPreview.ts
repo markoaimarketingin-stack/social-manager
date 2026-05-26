@@ -13,6 +13,6 @@ export const reviewPreview = {
   ],
   notes: [
     "The queue is intentionally visual first and backed by mock data until drafts and approvals are live.",
-    "We are preserving the legacy execution and QA feel without inventing fake publishing state.",
+    "We are preserving the legacy execution and QA feel with explicit publishing state.",
   ],
 };

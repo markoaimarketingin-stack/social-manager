@@ -116,7 +116,21 @@ function SidebarIcon({ icon, active }: { icon: SidebarIconKey; active: boolean }
   }
 }
 
-export function Sidebar({ workspaceId }: { workspaceId: string }) {
+type SidebarProps = {
+  workspaceId: string;
+  currentRole: string;
+  onToggleRole: () => void;
+  onOpenAccountSettings: () => void;
+  onLogout: () => void;
+};
+
+export function Sidebar({
+  workspaceId,
+  currentRole,
+  onToggleRole,
+  onOpenAccountSettings,
+  onLogout,
+}: SidebarProps) {
   return (
     <div className="left-sidebar flex h-full w-full flex-col overflow-hidden px-4 py-4">
       <div className="border-b border-white/[0.045] pb-4">
@@ -182,13 +196,14 @@ export function Sidebar({ workspaceId }: { workspaceId: string }) {
       <div className="mt-auto border-t border-white/[0.045] pt-3">
         <button
           type="button"
+          onClick={onToggleRole}
           className="mb-2.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[10px] text-white/44 transition hover:bg-white/[0.03] hover:text-white/72"
         >
           <svg className="h-[13px] w-[13px] text-white/42" viewBox="0 0 24 24" fill="none">
             <path d="M8 7h8m0 0-2.5-2.5M16 7l-2.5 2.5M16 17H8m0 0 2.5-2.5M8 17l2.5 2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span>Demo role:</span>
-          <span className="font-semibold text-white">Manager</span>
+          <span className="font-semibold text-white">{currentRole}</span>
         </button>
 
         <div className="flex items-center justify-between gap-3 rounded-lg bg-[#253146] px-3 py-2.5 text-left">
@@ -201,7 +216,12 @@ export function Sidebar({ workspaceId }: { workspaceId: string }) {
               <p className="truncate text-[10px] text-white/42">Free Plan</p>
             </div>
           </div>
-          <button type="button" className="text-white/55 transition hover:text-white" aria-label="Open account settings">
+          <button
+            type="button"
+            onClick={onOpenAccountSettings}
+            className="text-white/55 transition hover:text-white"
+            aria-label="Open account settings"
+          >
             <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="currentColor">
               <path d="m10.7 3.2.6 1.9c.2.5.6.9 1.1 1l2 .3c1 .2 1.4 1.4.7 2.1L14 9.9c-.4.4-.5 1-.4 1.5l.3 2c.2 1-.9 1.8-1.8 1.3l-1.8-1a1.7 1.7 0 0 0-1.6 0l-1.8 1c-.9.5-2-.3-1.8-1.3l.3-2c.1-.5 0-1.1-.4-1.5L3 8.5c-.7-.7-.3-1.9.7-2.1l2-.3c.5-.1.9-.5 1.1-1l.6-1.9c.3-1 1.7-1 2 0Zm.3 5.5a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6Z" />
             </svg>
@@ -210,6 +230,7 @@ export function Sidebar({ workspaceId }: { workspaceId: string }) {
 
         <button
           type="button"
+          onClick={onLogout}
           className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-[0.6rem] bg-[#374256] px-4 py-2.5 text-[0.88rem] font-semibold text-white transition hover:bg-[#44506a]"
         >
           <svg className="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none">

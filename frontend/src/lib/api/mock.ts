@@ -2,9 +2,12 @@ import type {
   AudienceSegment,
   BrandProfile,
   BrandStrategy,
+  AssistantCommandResult,
   ContentPlan,
+  KnowledgeBaseDocument,
   PlannedPostStatus,
   PostDraft,
+  TrainingJob,
   WorkflowRun,
   WorkspaceActivityEvent,
   WorkspaceActivitySummary,
@@ -19,6 +22,8 @@ type DemoStore = {
   strategies: BrandStrategy[];
   contentPlans: ContentPlan[];
   drafts: PostDraft[];
+  knowledgeBaseDocuments: KnowledgeBaseDocument[];
+  trainingJobs: TrainingJob[];
   activity: WorkspaceActivityEvent[];
 };
 
@@ -350,6 +355,48 @@ function seedStore(): DemoStore {
         updated_at: createdAt,
       },
     ],
+    knowledgeBaseDocuments: [
+      {
+        id: rid("doc"),
+        workspace_id: workspaceId,
+        file_name: "brand_voice_guidelines.txt",
+        category: "brand_voice",
+        mime_type: "text/plain",
+        size_bytes: 18420,
+        ingestion_status: "ready",
+        source: "demo_seed",
+        uploaded_by_member_id: null,
+        created_at: addDays(-2),
+        updated_at: addDays(-2),
+      },
+      {
+        id: rid("doc"),
+        workspace_id: workspaceId,
+        file_name: "campaign_brief_festival_launch.pdf",
+        category: "campaign_brief",
+        mime_type: "application/pdf",
+        size_bytes: 342000,
+        ingestion_status: "ready",
+        source: "demo_seed",
+        uploaded_by_member_id: null,
+        created_at: addDays(-1),
+        updated_at: addDays(-1),
+      },
+      {
+        id: rid("doc"),
+        workspace_id: workspaceId,
+        file_name: "audience_segments.csv",
+        category: "audience",
+        mime_type: "text/csv",
+        size_bytes: 12840,
+        ingestion_status: "ready",
+        source: "demo_seed",
+        uploaded_by_member_id: null,
+        created_at: createdAt,
+        updated_at: createdAt,
+      },
+    ],
+    trainingJobs: [],
     drafts: [
       {
         id: draftA,
@@ -542,7 +589,14 @@ function readStore(): DemoStore {
   }
 
   try {
-    return JSON.parse(raw) as DemoStore;
+    const parsed = JSON.parse(raw) as DemoStore;
+    const seeded = seedStore();
+    return {
+      ...seeded,
+      ...parsed,
+      knowledgeBaseDocuments: parsed.knowledgeBaseDocuments ?? seeded.knowledgeBaseDocuments,
+      trainingJobs: parsed.trainingJobs ?? [],
+    };
   } catch {
     const seeded = seedStore();
     writeStore(seeded);
@@ -612,6 +666,94 @@ export async function mockRequest<T>(path: string, init?: RequestInit): Promise<
     store.workspace.audience_segment_count = store.audienceSegments.length;
     writeStore(store);
     return store.workspace as T;
+  }
+
+  if (path === `/api/v1/workspaces/${workspaceId}/knowledge-base/documents` && method === "GET") {
+    return store.knowledgeBaseDocuments as T;
+  }
+  if (path === `/api/v1/workspaces/${workspaceId}/knowledge-base/documents` && method === "POST" && body) {
+    const timestamp = nowIso();
+    const document: KnowledgeBaseDocument = {
+      id: rid("doc"),
+      workspace_id: workspaceId,
+      file_name: String(body.file_name ?? "untitled"),
+      category: body.category as KnowledgeBaseDocument["category"],
+      mime_type: String(body.mime_type ?? "application/octet-stream"),
+      size_bytes: Number(body.size_bytes ?? 0),
+      ingestion_status: "ready",
+      source: "upload",
+      uploaded_by_member_id: (body.uploaded_by_member_id as string | null | undefined) ?? null,
+      created_at: timestamp,
+      updated_at: timestamp,
+    };
+    store.knowledgeBaseDocuments.unshift(document);
+    addActivity(store, {
+      workspace_id: workspaceId,
+      actor_member_id: null,
+      actor_label: "Operator",
+      entity_type: "knowledge_document",
+      entity_id: document.id,
+      event_type: "document_uploaded",
+      summary: `Uploaded knowledge document '${document.file_name}'.`,
+      metadata_payload: { category: document.category, size_bytes: document.size_bytes },
+    });
+    writeStore(store);
+    return document as T;
+  }
+
+  if (path === `/api/v1/workspaces/${workspaceId}/training-jobs` && method === "GET") {
+    return store.trainingJobs as T;
+  }
+  if (path === `/api/v1/workspaces/${workspaceId}/training-jobs` && method === "POST" && body) {
+    const timestamp = nowIso();
+    const job: TrainingJob = {
+      id: rid("training"),
+      workspace_id: workspaceId,
+      document_ids: (body.document_ids as string[]) ?? store.knowledgeBaseDocuments.map((doc) => doc.id),
+      category: (body.category as TrainingJob["category"]) ?? "brand_voice",
+      status: "completed",
+      created_at: timestamp,
+      updated_at: timestamp,
+    };
+    store.trainingJobs.unshift(job);
+    addActivity(store, {
+      workspace_id: workspaceId,
+      actor_member_id: null,
+      actor_label: "Trainer",
+      entity_type: "training_job",
+      entity_id: job.id,
+      event_type: "training_queued",
+      summary: `Queued model training with ${job.document_ids.length} document${job.document_ids.length === 1 ? "" : "s"}.`,
+      metadata_payload: { category: job.category, document_ids: job.document_ids },
+    });
+    writeStore(store);
+    return job as T;
+  }
+
+  if (path === `/api/v1/workspaces/${workspaceId}/assistant/commands` && method === "POST" && body) {
+    const timestamp = nowIso();
+    const prompt = String(body.prompt ?? "");
+    const result: AssistantCommandResult = {
+      id: rid("assistant"),
+      workspace_id: workspaceId,
+      route_context: String(body.route_context ?? "workspace"),
+      mode: (body.mode as AssistantCommandResult["mode"]) ?? "ask",
+      prompt,
+      response: `Logged '${prompt}' against ${String(body.route_context ?? "workspace")} in demo mode.`,
+      created_at: timestamp,
+    };
+    addActivity(store, {
+      workspace_id: workspaceId,
+      actor_member_id: null,
+      actor_label: "Assistant",
+      entity_type: "assistant_command",
+      entity_id: result.id,
+      event_type: "assistant_command_logged",
+      summary: `Assistant command logged: ${prompt.slice(0, 80)}${prompt.length > 80 ? "..." : ""}`,
+      metadata_payload: { route_context: result.route_context, mode: result.mode },
+    });
+    writeStore(store);
+    return result as T;
   }
 
   if (path === `/api/v1/workspaces/${workspaceId}/brand-profile`) {

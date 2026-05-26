@@ -77,8 +77,12 @@ export function BrandProfilePage() {
         payload,
       ),
     onSuccess: async () => {
-      setFeedback("Strategy workflow stub executed");
+      setFeedback("Strategy workflow completed");
       await queryClient.invalidateQueries({ queryKey: queryKeys.workflowRuns(workspaceId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.strategies(workspaceId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.latestStrategy(workspaceId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) });
     },
     onError: (error) => {
       setFeedback(error instanceof Error ? error.message : "Failed to run strategy workflow");
@@ -169,7 +173,7 @@ export function BrandProfilePage() {
                 }
                 className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
               >
-                {strategyRunMutation.isPending ? "Running..." : "Run strategy stub"}
+                {strategyRunMutation.isPending ? "Running..." : "Run strategy workflow"}
               </button>
             </div>
           </form>
@@ -185,8 +189,8 @@ export function BrandProfilePage() {
               <span className="font-semibold">{workspaceQuery.data?.audience_segment_count ?? 0}</span>
             </p>
             <p className="text-white/55">
-              Full AI strategy generation is intentionally deferred. The current button writes a typed
-              workflow run record only.
+              Strategy generation writes a typed workflow run now, so backend logic can attach directly
+              to the same contract later.
             </p>
           </div>
         </Panel>

@@ -109,6 +109,7 @@ export function PlanningPage() {
         queryClient.invalidateQueries({ queryKey: queryKeys.latestContentPlan(workspaceId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.contentPlans(workspaceId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
       ]);
     },
   });
@@ -123,6 +124,7 @@ export function PlanningPage() {
         queryClient.invalidateQueries({ queryKey: queryKeys.contentPlans(workspaceId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.drafts(workspaceId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.reviewQueue(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
       ]);
     },

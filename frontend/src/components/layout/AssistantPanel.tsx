@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 
 import { useWorkspaceChrome } from "../../features/workspace/components/WorkspaceChromeContext";
 import { useWorkspaceContext } from "../../features/workspace/hooks/useWorkspaceContext";
+import { apiPost } from "../../lib/api/client";
+import type { AssistantCommandResult } from "../../lib/api/types/domain";
+import type { AssistantCommandRequest } from "../../lib/api/types/requests";
+import { queryKeys } from "../../lib/query/keys";
 
 type AssistantPanelProps = {
   workspaceId: string;
@@ -82,9 +87,15 @@ function statusLabel(status: string | null | undefined) {
 }
 
 export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<AssistantTab>("chatbot");
   const [chatInput, setChatInput] = useState("");
   const [messageIndex, setMessageIndex] = useState(0);
+  const [lastAssistantResponse, setLastAssistantResponse] = useState<string | null>(null);
+  const [assistantMode, setAssistantMode] = useState<AssistantCommandRequest["mode"]>("ask");
+  const [selectedModel, setSelectedModel] = useState("marko-2.0-mini");
+  const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showModelMenu, setShowModelMenu] = useState(false);
   const { pathname } = useLocation();
   const {
     toggleAssistant,
@@ -168,7 +179,10 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
     return () => window.clearInterval(interval);
   }, [operationalMessages.length, tab]);
 
-  const currentMessage = operationalMessages[messageIndex] ?? "Supervisor linked to the current workspace.";
+  const currentMessage =
+    lastAssistantResponse ??
+    operationalMessages[messageIndex] ??
+    "Supervisor linked to the current workspace.";
   const liveSignals = [
     latestStrategy ? `Strategy v${latestStrategy.version_number}` : null,
     latestPlan ? `${latestPlan.planned_posts.length} post${latestPlan.planned_posts.length === 1 ? "" : "s"} in plan` : null,
@@ -184,7 +198,26 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
     latestActivity?.summary ?? "Summarize the latest workflow event",
   ];
 
-  const isSubmitDisabled = !chatInput.trim();
+  const assistantCommandMutation = useMutation({
+    mutationFn: (payload: AssistantCommandRequest) =>
+      apiPost<AssistantCommandResult, AssistantCommandRequest>(
+        `/api/v1/workspaces/${workspaceId}/assistant/commands`,
+        payload,
+      ),
+    onSuccess: async (result) => {
+      setLastAssistantResponse(result.response);
+      pushToast("Assistant command recorded.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
+      ]);
+    },
+    onError: (error) => {
+      pushToast(error instanceof Error ? error.message : "Assistant command failed.");
+    },
+  });
+
+  const isSubmitDisabled = !chatInput.trim() || assistantCommandMutation.isPending;
 
   return (
     <div className="assistant-panel flex h-full w-full flex-col overflow-hidden bg-[#050505] text-white">
@@ -344,13 +377,18 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
 
       <div className="border-t border-white/[0.05] px-3.5 pb-3 pt-3">
         <form
-          className="assistant-dock rounded-[1.2rem] border border-white/[0.08] bg-[#171615]/92 p-3 shadow-[0_16px_42px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
+          className="assistant-dock relative rounded-[1.2rem] border border-white/[0.08] bg-[#171615]/92 p-3 shadow-[0_16px_42px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
           onSubmit={(event) => {
             event.preventDefault();
             if (!chatInput.trim()) {
               return;
             }
-            pushToast(`Assistant logged: ${chatInput.trim()}`);
+            assistantCommandMutation.mutate({
+              prompt: chatInput.trim(),
+              route_context: routeMeta.title,
+              mode: assistantMode,
+              attached_document_ids: [],
+            });
             setChatInput("");
           }}
         >
@@ -381,20 +419,26 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
           <div className="mt-3 flex items-center gap-2">
             <button
               type="button"
-              onClick={() => pushToast(`Context attached from ${routeMeta.title}.`)}
+              onClick={() => {
+                setShowModeMenu((current) => !current);
+                setShowModelMenu(false);
+              }}
               className="flex min-w-[74px] items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
             >
-              <span>Ask</span>
+              <span className="capitalize">{assistantMode}</span>
               <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none">
                 <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             <button
               type="button"
-              onClick={() => pushToast(`Using route context: ${routeMeta.title}.`)}
+              onClick={() => {
+                setShowModelMenu((current) => !current);
+                setShowModeMenu(false);
+              }}
               className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
             >
-              <span className="truncate">marko-2.0-mini</span>
+              <span className="truncate">{selectedModel}</span>
               <svg className="h-4 w-4 shrink-0 text-white/70" viewBox="0 0 24 24" fill="none">
                 <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -416,6 +460,42 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
               </svg>
             </button>
           </div>
+          {showModeMenu ? (
+            <div className="absolute bottom-[3.8rem] left-3 z-10 w-28 rounded-2xl border border-white/10 bg-black/95 p-1 text-sm text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+              {(["ask", "agent"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    setAssistantMode(mode);
+                    setShowModeMenu(false);
+                    pushToast(`${mode === "ask" ? "Ask" : "Agent"} mode selected.`);
+                  }}
+                  className="w-full rounded-xl px-3 py-2 text-left capitalize text-white/78 transition hover:bg-white/10 hover:text-white"
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {showModelMenu ? (
+            <div className="absolute bottom-[3.8rem] left-24 right-12 z-10 rounded-2xl border border-white/10 bg-black/95 p-1 text-sm text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+              {["marko-2.0-mini", "marko-2.0-standard"].map((model) => (
+                <button
+                  key={model}
+                  type="button"
+                  onClick={() => {
+                    setSelectedModel(model);
+                    setShowModelMenu(false);
+                    pushToast(`${model} selected.`);
+                  }}
+                  className="w-full rounded-xl px-3 py-2 text-left text-white/78 transition hover:bg-white/10 hover:text-white"
+                >
+                  {model}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </form>
       </div>
     </div>

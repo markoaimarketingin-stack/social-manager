@@ -198,12 +198,49 @@ export type PostDraft = {
   updated_at: string;
 };
 
+export type KnowledgeBaseDocument = {
+  id: string;
+  workspace_id: string;
+  file_name: string;
+  category: "brand_voice" | "campaign_brief" | "audience" | "competitors" | "social_strategy" | "asset";
+  mime_type: string;
+  size_bytes: number;
+  ingestion_status: "queued" | "processing" | "ready" | "failed";
+  source: "upload" | "demo_seed";
+  uploaded_by_member_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TrainingJob = {
+  id: string;
+  workspace_id: string;
+  document_ids: string[];
+  category: KnowledgeBaseDocument["category"];
+  status: "queued" | "processing" | "completed" | "failed";
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssistantCommandResult = {
+  id: string;
+  workspace_id: string;
+  route_context: string;
+  mode: "ask" | "agent";
+  prompt: string;
+  response: string;
+  created_at: string;
+};
+
 export type ActivityEntityType =
   | "workspace"
   | "strategy"
   | "content_plan"
   | "planned_post"
   | "post_draft"
+  | "knowledge_document"
+  | "training_job"
+  | "assistant_command"
   | "workflow_run";
 
 export type ActivityEventType =
@@ -218,6 +255,9 @@ export type ActivityEventType =
   | "approval_granted"
   | "publish_ready"
   | "published"
+  | "document_uploaded"
+  | "training_queued"
+  | "assistant_command_logged"
   | "workflow_completed"
   | "workflow_failed";
 

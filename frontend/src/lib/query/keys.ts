@@ -13,4 +13,6 @@ export const queryKeys = {
   workflowRuns: (workspaceId: string) => ["workflowRuns", workspaceId] as const,
   activity: (workspaceId: string) => ["activity", workspaceId] as const,
   activitySummary: (workspaceId: string) => ["activitySummary", workspaceId] as const,
+  knowledgeBaseDocuments: (workspaceId: string) => ["knowledgeBaseDocuments", workspaceId] as const,
+  trainingJobs: (workspaceId: string) => ["trainingJobs", workspaceId] as const,
 };
