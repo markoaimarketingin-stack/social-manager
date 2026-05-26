@@ -15,14 +15,16 @@ export function TopBar() {
   ];
 
   return (
-    <header className="flex items-center justify-between border-b border-white/5 bg-black/70 px-5 py-4 backdrop-blur lg:px-8">
+    <header className="flex h-[4.9rem] shrink-0 items-center justify-between border-b border-white/[0.04] bg-black px-5 lg:px-6">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-          <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13.2 9 17l10-10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
         <div className="max-w-xl">
-          <h2 className="text-base font-semibold tracking-tight text-white md:text-lg">Social Operations</h2>
-          <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Command Center</p>
+          <h2 className="text-[0.98rem] font-semibold text-white md:text-[1.02rem]">Supervisor</h2>
+          <p className="text-[9px] uppercase tracking-[0.32em] text-white/38">Orchestrator</p>
         </div>
       </div>
       <div className="hidden items-center gap-2 lg:flex">
@@ -31,7 +33,7 @@ export function TopBar() {
             key={button.label}
             type="button"
             onClick={button.onClick}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+            className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[11px] font-medium text-white/78 transition hover:bg-white/[0.08] hover:text-white"
           >
             {button.label}
           </button>

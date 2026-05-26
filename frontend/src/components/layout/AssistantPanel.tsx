@@ -188,12 +188,12 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
 
   return (
     <div className="assistant-panel flex h-full w-full flex-col overflow-hidden bg-[#050505] text-white">
-      <div className="border-b border-white/[0.05] px-5 pb-5 pt-4">
+      <div className="border-b border-white/[0.05] px-3.5 pb-3.5 pt-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="assistant-orb relative mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] border border-white/10 bg-[#0c0c0c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_12px_34px_rgba(0,0,0,0.42)]">
+            <div className="assistant-orb relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-white/10 bg-[#0c0c0c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_26px_rgba(0,0,0,0.36)]">
               <div className="absolute inset-0 rounded-[0.95rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-              <svg className="relative h-[18px] w-[18px] text-white/90" viewBox="0 0 24 24" fill="none">
+              <svg className="relative h-4 w-4 text-white/90" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M8 8.75h8M8 12h5m-2-7 1.2 2.3L15 8.5l-2.2 1.2L11 12l-1.2-2.3L7.5 8.5l2.3-1.2L11 5Z"
                   stroke="currentColor"
@@ -205,16 +205,16 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
               </svg>
             </div>
             <div className="min-w-0">
-              <p className="brand-title text-[1.02rem] font-semibold tracking-[-0.03em] text-white">Assistant</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.45em] text-[#bba48f]">Read-only mode</p>
+              <p className="brand-title text-[0.92rem] font-semibold text-white">Assistant</p>
+              <p className="mt-0.5 text-[9px] uppercase tracking-[0.34em] text-[#bba48f]">Read-only mode</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={openKnowledgeBase}
-              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
               aria-label="Open knowledge base"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -224,7 +224,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             <button
               type="button"
               onClick={openNotifications}
-              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
               aria-label="Open operational notifications"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -240,7 +240,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             <button
               type="button"
               onClick={toggleAssistant}
-              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
               aria-label="Collapse assistant"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -250,8 +250,8 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[1.65rem] border border-white/[0.08] bg-black p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <div className="grid grid-cols-2 gap-1 text-[0.98rem] font-semibold">
+        <div className="mt-4 rounded-[1.05rem] border border-white/[0.08] bg-black p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="grid grid-cols-2 gap-1 text-[0.84rem] font-semibold">
             {[
               { key: "chatbot" as const, label: "Chatbot" },
               { key: "suggestions" as const, label: "Suggestions" },
@@ -260,7 +260,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
                 key={item.key}
                 type="button"
                 onClick={() => setTab(item.key)}
-                className={`rounded-[1.35rem] px-4 py-3 transition-all duration-250 ${
+                className={`rounded-[0.85rem] px-3 py-2 transition-all duration-250 ${
                   tab === item.key
                     ? "bg-white/[0.12] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-[#85776b] hover:bg-white/[0.04] hover:text-[#cdb79f]"
@@ -273,14 +273,14 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-6">
+      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 pb-3.5 pt-4">
         {tab === "chatbot" ? (
           <div className="flex min-h-full flex-col">
             <div className="space-y-3">
-              <div className="rounded-[1.15rem] border border-white/[0.08] bg-[#1b1a19] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#201f1d]">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-[0.95rem] border border-white/10 bg-black text-[#f6e2c8] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <div className="rounded-[0.9rem] border border-white/[0.08] bg-[#1b1a19] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#201f1d]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-black text-[#f6e2c8] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
                       <path
                         d="M9 9.5h.01M15 9.5h.01M8.2 15h7.6M8 5h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-1.8L12 19l-2.2-3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
                         stroke="currentColor"
@@ -291,24 +291,24 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[1rem] font-semibold tracking-[-0.03em] text-white">Social Supervisor</p>
-                    <p className="mt-0.5 text-[0.88rem] text-[#b69879]">Orchestrator</p>
+                    <p className="text-[0.9rem] font-semibold text-white">Social Supervisor</p>
+                    <p className="mt-0.5 text-[0.76rem] text-[#b69879]">Orchestrator</p>
                   </div>
                 </div>
               </div>
 
-              <div className="assistant-message-card rounded-[1.35rem] border border-white/[0.08] bg-[#1a1918] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:border-white/[0.12] hover:bg-[#1d1c1b]">
-                <p key={`${routeKey}-${messageIndex}`} className="assistant-message text-[1.02rem] leading-[1.6] tracking-[-0.01em] text-[#dfd3c6]">
+              <div className="assistant-message-card rounded-[1rem] border border-white/[0.08] bg-[#1a1918] px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:border-white/[0.12] hover:bg-[#1d1c1b]">
+                <p key={`${routeKey}-${messageIndex}`} className="assistant-message text-[0.88rem] leading-[1.5] text-[#dfd3c6]">
                   {activitySummaryQuery.isLoading ? "Linking current workspace context..." : currentMessage}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/[0.08] bg-black/30 px-2.5 py-1 text-[10px] uppercase tracking-[0.28em] text-white/42">
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-0.5 text-[9px] uppercase tracking-[0.24em] text-white/42">
                     {routeMeta.title}
                   </span>
                   {liveSignals.slice(0, 2).map((signal) => (
                     <span
                       key={signal}
-                      className="rounded-full border border-white/[0.08] bg-black/30 px-2.5 py-1 text-[10px] uppercase tracking-[0.22em] text-white/42"
+                      className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-white/42"
                     >
                       {signal}
                     </span>
@@ -319,8 +319,8 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
 
             <div className="flex-1" />
 
-            <div className="px-1 pb-1 pt-6">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/24">
+            <div className="px-1 pb-1 pt-4">
+              <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.28em] text-white/24">
                 <span>{workspaceName}</span>
                 <span>{formatRelativeMoment(latestActivity?.created_at)}</span>
               </div>
@@ -333,7 +333,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
                 key={suggestion}
                 type="button"
                 onClick={() => setChatInput(suggestion)}
-                className="w-full rounded-[1.25rem] border border-white/[0.07] bg-[#161515] px-4 py-4 text-left text-[0.97rem] leading-7 text-[#d5c8bb] transition-all duration-200 hover:-translate-y-[1px] hover:border-white/[0.12] hover:bg-[#1b1a1a]"
+                className="w-full rounded-[0.95rem] border border-white/[0.07] bg-[#161515] px-3.5 py-3 text-left text-[0.86rem] leading-6 text-[#d5c8bb] transition-all duration-200 hover:-translate-y-[1px] hover:border-white/[0.12] hover:bg-[#1b1a1a]"
               >
                 {suggestion}
               </button>
@@ -342,9 +342,9 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
         )}
       </div>
 
-      <div className="border-t border-white/[0.05] px-5 pb-4 pt-4">
+      <div className="border-t border-white/[0.05] px-3.5 pb-3 pt-3">
         <form
-          className="assistant-dock rounded-[2rem] border border-white/[0.08] bg-[#171615]/92 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
+          className="assistant-dock rounded-[1.2rem] border border-white/[0.08] bg-[#171615]/92 p-3 shadow-[0_16px_42px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
           onSubmit={(event) => {
             event.preventDefault();
             if (!chatInput.trim()) {
@@ -354,9 +354,9 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             setChatInput("");
           }}
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] border border-white/[0.11] bg-white/[0.04] text-white/78">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.7rem] border border-white/[0.11] bg-white/[0.04] text-white/78">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
                 <path
                   d="m8.5 12 4-4a2.8 2.8 0 1 1 4 4l-5.2 5.2a4.2 4.2 0 1 1-6-6L10 6"
                   stroke="currentColor"
@@ -367,10 +367,10 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
               </svg>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.95rem] text-white/62">Add context (#), extensions (@), commands (/)</p>
+              <p className="truncate text-[0.78rem] text-white/62">Add context (#), extensions (@), commands (/)</p>
               <input
                 type="text"
-                className="mt-2 w-full bg-transparent p-0 text-[1rem] text-white placeholder:text-white/28 focus:outline-none"
+                className="mt-1 w-full bg-transparent p-0 text-[0.86rem] text-white placeholder:text-white/28 focus:outline-none"
                 placeholder="Ask or instruct the assistant..."
                 value={chatInput}
                 onChange={(event) => setChatInput(event.target.value)}
@@ -378,11 +378,11 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-3 flex items-center gap-2">
             <button
               type="button"
               onClick={() => pushToast(`Context attached from ${routeMeta.title}.`)}
-              className="flex min-w-[94px] items-center justify-between gap-3 rounded-full border border-white/[0.1] bg-black/35 px-4 py-2.5 text-[0.98rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
+              className="flex min-w-[74px] items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
             >
               <span>Ask</span>
               <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none">
@@ -392,7 +392,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             <button
               type="button"
               onClick={() => pushToast(`Using route context: ${routeMeta.title}.`)}
-              className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-full border border-white/[0.1] bg-black/35 px-4 py-2.5 text-[0.98rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
+              className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
             >
               <span className="truncate">marko-2.0-mini</span>
               <svg className="h-4 w-4 shrink-0 text-white/70" viewBox="0 0 24 24" fill="none">
@@ -402,7 +402,7 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
             <button
               type="submit"
               disabled={isSubmitDisabled}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8f8b85] text-black transition-all duration-200 hover:scale-[1.02] hover:bg-[#a9a39c] disabled:cursor-not-allowed disabled:bg-white/[0.1] disabled:text-white/28 disabled:hover:scale-100"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8f8b85] text-black transition-all duration-200 hover:scale-[1.02] hover:bg-[#a9a39c] disabled:cursor-not-allowed disabled:bg-white/[0.1] disabled:text-white/28 disabled:hover:scale-100"
               aria-label="Send command"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">

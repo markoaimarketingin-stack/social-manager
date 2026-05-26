@@ -14,7 +14,7 @@ export function Panel({ title, eyebrow, tone = "dark", className = "", children 
       : "shell-surface text-ink transition-transform duration-500 ease-out";
 
   return (
-    <section className={`rounded-[2rem] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.28)] ${toneClasses} hover:shadow-[0_40px_100px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 ${className}`.trim()}>
+    <section className={`rounded-[1.25rem] p-6 shadow-[0_20px_54px_rgba(0,0,0,0.24)] ${toneClasses} ${className}`.trim()}>
       {eyebrow ? (
         <p
           className={`text-[10px] font-bold uppercase tracking-[0.35em] ${
@@ -24,7 +24,7 @@ export function Panel({ title, eyebrow, tone = "dark", className = "", children 
           {eyebrow}
         </p>
       ) : null}
-      {title ? <h2 className="mt-4 text-xl font-bold tracking-tight text-white/95">{title}</h2> : null}
+      {title ? <h2 className="mt-3 text-lg font-semibold text-white/95">{title}</h2> : null}
       {children}
     </section>
   );

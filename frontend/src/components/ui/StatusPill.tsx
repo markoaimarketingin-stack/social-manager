@@ -11,7 +11,7 @@ const toneClasses: Record<NonNullable<StatusPillProps["tone"]>, string> = {
 
 export function StatusPill({ label, tone = "neutral" }: StatusPillProps) {
   return (
-    <span className={`rounded-full border px-3 py-1 text-[11px] font-medium ${toneClasses[tone]}`}>
+    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${toneClasses[tone]}`}>
       {label}
     </span>
   );

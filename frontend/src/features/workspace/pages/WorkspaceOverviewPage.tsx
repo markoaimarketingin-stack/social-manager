@@ -24,27 +24,26 @@ export function WorkspaceOverviewPage() {
   const latestRun = workflowRunsQuery.data?.[0] ?? null;
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 py-8 lg:px-8">
-      <section className="mt-12 rounded-[2rem] border border-white/8 bg-white/[0.03] p-7 shadow-shell">
-        <div className="mx-auto mb-7 flex h-20 w-20 animate-float items-center justify-center rounded-full border border-white/8 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
-          <div className="flex gap-1.5">
-            <span className="h-8 w-2.5 rounded-full bg-white" />
-            <span className="mt-[-8px] h-10 w-2.5 rounded-full bg-white" />
-            <span className="mt-[-14px] h-14 w-2.5 rounded-full bg-white" />
-            <span className="mt-[-8px] h-10 w-2.5 rounded-full bg-white" />
+    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-5 py-6 lg:px-7">
+      <section className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center pb-12 text-center">
+        <div className="mb-8 flex h-24 w-24 animate-float items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.025] shadow-[0_22px_90px_rgba(255,255,255,0.035)]">
+          <div className="flex gap-2">
+            <span className="h-10 w-3 rounded-full bg-white" />
+            <span className="mt-[-10px] h-14 w-3 rounded-full bg-white" />
+            <span className="mt-[-18px] h-[4.5rem] w-3 rounded-full bg-white" />
           </div>
         </div>
 
-        <h2 className="mx-auto max-w-4xl text-center text-3xl font-bold leading-tight tracking-tight text-white md:text-5xl">
+        <h2 className="mx-auto max-w-4xl text-[2.65rem] font-bold leading-[0.98] text-white md:text-[3.45rem]">
           Social Operations Command
         </h2>
-        <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-white/50 md:text-base">
+        <p className="mx-auto mt-5 max-w-3xl text-[0.95rem] leading-7 text-white/56 md:text-[1rem]">
           The central hub for strategy, planning, and publishing operations. 
           Manage multi-channel campaigns with automated intelligence, continuous workflow tracking, 
           and human-in-the-loop review queues. Everything synchronized continuously.
         </p>
 
-        <div className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-2">
+        <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-2">
           <StatusPill
             label={`Workflow ${latestRun?.status ?? "idle"}`}
             tone={workflowTone(latestRun?.status ?? "idle")}

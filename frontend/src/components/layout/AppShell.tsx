@@ -19,20 +19,20 @@ export function AppShell({
   return (
     <div className="relative flex h-screen overflow-hidden bg-canvas text-ink">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute right-[-6rem] top-20 h-80 w-80 rounded-full bg-glow/10 blur-3xl" />
+        <div className="absolute left-[-7rem] top-[-7rem] h-56 w-56 rounded-full bg-white/[0.03] blur-3xl" />
+        <div className="absolute right-[-5rem] top-16 h-64 w-64 rounded-full bg-white/[0.025] blur-3xl" />
       </div>
-      <aside className="relative hidden h-full w-[280px] shrink-0 border-r border-line bg-[#020202]/95 lg:flex">
+      <aside className="relative hidden h-full w-[236px] shrink-0 border-r border-white/[0.03] bg-black lg:flex">
         {sidebar}
       </aside>
       <div className="relative flex h-full min-w-0 flex-1">
         <main className="flex min-h-0 flex-1">
           <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
             {topbar}
-            <div className="flex-1 overflow-hidden">{children}</div>
+            <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
           </section>
           {!assistantCollapsed ? (
-            <aside className="hidden h-full w-[420px] shrink-0 border-l border-white/[0.05] bg-[#040404]/95 xl:flex backdrop-blur-md">
+            <aside className="hidden h-full w-[304px] shrink-0 border-l border-white/[0.04] bg-[#040404] xl:flex">
               {assistant}
             </aside>
           ) : null}
