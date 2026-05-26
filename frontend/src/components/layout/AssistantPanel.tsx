@@ -1,88 +1,340 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import { useWorkspaceChrome } from "../../features/workspace/components/WorkspaceChromeContext";
-import { ApiError, apiGet } from "../../lib/api/client";
-import type { WorkspaceActivitySummary } from "../../lib/api/types/domain";
-import { queryKeys } from "../../lib/query/keys";
+import { useWorkspaceContext } from "../../features/workspace/hooks/useWorkspaceContext";
 
 type AssistantPanelProps = {
   workspaceId: string;
 };
 
-const suggestions = [
-  "Approve the active strategy before regenerating planning.",
-  "Stage at least one publish-ready draft for the founder walkthrough.",
-  "Use the intelligence hub to anchor trend and competitor context.",
-];
+type AssistantTab = "chatbot" | "suggestions";
+
+const routeCopy = {
+  overview: {
+    title: "Workspace overview",
+    summary: "Monitoring the full operating lane across strategy, planning, review, and publish staging.",
+    command: "Summarize the workspace operating posture",
+  },
+  intelligence: {
+    title: "Intelligence board",
+    summary: "Watching the upstream signal layer so planning and approvals stay grounded in live context.",
+    command: "Surface the strongest intelligence signal",
+  },
+  strategy: {
+    title: "Strategy workflow",
+    summary: "Tracking revision status, active version lineage, and the next approval handoff into planning.",
+    command: "Explain the current strategy revision",
+  },
+  planning: {
+    title: "Planning cycle",
+    summary: "Holding the bridge between approved strategy and the next reviewable post sequence.",
+    command: "Show the next planning action",
+  },
+  review: {
+    title: "Review queue",
+    summary: "Following draft movement, reviewer decisions, and items close to publish-ready staging.",
+    command: "Show what is waiting for approval",
+  },
+  publishing: {
+    title: "Publishing queue",
+    summary: "Watching publish-ready drafts, schedule posture, and the next outbound slot.",
+    command: "Summarize the publishing queue",
+  },
+  brand: {
+    title: "Brand profile",
+    summary: "Standing by on brand inputs that will shape the next strategy generation pass.",
+    command: "Check whether the brand profile is strategy-ready",
+  },
+  audience: {
+    title: "Audience segments",
+    summary: "Tracking segmentation inputs that sharpen platform angles and message fit.",
+    command: "Summarize the active audience mix",
+  },
+} as const;
+
+function getRouteKey(pathname: string) {
+  if (pathname.endsWith("/intelligence")) return "intelligence";
+  if (pathname.endsWith("/strategy")) return "strategy";
+  if (pathname.endsWith("/planning")) return "planning";
+  if (pathname.endsWith("/review")) return "review";
+  if (pathname.endsWith("/publishing")) return "publishing";
+  if (pathname.endsWith("/brand-profile")) return "brand";
+  if (pathname.endsWith("/audience-segments")) return "audience";
+  return "overview";
+}
+
+function formatRelativeMoment(value: string | null | undefined) {
+  if (!value) return "Standing by";
+
+  const diffMs = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(1, Math.round(diffMs / 60000));
+
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
+
+function statusLabel(status: string | null | undefined) {
+  return status ? status.replace(/_/g, " ") : "idle";
+}
 
 export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
-  const [tab, setTab] = useState<"chat" | "suggestions">("chat");
+  const [tab, setTab] = useState<AssistantTab>("chatbot");
   const [chatInput, setChatInput] = useState("");
-  const { pushToast } = useWorkspaceChrome();
+  const [messageIndex, setMessageIndex] = useState(0);
+  const { pathname } = useLocation();
+  const {
+    toggleAssistant,
+    openKnowledgeBase,
+    openNotifications,
+    pushToast,
+  } = useWorkspaceChrome();
+  const {
+    workspaceQuery,
+    brandProfileQuery,
+    workflowRunsQuery,
+    latestStrategyQuery,
+    latestContentPlanQuery,
+    reviewQueueQuery,
+    publishingQueueQuery,
+    activityQuery,
+    activitySummaryQuery,
+  } = useWorkspaceContext();
 
-  const activitySummaryQuery = useQuery({
-    queryKey: queryKeys.activitySummary(workspaceId),
-    queryFn: () => apiGet<WorkspaceActivitySummary>(`/api/v1/workspaces/${workspaceId}/activity/summary`),
-    enabled: workspaceId.length > 0,
-    retry: (_, error) => !(error instanceof ApiError && error.status === 404),
-  });
+  const routeKey = getRouteKey(pathname);
+  const routeMeta = routeCopy[routeKey];
+  const workspaceName = workspaceQuery.data?.name ?? workspaceId;
+  const activity = activityQuery.data ?? [];
+  const latestActivity = activity[0] ?? null;
+  const latestStrategy = latestStrategyQuery.data ?? null;
+  const latestPlan = latestContentPlanQuery.data ?? null;
+  const reviewQueue = reviewQueueQuery.data ?? [];
+  const publishingQueue = publishingQueueQuery.data ?? [];
+  const workflowRuns = workflowRunsQuery.data ?? [];
+  const latestRun = workflowRuns[0] ?? null;
+
+  const operationalMessages = useMemo(() => {
+    const messages = [
+      activitySummaryQuery.data?.latest_summary,
+      routeMeta.summary,
+      latestStrategy
+        ? `Strategy v${latestStrategy.version_number} is ${statusLabel(latestStrategy.status)}${latestStrategy.is_active ? " and remains the active operating version." : "."}`
+        : null,
+      latestPlan
+        ? `${latestPlan.title} is ${statusLabel(latestPlan.status)} with ${latestPlan.planned_posts.length} planned posts attached to the current workflow.`
+        : null,
+      reviewQueue.length > 0
+        ? `${reviewQueue.length} draft${reviewQueue.length > 1 ? "s are" : " is"} still moving through review.`
+        : "No drafts are blocked in review right now.",
+      publishingQueue[0]
+        ? `Next publish-ready item: '${publishingQueue[0].title}'${publishingQueue[0].scheduled_publish_at ? ` scheduled for ${new Date(publishingQueue[0].scheduled_publish_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.` : " awaiting a scheduled slot."}`
+        : "Nothing is staged in the publish-ready queue yet.",
+      latestRun
+        ? `Latest workflow run is ${statusLabel(latestRun.status)} on ${statusLabel(latestRun.workflow_type)}.`
+        : null,
+      brandProfileQuery.data
+        ? `${brandProfileQuery.data.brand_name} brand context is loaded for downstream operations.`
+        : "Brand profile context has not been completed yet.",
+    ].filter((value): value is string => Boolean(value));
+
+    return Array.from(new Set(messages));
+  }, [
+    activitySummaryQuery.data?.latest_summary,
+    brandProfileQuery.data,
+    latestPlan,
+    latestRun,
+    latestStrategy,
+    publishingQueue,
+    reviewQueue.length,
+    routeMeta.summary,
+  ]);
+
+  useEffect(() => {
+    setMessageIndex(0);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (tab !== "chatbot" || operationalMessages.length <= 1) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setMessageIndex((current) => (current + 1) % operationalMessages.length);
+    }, 4800);
+
+    return () => window.clearInterval(interval);
+  }, [operationalMessages.length, tab]);
+
+  const currentMessage = operationalMessages[messageIndex] ?? "Supervisor linked to the current workspace.";
+  const liveSignals = [
+    latestStrategy ? `Strategy v${latestStrategy.version_number}` : null,
+    latestPlan ? `${latestPlan.planned_posts.length} post${latestPlan.planned_posts.length === 1 ? "" : "s"} in plan` : null,
+    reviewQueue.length ? `${reviewQueue.length} in review` : null,
+    publishingQueue.length ? `${publishingQueue.length} publish-ready` : null,
+  ].filter((value): value is string => Boolean(value));
+
+  const suggestions = [
+    routeMeta.command,
+    publishingQueue[0]
+      ? `Open the publish-ready context for '${publishingQueue[0].title}'`
+      : "Show the next item that should move to publish-ready",
+    latestActivity?.summary ?? "Summarize the latest workflow event",
+  ];
+
+  const isSubmitDisabled = !chatInput.trim();
 
   return (
-    <div className="assistant-panel flex h-full w-full flex-col gap-5 overflow-hidden px-5 py-6 text-white bg-[#020202]">
-      <div className="flex items-center justify-between pb-6 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-2 w-2 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+    <div className="assistant-panel flex h-full w-full flex-col overflow-hidden bg-[#050505] text-white">
+      <div className="border-b border-white/[0.05] px-5 pb-5 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="assistant-orb relative mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] border border-white/10 bg-[#0c0c0c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_12px_34px_rgba(0,0,0,0.42)]">
+              <div className="absolute inset-0 rounded-[0.95rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
+              <svg className="relative h-[18px] w-[18px] text-white/90" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M8 8.75h8M8 12h5m-2-7 1.2 2.3L15 8.5l-2.2 1.2L11 12l-1.2-2.3L7.5 8.5l2.3-1.2L11 5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <p className="brand-title text-[1.02rem] font-semibold tracking-[-0.03em] text-white">Assistant</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.45em] text-[#bba48f]">Read-only mode</p>
+            </div>
           </div>
-          <div>
-            <p className="brand-title text-base font-bold tracking-tight text-white/95">Intelligence</p>
-            <p className="text-[10px] uppercase tracking-widest text-emerald-400/70 font-medium mt-1">Context Active</p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openKnowledgeBase}
+              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              aria-label="Open knowledge base"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={openNotifications}
+              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              aria-label="Open operational notifications"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 7v5l3 2m5-2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={toggleAssistant}
+              className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
+              aria-label="Collapse assistant"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-[1.65rem] border border-white/[0.08] bg-black p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="grid grid-cols-2 gap-1 text-[0.98rem] font-semibold">
+            {[
+              { key: "chatbot" as const, label: "Chatbot" },
+              { key: "suggestions" as const, label: "Suggestions" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setTab(item.key)}
+                className={`rounded-[1.35rem] px-4 py-3 transition-all duration-250 ${
+                  tab === item.key
+                    ? "bg-white/[0.12] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    : "text-[#85776b] hover:bg-white/[0.04] hover:text-[#cdb79f]"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] p-1 text-xs">
-        <button
-          type="button"
-          onClick={() => setTab("chat")}
-          className={`flex-1 rounded-lg px-3 py-2 font-medium transition-all ${
-            tab === "chat" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/[0.04]"
-          }`}
-        >
-          Chat
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("suggestions")}
-          className={`flex-1 rounded-lg px-3 py-2 font-medium transition-all ${
-            tab === "suggestions" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/[0.04]"
-          }`}
-        >
-          Guidance
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin pr-1 pb-4">
-        {tab === "chat" ? (
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 shadow-inset">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-6">
+        {tab === "chatbot" ? (
+          <div className="flex min-h-full flex-col">
+            <div className="space-y-3">
+              <div className="rounded-[1.15rem] border border-white/[0.08] bg-[#1b1a19] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#201f1d]">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-[0.95rem] border border-white/10 bg-black text-[#f6e2c8] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M9 9.5h.01M15 9.5h.01M8.2 15h7.6M8 5h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-1.8L12 19l-2.2-3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[1rem] font-semibold tracking-[-0.03em] text-white">Social Supervisor</p>
+                    <p className="mt-0.5 text-[0.88rem] text-[#b69879]">Orchestrator</p>
+                  </div>
+                </div>
               </div>
-              <div className="mt-0.5 rounded-2xl rounded-tl-sm bg-white/[0.03] border border-white/5 px-4 py-3">
-                <p className="text-[13px] leading-relaxed text-white/80">
-                  {activitySummaryQuery.data?.latest_summary ??
-                    "System nominal. Monitoring active workspace context."}
+
+              <div className="assistant-message-card rounded-[1.35rem] border border-white/[0.08] bg-[#1a1918] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:border-white/[0.12] hover:bg-[#1d1c1b]">
+                <p key={`${routeKey}-${messageIndex}`} className="assistant-message text-[1.02rem] leading-[1.6] tracking-[-0.01em] text-[#dfd3c6]">
+                  {activitySummaryQuery.isLoading ? "Linking current workspace context..." : currentMessage}
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-white/[0.08] bg-black/30 px-2.5 py-1 text-[10px] uppercase tracking-[0.28em] text-white/42">
+                    {routeMeta.title}
+                  </span>
+                  {liveSignals.slice(0, 2).map((signal) => (
+                    <span
+                      key={signal}
+                      className="rounded-full border border-white/[0.08] bg-black/30 px-2.5 py-1 text-[10px] uppercase tracking-[0.22em] text-white/42"
+                    >
+                      {signal}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1" />
+
+            <div className="px-1 pb-1 pt-6">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/24">
+                <span>{workspaceName}</span>
+                <span>{formatRelativeMoment(latestActivity?.created_at)}</span>
               </div>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             {suggestions.map((suggestion) => (
-              <button key={suggestion} type="button" onClick={() => setChatInput(suggestion)} className="w-full text-left rounded-xl border border-white/5 bg-white/[0.02] p-4 text-[13px] leading-relaxed text-white/70 transition hover:bg-white/[0.05] hover:text-white/90">
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setChatInput(suggestion)}
+                className="w-full rounded-[1.25rem] border border-white/[0.07] bg-[#161515] px-4 py-4 text-left text-[0.97rem] leading-7 text-[#d5c8bb] transition-all duration-200 hover:-translate-y-[1px] hover:border-white/[0.12] hover:bg-[#1b1a1a]"
+              >
                 {suggestion}
               </button>
             ))}
@@ -90,31 +342,80 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
         )}
       </div>
 
-      <div className="mt-auto border-t border-white/5 pt-5 pb-1">
+      <div className="border-t border-white/[0.05] px-5 pb-4 pt-4">
         <form
-          className="relative flex items-center xl:rounded-full rounded-xl border border-white/10 bg-[#000] px-3 shadow-inset transition-colors focus-within:border-white/20 hover:bg-white/[0.02] focus-within:ring-1 focus-within:ring-white/10"
+          className="assistant-dock rounded-[2rem] border border-white/[0.08] bg-[#171615]/92 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
           onSubmit={(event) => {
             event.preventDefault();
-            if (chatInput.trim()) {
-              pushToast(`Task registered: ${chatInput.trim()}`);
-              setChatInput("");
+            if (!chatInput.trim()) {
+              return;
             }
+            pushToast(`Assistant logged: ${chatInput.trim()}`);
+            setChatInput("");
           }}
         >
-          <input
-            type="text"
-            className="w-full bg-transparent py-3 pl-1 pr-10 text-[13px] text-white placeholder-white/30 outline-none"
-            placeholder="Issue command..."
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={!chatInput.trim()}
-            className="absolute right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/50 transition-all hover:bg-white/20 hover:text-white disabled:pointer-events-none disabled:opacity-30 active:scale-95"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] border border-white/[0.11] bg-white/[0.04] text-white/78">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="m8.5 12 4-4a2.8 2.8 0 1 1 4 4l-5.2 5.2a4.2 4.2 0 1 1-6-6L10 6"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[0.95rem] text-white/62">Add context (#), extensions (@), commands (/)</p>
+              <input
+                type="text"
+                className="mt-2 w-full bg-transparent p-0 text-[1rem] text-white placeholder:text-white/28 focus:outline-none"
+                placeholder="Ask or instruct the assistant..."
+                value={chatInput}
+                onChange={(event) => setChatInput(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => pushToast(`Context attached from ${routeMeta.title}.`)}
+              className="flex min-w-[94px] items-center justify-between gap-3 rounded-full border border-white/[0.1] bg-black/35 px-4 py-2.5 text-[0.98rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
+            >
+              <span>Ask</span>
+              <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none">
+                <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => pushToast(`Using route context: ${routeMeta.title}.`)}
+              className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-full border border-white/[0.1] bg-black/35 px-4 py-2.5 text-[0.98rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
+            >
+              <span className="truncate">marko-2.0-mini</span>
+              <svg className="h-4 w-4 shrink-0 text-white/70" viewBox="0 0 24 24" fill="none">
+                <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitDisabled}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8f8b85] text-black transition-all duration-200 hover:scale-[1.02] hover:bg-[#a9a39c] disabled:cursor-not-allowed disabled:bg-white/[0.1] disabled:text-white/28 disabled:hover:scale-100"
+              aria-label="Send command"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12h12m0 0-4.5-4.5M17 12l-4.5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </form>
       </div>
     </div>

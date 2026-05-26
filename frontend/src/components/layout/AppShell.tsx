@@ -32,7 +32,7 @@ export function AppShell({
             <div className="flex-1 overflow-hidden">{children}</div>
           </section>
           {!assistantCollapsed ? (
-            <aside className="hidden h-full w-[300px] shrink-0 border-l border-line bg-[#040404]/90 xl:flex backdrop-blur-md">
+            <aside className="hidden h-full w-[420px] shrink-0 border-l border-white/[0.05] bg-[#040404]/95 xl:flex backdrop-blur-md">
               {assistant}
             </aside>
           ) : null}
