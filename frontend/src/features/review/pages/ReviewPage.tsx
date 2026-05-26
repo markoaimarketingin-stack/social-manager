@@ -170,7 +170,7 @@ export function ReviewPage() {
                       },
                     })
                   }
-                  className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
+                  className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
                 >
                   {updateDraftMutation.isPending ? "Saving..." : "Save review"}
                 </button>
@@ -183,7 +183,7 @@ export function ReviewPage() {
                       payload: { scheduled_publish_at: selectedDraft.scheduled_publish_at ?? null },
                     })
                   }
-                  className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-5 py-2.5 text-xs font-semibold text-emerald-100 disabled:opacity-60"
+                  className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-5 py-2.5 text-xs font-semibold text-emerald-100 transition-all hover:bg-emerald-300/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
                 >
                   {markPublishReadyMutation.isPending ? "Staging..." : "Mark publish-ready"}
                 </button>
@@ -191,7 +191,7 @@ export function ReviewPage() {
                   type="button"
                   disabled={publishDraftMutation.isPending}
                   onClick={() => publishDraftMutation.mutate({ draftId: selectedDraft.id, payload: {} })}
-                  className="rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-black disabled:opacity-60"
+                  className="rounded-full bg-white px-5 py-2.5 text-xs font-bold text-black shadow-lg shadow-white/5 transition-all hover:bg-white/90 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
                 >
                   {publishDraftMutation.isPending ? "Publishing..." : "Mock publish"}
                 </button>

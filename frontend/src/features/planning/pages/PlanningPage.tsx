@@ -173,7 +173,7 @@ export function PlanningPage() {
                   planning_horizon_label: "Next 2 weeks",
                 })
               }
-              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black disabled:opacity-60"
+              className="rounded-full bg-white px-5 py-3 text-sm font-bold text-black shadow-lg shadow-white/5 disabled:opacity-60 transition-all hover:bg-white/90 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
             >
               {generatePlanMutation.isPending
                 ? "Generating plan..."
@@ -189,7 +189,7 @@ export function PlanningPage() {
                   content_plan_id: contentPlan?.id ?? null,
                 })
               }
-              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
             >
               {generateDraftsMutation.isPending ? "Generating drafts..." : "Generate drafts from plan"}
             </button>
@@ -385,7 +385,7 @@ export function PlanningPage() {
                         payload: postForm,
                       })
                     }
-                    className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                    className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[13px] font-semibold text-white disabled:opacity-60 transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
                   >
                     {updatePostMutation.isPending ? "Saving..." : "Save planned post"}
                   </button>

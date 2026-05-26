@@ -566,8 +566,9 @@ function summarizeActivity(store: DemoStore): WorkspaceActivitySummary {
 }
 
 export async function mockRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  await wait();
   const method = (init?.method ?? "GET").toUpperCase();
+  const delay = method === "GET" ? 200 : Math.floor(Math.random() * 800) + 800; // longer delay for mutations to feel real
+  await wait(delay);
   const body = init?.body ? (JSON.parse(init.body.toString()) as Record<string, unknown>) : null;
   const store = readStore();
 

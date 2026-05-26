@@ -27,21 +27,21 @@ export function PublishingPage() {
       />
 
       <div className="mt-5 grid gap-4 md:grid-cols-4">
-        <div className="rounded-3xl border border-line bg-white/5 p-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
           <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">In review</p>
           <p className="mt-2 text-3xl font-semibold text-white">{reviewQueue.length}</p>
         </div>
-        <div className="rounded-3xl border border-line bg-white/5 p-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
           <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Publish-ready</p>
           <p className="mt-2 text-3xl font-semibold text-white">{publishingQueue.length}</p>
         </div>
-        <div className="rounded-3xl border border-line bg-white/5 p-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
           <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Latest state</p>
           <p className="mt-2 text-sm font-semibold text-white">
             {leadDraft?.review_status.replace(/_/g, " ") ?? "Queue idle"}
           </p>
         </div>
-        <div className="rounded-3xl border border-line bg-white/5 p-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
           <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Platforms</p>
           <p className="mt-2 text-sm font-semibold text-white">3 tracked</p>
         </div>
@@ -76,7 +76,7 @@ export function PublishingPage() {
         <Panel eyebrow="Platform status" title="Publishing posture" className="min-h-0 overflow-hidden">
           <div className="mt-4 space-y-3">
             {platformHealth.map((item) => (
-              <div key={item.platform} className="rounded-3xl border border-line bg-white/5 p-4">
+              <div key={item.platform} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-base font-semibold">{item.platform}</p>
                   <StatusPill label={item.state} tone={item.tone} />
@@ -84,7 +84,7 @@ export function PublishingPage() {
               </div>
             ))}
             {recentPublishActivity.map((event) => (
-              <div key={event.id} className="rounded-3xl border border-line bg-white/5 p-4">
+              <div key={event.id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                 <p className="text-sm font-semibold text-white">{event.summary}</p>
                 <p className="mt-2 text-xs uppercase tracking-[0.25em] text-white/35">
                   {new Date(event.created_at).toLocaleString()}

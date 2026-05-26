@@ -29,134 +29,94 @@ export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
   });
 
   return (
-    <div className="assistant-panel flex h-full w-full flex-col gap-4 overflow-hidden p-3 text-white">
-      <div className="flex items-start justify-between pt-0">
+    <div className="assistant-panel flex h-full w-full flex-col gap-5 overflow-hidden px-5 py-6 text-white bg-[#020202]">
+      <div className="flex items-center justify-between pb-6 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <img
-            src="/favicon.svg"
-            alt="Marko"
-            className="h-9 w-9 rounded-md border border-white/10 bg-black/60 p-1"
-          />
-          <div>
-            <p className="text-sm font-semibold">Assistant</p>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-white/40">Read-only mode</p>
+          <div className="relative flex h-2 w-2 items-center justify-center">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
           </div>
-        </div>
-        <div className="flex items-center gap-2 text-white/60">
-          {["+", "↺", "X"].map((label) => (
-            <div
-              key={label}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs"
-            >
-              {label}
-            </div>
-          ))}
+          <div>
+            <p className="brand-title text-base font-bold tracking-tight text-white/95">Intelligence</p>
+            <p className="text-[10px] uppercase tracking-widest text-emerald-400/70 font-medium mt-1">Context Active</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black px-2 py-1 text-xs">
+      <div className="flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] p-1 text-xs">
         <button
           type="button"
           onClick={() => setTab("chat")}
-          className={`flex-1 rounded-full px-3 py-2 font-semibold ${
-            tab === "chat" ? "bg-white/10 text-white" : "text-white/50"
+          className={`flex-1 rounded-lg px-3 py-2 font-medium transition-all ${
+            tab === "chat" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/[0.04]"
           }`}
         >
-          Chatbot
+          Chat
         </button>
         <button
           type="button"
           onClick={() => setTab("suggestions")}
-          className={`flex-1 rounded-full px-3 py-2 font-semibold ${
-            tab === "suggestions" ? "bg-white/10 text-white" : "text-white/50"
+          className={`flex-1 rounded-lg px-3 py-2 font-medium transition-all ${
+            tab === "suggestions" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/[0.04]"
           }`}
         >
-          Suggestions
+          Guidance
         </button>
       </div>
 
-      <div className="flex-1 overflow-hidden pr-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin pr-1 pb-4">
         {tab === "chat" ? (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-black/60 text-white">
-                  #
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Social Supervisor</p>
-                  <p className="text-[10px] text-white/50">Orchestrator</p>
-                </div>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 shadow-inset">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              </div>
+              <div className="mt-0.5 rounded-2xl rounded-tl-sm bg-white/[0.03] border border-white/5 px-4 py-3">
+                <p className="text-[13px] leading-relaxed text-white/80">
+                  {activitySummaryQuery.data?.latest_summary ??
+                    "System nominal. Monitoring active workspace context."}
+                </p>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
-                <span>#</span>
-                <span>Context</span>
-              </div>
-              <p className="text-sm leading-6 text-white/75">
-                {activitySummaryQuery.data?.latest_summary ??
-                  "Ask mode is for Q&A and fetching context. Agent mode can prepare optimizations behind confirmation."}
-              </p>
-            </div>
-            <div className="h-24 rounded-2xl border border-dashed border-white/10 bg-white/[0.02]" />
           </div>
         ) : (
           <div className="space-y-3">
             {suggestions.map((suggestion) => (
-              <div key={suggestion} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Suggestion</p>
-                <p className="mt-2 text-sm font-semibold text-white">{suggestion}</p>
-              </div>
+              <button key={suggestion} type="button" onClick={() => setChatInput(suggestion)} className="w-full text-left rounded-xl border border-white/5 bg-white/[0.02] p-4 text-[13px] leading-relaxed text-white/70 transition hover:bg-white/[0.05] hover:text-white/90">
+                {suggestion}
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!chatInput.trim()) {
-            return;
-          }
-          pushToast(`Assistant noted: ${chatInput.trim()}`);
-          setChatInput("");
-        }}
-        className="rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
-      >
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white">
-              #
-            </div>
-            <div className="flex-1">
-              <p className="mb-1 text-xs text-white/60">Add context (#), extensions (@), commands (/)</p>
-              <input
-                value={chatInput}
-                onChange={(event) => setChatInput(event.target.value)}
-                type="text"
-                placeholder="Ask or instruct the assistant..."
-                className="min-w-0 w-full bg-transparent text-xs text-white placeholder:text-white/35 focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="rounded-full border border-white/10 bg-black/40 px-3 py-2 text-xs text-white">
-              Guided
-            </div>
-            <div className="flex-1 rounded-full border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/70">
-              marko-2.0-mini
-            </div>
-            <button
-              type="submit"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-semibold text-black transition hover:bg-white/90"
-            >
-              &rsaquo;
-            </button>
-          </div>
-        </div>
-      </form>
+      <div className="mt-auto border-t border-white/5 pt-5 pb-1">
+        <form
+          className="relative flex items-center xl:rounded-full rounded-xl border border-white/10 bg-[#000] px-3 shadow-inset transition-colors focus-within:border-white/20 hover:bg-white/[0.02] focus-within:ring-1 focus-within:ring-white/10"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (chatInput.trim()) {
+              pushToast(`Task registered: ${chatInput.trim()}`);
+              setChatInput("");
+            }
+          }}
+        >
+          <input
+            type="text"
+            className="w-full bg-transparent py-3 pl-1 pr-10 text-[13px] text-white placeholder-white/30 outline-none"
+            placeholder="Issue command..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={!chatInput.trim()}
+            className="absolute right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/50 transition-all hover:bg-white/20 hover:text-white disabled:pointer-events-none disabled:opacity-30 active:scale-95"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

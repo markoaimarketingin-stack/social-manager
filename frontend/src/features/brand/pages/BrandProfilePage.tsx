@@ -151,11 +151,11 @@ export function BrandProfilePage() {
 
             {feedback ? <p className="text-sm text-black/70">{feedback}</p> : null}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 mt-4">
               <button
                 type="submit"
                 disabled={saveBrandProfileMutation.isPending}
-                className="rounded-full bg-black px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] disabled:opacity-60"
+                className="rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] transition-all hover:bg-black/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
               >
                 {saveBrandProfileMutation.isPending ? "Saving..." : "Save brand profile"}
               </button>
@@ -167,7 +167,7 @@ export function BrandProfilePage() {
                     goal: "Generate a first strategy snapshot from Sprint 1 inputs",
                   })
                 }
-                className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold"
+                className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
               >
                 {strategyRunMutation.isPending ? "Running..." : "Run strategy stub"}
               </button>

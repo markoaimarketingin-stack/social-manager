@@ -35,13 +35,13 @@ export function WorkspaceOverviewPage() {
           </div>
         </div>
 
-        <h2 className="mx-auto max-w-4xl text-center text-3xl font-black leading-tight tracking-tight text-white md:text-5xl">
-          I am your Social Community Manager
+        <h2 className="mx-auto max-w-4xl text-center text-3xl font-bold leading-tight tracking-tight text-white md:text-5xl">
+          Social Operations Command
         </h2>
-        <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-white/60 md:text-base">
-          Specialized in managing social communities through audience engagement, content
-          coordination, trend monitoring, moderation, sentiment analysis, and growth-driven
-          interaction strategies for impactful brand presence and loyal community building.
+        <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-white/50 md:text-base">
+          The central hub for strategy, planning, and publishing operations. 
+          Manage multi-channel campaigns with automated intelligence, continuous workflow tracking, 
+          and human-in-the-loop review queues. Everything synchronized continuously.
         </p>
 
         <div className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-2">

@@ -22,7 +22,7 @@ export function AppShell({
         <div className="absolute left-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-white/5 blur-3xl" />
         <div className="absolute right-[-6rem] top-20 h-80 w-80 rounded-full bg-glow/10 blur-3xl" />
       </div>
-      <aside className="relative hidden h-full w-[305px] shrink-0 border-r border-line bg-[#020202]/95 lg:flex">
+      <aside className="relative hidden h-full w-[280px] shrink-0 border-r border-line bg-[#020202]/95 lg:flex">
         {sidebar}
       </aside>
       <div className="relative flex h-full min-w-0 flex-1">
@@ -32,7 +32,7 @@ export function AppShell({
             <div className="flex-1 overflow-hidden">{children}</div>
           </section>
           {!assistantCollapsed ? (
-            <aside className="hidden h-full w-[320px] shrink-0 border-l border-line bg-[#070707]/95 xl:flex">
+            <aside className="hidden h-full w-[300px] shrink-0 border-l border-line bg-[#040404]/90 xl:flex backdrop-blur-md">
               {assistant}
             </aside>
           ) : null}

@@ -123,11 +123,11 @@ export function AudienceSegmentsPage() {
               </label>
             ))}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 mt-2">
               <button
                 type="submit"
                 disabled={upsertMutation.isPending}
-                className="rounded-full bg-black px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] disabled:opacity-60"
+                className="rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] transition-all hover:bg-black/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
               >
                 {upsertMutation.isPending
                   ? "Saving..."
@@ -142,7 +142,7 @@ export function AudienceSegmentsPage() {
                     setEditingSegmentId(null);
                     setFormState(initialFormState);
                   }}
-                  className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold"
+                  className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 >
                   Cancel edit
                 </button>
@@ -174,7 +174,7 @@ export function AudienceSegmentsPage() {
                   Messaging angle: {segment.messaging_angle || "Not defined yet"}
                 </p>
 
-                <div className="mt-4 flex gap-3">
+                <div className="mt-5 flex gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -188,14 +188,14 @@ export function AudienceSegmentsPage() {
                         messaging_angle: segment.messaging_angle ?? "",
                       });
                     }}
-                    className="rounded-full border border-line px-4 py-2 text-sm"
+                    className="rounded-full border border-line px-4 py-2 text-sm transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteMutation.mutate(segment.id)}
-                    className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-200"
+                    className="rounded-full border border-red-500/30 bg-red-500/5 px-4 py-2 text-sm text-red-600 transition-all hover:bg-red-500/10 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                   >
                     Delete
                   </button>
