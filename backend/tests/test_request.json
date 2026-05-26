@@ -1,0 +1,24 @@
+{
+  "state": {
+    "brand_profile": {
+      "brand_name": "TechFlow AI",
+      "brand_type": "saas",
+      "product_category": "productivity",
+      "voice_keywords": ["innovative", "practical", "clear"]
+    },
+    "target_persona": {
+      "interests": ["technology", "productivity", "automation"],
+      "stage": "consideration"
+    },
+    "active_platforms": ["LinkedIn", "Twitter"],
+    "posting_frequency": {
+      "LinkedIn": 4,
+      "Twitter": 10
+    },
+    "engagement_metrics": {
+      "engagement_rate": 3.2,
+      "follower_growth": 500,
+      "post_consistency_score": 0.85
+    }
+  }
+}

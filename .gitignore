@@ -1,31 +1,105 @@
-.DS_Store
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+.eggs/
+MANIFEST
+
+# =============================================================================
+# Virtual Environments
+# =============================================================================
+venv/
+.venv/
+env/
+.env_backup
+ENV/
+env.bak/
+venv.bak/
+backend/.venv/
+
+# =============================================================================
+# Environment & Secrets — NEVER COMMIT THESE
+# =============================================================================
 .env
 .env.local
-.venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+.env.production
+.env.development
+*.pem
+*.key
+secrets.json
+frontend/.env
+backend/.env
+
+# =============================================================================
+# Database Files
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+social_manager.db
+verification.db
+
+# =============================================================================
+# IDE / Editor
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =============================================================================
+# Logs & Temp Files
+# =============================================================================
+*.log
+logs/
+*.tmp
+tmp/
+temp_uploads/
+temp_test_doc.txt
+
+# =============================================================================
+# Testing & Coverage
+# =============================================================================
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .coverage
-htmlcov/
-
-backend/.venv/
 backend/.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+nosetests.xml
+test-results/
 
+# =============================================================================
+# Node.js / React (frontend/)
+# =============================================================================
 frontend/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 frontend/dist/
+frontend/build/
+frontend/.eslintcache
 frontend/.vite/
-
-logs/
-tmp/
-verification.db
-*.sqlite3
-*.sqlite
-.env.development
-.env.production
-.idea/
-frontend/.env
-backend/.env
