@@ -25,6 +25,11 @@ class InstagramAdapter(PlatformAdapter):
         self.ig_user_id = ig_user_id
         self.sandbox = sandbox
         self.rate_limiter = RateLimitStrategy(max_requests_per_minute=90)
+        self._http_client: Optional[httpx.AsyncClient] = None
+
+    def _ensure_http_client(self):
+        if self._http_client is None or self._http_client.is_closed:
+            self._http_client = httpx.AsyncClient(timeout=60.0)
     
     async def authenticate(self) -> bool:
         """Verify Instagram Graph API access."""
@@ -34,12 +39,12 @@ class InstagramAdapter(PlatformAdapter):
             return False
             
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    f"{self.GRAPH_API_BASE}/{self.ig_user_id}",
-                    params={"fields": "id,username", "access_token": self.api_key}
-                )
-                return resp.status_code == 200
+            self._ensure_http_client()
+            resp = await self._http_client.get(
+                f"{self.GRAPH_API_BASE}/{self.ig_user_id}",
+                params={"fields": "id,username", "access_token": self.api_key}
+            )
+            return resp.status_code == 200
         except Exception as e:
             logger.error(f"Instagram authentication failed: {e}")
             return False
