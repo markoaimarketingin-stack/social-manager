@@ -25,7 +25,7 @@ Base = declarative_base()
 
 class User(Base):
     """User account."""
-    __tablename__ = "users"
+    __tablename__ = "sm_users"
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True, index=True)
     name = Column(String)
@@ -39,7 +39,7 @@ class SocialConnection(Base):
     """OAuth tokens and connection details per user per platform."""
     __tablename__ = "social_connections"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    user_id = Column(Integer, ForeignKey("sm_users.id"), index=True)
     user = relationship("User", back_populates="social_connections")
     
     platform = Column(String, index=True)  # facebook, instagram, linkedin, x, youtube

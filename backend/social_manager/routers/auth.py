@@ -100,7 +100,7 @@ def connect_platform(platform: str, request: Request, user_id: int = Depends(get
             "client_id": settings.linkedin_client_id,
             "redirect_uri": redirect_uri,
             "state": state,
-            "scope": "w_member_social r_liteprofile r_emailaddress",
+            "scope": "w_member_social openid profile email",
         }
         auth_url = f"https://www.linkedin.com/oauth/v2/authorization?{urllib.parse.urlencode(params)}"
 
@@ -132,17 +132,23 @@ def connect_platform(platform: str, request: Request, user_id: int = Depends(get
 # ---------------------------------------------------------------------------
 # OAuth – Callback (exchange code for token, save to DB)
 # ---------------------------------------------------------------------------
+from typing import Optional
 
 @router.get("/{platform}/callback")
 async def platform_callback(
     platform: str,
-    code: str,
     state: str,
+    code: Optional[str] = None,
+    error: Optional[str] = None,
+    error_description: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
     Handle OAuth redirect, exchange auth code for access token, save to DB.
     """
+    if error or not code:
+        logger.error(f"OAuth error from {platform}: {error} - {error_description}")
+        return RedirectResponse(f"{settings.frontend_url}/connect?error={error}&description={error_description}")
     try:
         user_id = int(state.split("_")[0])
     except Exception:
@@ -337,7 +343,7 @@ async def platform_callback(
         logger.info(f"✓ Saved new {platform} connection for user {user_id}")
 
     # Redirect back to frontend settings page
-    frontend_url = f"http://localhost:5173/settings?connected={platform}&success=true"
+    frontend_url = f"{settings.frontend_url}/connect?connected={platform}&success=true"
     return RedirectResponse(frontend_url)
 
 
