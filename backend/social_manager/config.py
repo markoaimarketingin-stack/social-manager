@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # 🎛️ Server 🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️
     port: int = 8088
     frontend_url: str = "http://localhost:5173"
+    backend_url: str = "http://localhost:8088"
 
     # ── Database ──────────────────────────────────────────────────────────────
     social_manager_db_url: str = "sqlite:///./social_manager.db"

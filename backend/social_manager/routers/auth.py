@@ -73,7 +73,7 @@ def connect_platform(platform: str, request: Request, user_id: int = Depends(get
     Start the OAuth flow for the requested platform.
     Redirects the user to the platform's consent screen.
     """
-    redirect_uri = f"http://localhost:{settings.port}/api/auth/{platform}/callback"
+    redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
     state = f"{user_id}_{uuid.uuid4().hex}"
 
     if platform in ("facebook", "instagram"):
@@ -154,7 +154,7 @@ async def platform_callback(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid OAuth state parameter")
 
-    redirect_uri = f"http://localhost:{settings.port}/api/auth/{platform}/callback"
+    redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
     access_token = None
     refresh_token = None
     platform_account_id = None
