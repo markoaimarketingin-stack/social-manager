@@ -11,8 +11,9 @@ from typing import List, Optional
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
 
-    # ── Server ────────────────────────────────────────────────────────────────
+    # 🎛️ Server 🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️
     port: int = 8088
+    frontend_url: str = "http://localhost:5173"
 
     # ── Database ──────────────────────────────────────────────────────────────
     social_manager_db_url: str = "sqlite:///./social_manager.db"

@@ -1,5 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
+import AuthPage from "../features/auth/AuthPage";
+import ConnectPage from "../features/auth/ConnectPage";
+import ComposePage from "../features/publishing/ComposePage";
+import { ProtectedRoute } from "../components/layout/ProtectedRoute";
 import { IntelligencePage } from "../features/intelligence/pages/IntelligencePage";
 import { AudienceSegmentsPage } from "../features/audience/pages/AudienceSegmentsPage";
 import { BrandProfilePage } from "../features/brand/pages/BrandProfilePage";
@@ -16,12 +20,19 @@ export function AppRouter() {
   const homeElement = isDemoModeEnabled() ? (
     <Navigate replace to="/workspaces/demo-workspace" />
   ) : (
-    <OnboardingPage />
+    <Navigate replace to="/auth" />
   );
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth routes */}
+        <Route path="/auth" element={<AuthPage />} />
+        
+        {/* New Protected Routes */}
+        <Route path="/connect" element={<ProtectedRoute><ConnectPage /></ProtectedRoute>} />
+        <Route path="/compose" element={<ProtectedRoute><ComposePage /></ProtectedRoute>} />
+
         <Route path="/" element={homeElement} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/workspaces/:workspaceId" element={<WorkspaceLayout />}>
