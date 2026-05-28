@@ -1,17 +1,14 @@
 {
-  "version": 2,
-  "buildCommand": null,
-  "outputDirectory": "web",
   "builds": [
     {
-      "src": "web/index.html",
-      "use": "@vercel/static"
+      "src": "main.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "web/$1"
+      "dest": "main.py"
     }
   ]
 }
