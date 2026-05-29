@@ -86,7 +86,7 @@ def connect_platform(platform: str, request: Request, user_id: int = Depends(get
             "state": state,
             "scope": (
                 "pages_manage_posts,pages_read_engagement,pages_show_list,"
-                "instagram_basic,instagram_content_publish,instagram_manage_insights"
+                "instagram_basic,instagram_content_publish"
             ),
         }
         auth_url = f"https://www.facebook.com/v18.0/dialog/oauth?{urllib.parse.urlencode(params)}"
