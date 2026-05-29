@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiBaseUrl } from '../../lib/api/client';
 
 interface Connection {
   platform: string;
@@ -55,7 +56,7 @@ export default function ConnectPage() {
 
   const fetchConnections = async () => {
     try {
-      const res = await fetch('http://localhost:8088/api/auth/connections', {
+      const res = await fetch(`${apiBaseUrl}/api/auth/connections`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -72,13 +73,13 @@ export default function ConnectPage() {
   const getAccountName = (platform: string) => connections.find(c => c.platform === platform)?.account_name || '';
 
   const handleConnect = (platform: string) => {
-    window.location.href = `http://localhost:8088/api/auth/${platform}/connect?user_id=${token}`;
+    window.location.href = `${apiBaseUrl}/api/auth/${platform}/connect?user_id=${token}`;
   };
 
   const handleDisconnect = async (platform: string) => {
     if (!confirm(`Disconnect ${platform}?`)) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/auth/${platform}/disconnect`, {
+      const res = await fetch(`${apiBaseUrl}/api/auth/${platform}/disconnect`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -108,6 +109,12 @@ export default function ConnectPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => navigate('/workspaces/demo-workspace/dashboard')}
+            className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-white/50 hover:text-ink hover:border-white/20 transition-colors"
+          >
+            Skip for now →
+          </button>
           <button
             onClick={() => navigate('/compose')}
             className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-ink hover:bg-white/15 transition-colors"
