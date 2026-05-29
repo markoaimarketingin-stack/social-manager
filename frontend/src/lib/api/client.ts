@@ -19,6 +19,14 @@ export class ApiError extends Error {
   }
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem("auth_token");
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (isDemoModeEnabled()) {
     return mockRequest<T>(path, init);
@@ -28,33 +36,27 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
       ...(init?.headers ?? {}),
     },
   });
 
-  try {
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: { code?: string; message?: string } }
-        | null;
-      throw new ApiError(
-        payload?.error?.message ?? `${init?.method ?? "GET"} ${path} failed`,
-        response.status,
-        payload?.error?.code,
-      );
+  if (!response.ok) {
+    let errorMessage = `${init?.method ?? "GET"} ${path} failed`;
+    try {
+      const payload = await response.json();
+      errorMessage = payload?.detail ?? payload?.error?.message ?? errorMessage;
+    } catch {
+      // ignore parse errors
     }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return (await response.json()) as T;
-  } catch (error) {
-    if (error instanceof TypeError || error instanceof ApiError) {
-      return mockRequest<T>(path, init);
-    }
-    throw error;
+    throw new ApiError(errorMessage, response.status);
   }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
 }
 
 export function apiGet<T>(path: string): Promise<T> {

@@ -27,6 +27,7 @@ from social_manager.routers.publishing import router as publishing_router
 from social_manager.routers.strategy import router as strategy_router
 from social_manager.routers.chat import router as chat_router
 from social_manager.routers.v1_compat import router as v1_compat_router
+from social_manager.routers.dashboard import router as dashboard_router
 from social_manager.db import SocialConnectionRepository, SessionLocal
 
 from fastapi import UploadFile, File
@@ -586,6 +587,7 @@ app.include_router(auth_router)
 app.include_router(publishing_router)
 app.include_router(strategy_router)
 app.include_router(chat_router)
+app.include_router(dashboard_router)
 
 # ===== V1 COMPATIBILITY ROUTER (FOR NEW FRONTEND) =====
 app.include_router(v1_compat_router)

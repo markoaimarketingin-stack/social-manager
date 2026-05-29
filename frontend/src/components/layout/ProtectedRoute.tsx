@@ -8,14 +8,24 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+      <div
+        className="flex h-screen w-full items-center justify-center"
+        style={{ background: "#0d1117" }}
+      >
+        <div className="text-center">
+          <div
+            className="mx-auto h-8 w-8 animate-spin rounded-full border-2"
+            style={{ borderColor: "#21262d", borderTopColor: "#388bfd" }}
+          />
+          <p className="mt-3 text-xs" style={{ color: "#6e7681", fontFamily: '"Inter", system-ui, sans-serif' }}>
+            Loading…
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    // Redirect them to the /auth page, but save the current location they were trying to go to
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

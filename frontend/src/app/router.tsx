@@ -2,43 +2,52 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import AuthPage from "../features/auth/AuthPage";
 import ConnectPage from "../features/auth/ConnectPage";
-import ComposePage from "../features/publishing/ComposePage";
 import { ProtectedRoute } from "../components/layout/ProtectedRoute";
+import { WorkspaceLayout } from "../features/workspace/components/WorkspaceLayout";
+import { WorkspaceOverviewPage } from "../features/workspace/pages/WorkspaceOverviewPage";
 import { IntelligencePage } from "../features/intelligence/pages/IntelligencePage";
 import { AudienceSegmentsPage } from "../features/audience/pages/AudienceSegmentsPage";
 import { BrandProfilePage } from "../features/brand/pages/BrandProfilePage";
-import { OnboardingPage } from "../features/onboarding/pages/OnboardingPage";
 import { PlanningPage } from "../features/planning/pages/PlanningPage";
 import { PublishingPage } from "../features/publishing/pages/PublishingPage";
 import { ReviewPage } from "../features/review/pages/ReviewPage";
 import { StrategyPage } from "../features/strategy/pages/StrategyPage";
-import { WorkspaceLayout } from "../features/workspace/components/WorkspaceLayout";
-import { WorkspaceOverviewPage } from "../features/workspace/pages/WorkspaceOverviewPage";
-import { isDemoModeEnabled } from "../lib/api/mock";
+import { useAuth } from "../features/auth/AuthContext";
+
+function HomeRedirect() {
+  const { isAuthenticated, loading, user } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center" style={{ background: "#0d1117" }}>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-blue-400" />
+      </div>
+    );
+  }
+  if (!isAuthenticated) return <Navigate replace to="/auth" />;
+  return <Navigate replace to={`/workspaces/${user!.id}/dashboard`} />;
+}
 
 export function AppRouter() {
-  const homeElement = isDemoModeEnabled() ? (
-    <Navigate replace to="/workspaces/demo-workspace" />
-  ) : (
-    <Navigate replace to="/auth" />
-  );
-
   return (
     <BrowserRouter>
       <Routes>
         {/* Auth routes */}
         <Route path="/auth" element={<AuthPage />} />
-        
-        {/* New Protected Routes */}
-        <Route path="/connect" element={<ProtectedRoute><ConnectPage /></ProtectedRoute>} />
-        <Route path="/compose" element={<ProtectedRoute><ComposePage /></ProtectedRoute>} />
 
-        <Route path="/" element={homeElement} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/workspaces/:workspaceId" element={<WorkspaceLayout />}>
+        {/* Connect platforms */}
+        <Route path="/connect" element={<ProtectedRoute><ConnectPage /></ProtectedRoute>} />
+
+        {/* Home — redirects based on auth state */}
+        <Route path="/" element={<HomeRedirect />} />
+
+        {/* Workspace routes */}
+        <Route
+          path="/workspaces/:workspaceId"
+          element={<ProtectedRoute><WorkspaceLayout /></ProtectedRoute>}
+        >
           <Route index element={<Navigate replace to="dashboard" />} />
-          <Route path="social-supervisor" element={<WorkspaceOverviewPage />} />
           <Route path="dashboard" element={<WorkspaceOverviewPage />} />
+          <Route path="social-supervisor" element={<WorkspaceOverviewPage />} />
           <Route path="trends" element={<IntelligencePage />} />
           <Route path="competitors" element={<IntelligencePage />} />
           <Route path="segments" element={<AudienceSegmentsPage />} />
@@ -55,6 +64,7 @@ export function AppRouter() {
           <Route path="review" element={<ReviewPage />} />
           <Route path="publishing" element={<PublishingPage />} />
         </Route>
+
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </BrowserRouter>

@@ -1,502 +1,472 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { apiBaseUrl } from "../../lib/api/client";
 
-import { useWorkspaceChrome } from "../../features/workspace/components/WorkspaceChromeContext";
-import { useWorkspaceContext } from "../../features/workspace/hooks/useWorkspaceContext";
-import { apiPost } from "../../lib/api/client";
-import type { AssistantCommandResult } from "../../lib/api/types/domain";
-import type { AssistantCommandRequest } from "../../lib/api/types/requests";
-import { queryKeys } from "../../lib/query/keys";
+type Mode = "ask" | "agent";
 
-type AssistantPanelProps = {
+interface Message {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: Date;
+  published?: Array<{ platform: string; content: string }>;
+}
+
+interface Connection {
+  platform: string;
+  account_name: string;
+}
+
+const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string; abbr: string }> = {
+  linkedin:  { bg: "rgba(0,119,181,0.15)",   text: "#58a6ff",  border: "rgba(0,119,181,0.3)",   abbr: "LI" },
+  instagram: { bg: "rgba(225,48,108,0.15)",  text: "#f78166",  border: "rgba(225,48,108,0.3)",  abbr: "IG" },
+  facebook:  { bg: "rgba(24,119,242,0.15)",  text: "#79c0ff",  border: "rgba(24,119,242,0.3)",  abbr: "FB" },
+  x:         { bg: "rgba(255,255,255,0.08)", text: "#e6edf3",  border: "rgba(255,255,255,0.2)", abbr: "X" },
+};
+
+function uid() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+const QUICK_ASKS = [
+  "Best time to post on LinkedIn?",
+  "Write a caption for a product launch",
+  "Hashtag strategy for Instagram",
+  "How to boost engagement this week?",
+];
+
+const QUICK_AGENT_PROMPTS = [
+  "Post a motivational Monday quote",
+  "Share a professional tip about productivity",
+  "Announce we just launched something exciting",
+  "Post about the power of social media marketing",
+];
+
+type Props = {
   workspaceId: string;
 };
 
-type AssistantTab = "chatbot" | "suggestions";
+export function AssistantPanel({ workspaceId }: Props) {
+  const [mode, setMode] = useState<Mode>("ask");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-const routeCopy = {
-  overview: {
-    title: "Workspace overview",
-    summary: "Monitoring the full operating lane across strategy, planning, review, and publish staging.",
-    command: "Summarize the workspace operating posture",
-  },
-  intelligence: {
-    title: "Intelligence board",
-    summary: "Watching the upstream signal layer so planning and approvals stay grounded in live context.",
-    command: "Surface the strongest intelligence signal",
-  },
-  strategy: {
-    title: "Strategy workflow",
-    summary: "Tracking revision status, active version lineage, and the next approval handoff into planning.",
-    command: "Explain the current strategy revision",
-  },
-  planning: {
-    title: "Planning cycle",
-    summary: "Holding the bridge between approved strategy and the next reviewable post sequence.",
-    command: "Show the next planning action",
-  },
-  review: {
-    title: "Review queue",
-    summary: "Following draft movement, reviewer decisions, and items close to publish-ready staging.",
-    command: "Show what is waiting for approval",
-  },
-  publishing: {
-    title: "Publishing queue",
-    summary: "Watching publish-ready drafts, schedule posture, and the next outbound slot.",
-    command: "Summarize the publishing queue",
-  },
-  brand: {
-    title: "Brand profile",
-    summary: "Standing by on brand inputs that will shape the next strategy generation pass.",
-    command: "Check whether the brand profile is strategy-ready",
-  },
-  audience: {
-    title: "Audience segments",
-    summary: "Tracking segmentation inputs that sharpen platform angles and message fit.",
-    command: "Summarize the active audience mix",
-  },
-} as const;
-
-function getRouteKey(pathname: string) {
-  if (pathname.endsWith("/intelligence")) return "intelligence";
-  if (pathname.endsWith("/strategy")) return "strategy";
-  if (pathname.endsWith("/planning")) return "planning";
-  if (pathname.endsWith("/review")) return "review";
-  if (pathname.endsWith("/publishing")) return "publishing";
-  if (pathname.endsWith("/brand-profile")) return "brand";
-  if (pathname.endsWith("/audience-segments")) return "audience";
-  return "overview";
-}
-
-function formatRelativeMoment(value: string | null | undefined) {
-  if (!value) return "Standing by";
-
-  const diffMs = Date.now() - new Date(value).getTime();
-  const minutes = Math.max(1, Math.round(diffMs / 60000));
-
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  return `${days}d ago`;
-}
-
-function statusLabel(status: string | null | undefined) {
-  return status ? status.replace(/_/g, " ") : "idle";
-}
-
-export function AssistantPanel({ workspaceId }: AssistantPanelProps) {
-  const queryClient = useQueryClient();
-  const [tab, setTab] = useState<AssistantTab>("chatbot");
-  const [chatInput, setChatInput] = useState("");
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [lastAssistantResponse, setLastAssistantResponse] = useState<string | null>(null);
-  const [assistantMode, setAssistantMode] = useState<AssistantCommandRequest["mode"]>("ask");
-  const [selectedModel, setSelectedModel] = useState("marko-2.0-mini");
-  const [showModeMenu, setShowModeMenu] = useState(false);
-  const [showModelMenu, setShowModelMenu] = useState(false);
-  const { pathname } = useLocation();
-  const {
-    toggleAssistant,
-    openKnowledgeBase,
-    openNotifications,
-    pushToast,
-  } = useWorkspaceChrome();
-  const {
-    workspaceQuery,
-    brandProfileQuery,
-    workflowRunsQuery,
-    latestStrategyQuery,
-    latestContentPlanQuery,
-    reviewQueueQuery,
-    publishingQueueQuery,
-    activityQuery,
-    activitySummaryQuery,
-  } = useWorkspaceContext();
-
-  const routeKey = getRouteKey(pathname);
-  const routeMeta = routeCopy[routeKey];
-  const workspaceName = workspaceQuery.data?.name ?? workspaceId;
-  const activity = activityQuery.data ?? [];
-  const latestActivity = activity[0] ?? null;
-  const latestStrategy = latestStrategyQuery.data ?? null;
-  const latestPlan = latestContentPlanQuery.data ?? null;
-  const reviewQueue = reviewQueueQuery.data ?? [];
-  const publishingQueue = publishingQueueQuery.data ?? [];
-  const workflowRuns = workflowRunsQuery.data ?? [];
-  const latestRun = workflowRuns[0] ?? null;
-
-  const operationalMessages = useMemo(() => {
-    const messages = [
-      activitySummaryQuery.data?.latest_summary,
-      routeMeta.summary,
-      latestStrategy
-        ? `Strategy v${latestStrategy.version_number} is ${statusLabel(latestStrategy.status)}${latestStrategy.is_active ? " and remains the active operating version." : "."}`
-        : null,
-      latestPlan
-        ? `${latestPlan.title} is ${statusLabel(latestPlan.status)} with ${latestPlan.planned_posts.length} planned posts attached to the current workflow.`
-        : null,
-      reviewQueue.length > 0
-        ? `${reviewQueue.length} draft${reviewQueue.length > 1 ? "s are" : " is"} still moving through review.`
-        : "No drafts are blocked in review right now.",
-      publishingQueue[0]
-        ? `Next publish-ready item: '${publishingQueue[0].title}'${publishingQueue[0].scheduled_publish_at ? ` scheduled for ${new Date(publishingQueue[0].scheduled_publish_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.` : " awaiting a scheduled slot."}`
-        : "Nothing is staged in the publish-ready queue yet.",
-      latestRun
-        ? `Latest workflow run is ${statusLabel(latestRun.status)} on ${statusLabel(latestRun.workflow_type)}.`
-        : null,
-      brandProfileQuery.data
-        ? `${brandProfileQuery.data.brand_name} brand context is loaded for downstream operations.`
-        : "Brand profile context has not been completed yet.",
-    ].filter((value): value is string => Boolean(value));
-
-    return Array.from(new Set(messages));
-  }, [
-    activitySummaryQuery.data?.latest_summary,
-    brandProfileQuery.data,
-    latestPlan,
-    latestRun,
-    latestStrategy,
-    publishingQueue,
-    reviewQueue.length,
-    routeMeta.summary,
-  ]);
-
+  // Fetch connections
   useEffect(() => {
-    setMessageIndex(0);
-  }, [pathname]);
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    fetch(`${apiBaseUrl}/api/auth/connections`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Connection[]) => {
+        setConnections(data);
+        setSelectedPlatforms(data.map((c) => c.platform));
+      })
+      .catch(console.error);
+  }, []);
 
+  // Scroll to bottom on new messages
   useEffect(() => {
-    if (tab !== "chatbot" || operationalMessages.length <= 1) {
-      return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
+  }, [input]);
+
+  const addMessage = (role: Message["role"], content: string, extra?: Partial<Message>) => {
+    const msg: Message = {
+      id: uid(),
+      role,
+      content,
+      timestamp: new Date(),
+      ...extra,
+    };
+    setMessages((prev) => [...prev, msg]);
+    return msg;
+  };
+
+  const sendMessage = async (text?: string) => {
+    const prompt = (text ?? input).trim();
+    if (!prompt) return;
+    setInput("");
+
+    addMessage("user", prompt);
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      const body: Record<string, unknown> = {
+        message: prompt,
+        history: messages.map((m) => ({ role: m.role, content: m.content })),
+        mode,
+      };
+      if (mode === "agent") {
+        body.platforms = selectedPlatforms;
+      }
+
+      const res = await fetch(`${apiBaseUrl}/api/chat/interact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        addMessage("assistant", `⚠️ ${err.detail || "Error communicating with assistant."}`);
+        return;
+      }
+
+      const data = await res.json();
+      addMessage("assistant", data.response, {
+        published: data.published ?? [],
+      });
+
+      // If posted, add a system confirmation for each platform
+      if (data.published && data.published.length > 0) {
+        for (const p of data.published) {
+          addMessage("system", `✓ Posted to ${p.platform.charAt(0).toUpperCase() + p.platform.slice(1)}`);
+        }
+      }
+    } catch (e: any) {
+      addMessage("assistant", `⚠️ Connection error: ${e.message}. Is the backend running?`);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const interval = window.setInterval(() => {
-      setMessageIndex((current) => (current + 1) % operationalMessages.length);
-    }, 4800);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
-    return () => window.clearInterval(interval);
-  }, [operationalMessages.length, tab]);
+  const togglePlatform = (platform: string) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
+    );
+  };
 
-  const currentMessage =
-    lastAssistantResponse ??
-    operationalMessages[messageIndex] ??
-    "Supervisor linked to the current workspace.";
-  const liveSignals = [
-    latestStrategy ? `Strategy v${latestStrategy.version_number}` : null,
-    latestPlan ? `${latestPlan.planned_posts.length} post${latestPlan.planned_posts.length === 1 ? "" : "s"} in plan` : null,
-    reviewQueue.length ? `${reviewQueue.length} in review` : null,
-    publishingQueue.length ? `${publishingQueue.length} publish-ready` : null,
-  ].filter((value): value is string => Boolean(value));
+  const switchMode = (newMode: Mode) => {
+    setMode(newMode);
+    if (messages.length === 0) return;
+    addMessage(
+      "system",
+      newMode === "agent"
+        ? "🤖 Switched to Agent mode — I can now post to your connected platforms."
+        : "💬 Switched to Ask mode — I'll answer questions without posting anything."
+    );
+  };
 
-  const suggestions = [
-    routeMeta.command,
-    publishingQueue[0]
-      ? `Open the publish-ready context for '${publishingQueue[0].title}'`
-      : "Show the next item that should move to publish-ready",
-    latestActivity?.summary ?? "Summarize the latest workflow event",
-  ];
-
-  const assistantCommandMutation = useMutation({
-    mutationFn: (payload: AssistantCommandRequest) =>
-      apiPost<AssistantCommandResult, AssistantCommandRequest>(
-        `/api/v1/workspaces/${workspaceId}/assistant/commands`,
-        payload,
-      ),
-    onSuccess: async (result) => {
-      setLastAssistantResponse(result.response);
-      pushToast("Assistant command recorded.");
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.activity(workspaceId) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.activitySummary(workspaceId) }),
-      ]);
-    },
-    onError: (error) => {
-      pushToast(error instanceof Error ? error.message : "Assistant command failed.");
-    },
-  });
-
-  const isSubmitDisabled = !chatInput.trim() || assistantCommandMutation.isPending;
+  const hasMessages = messages.length > 0;
+  const quickPrompts = mode === "ask" ? QUICK_ASKS : QUICK_AGENT_PROMPTS;
 
   return (
-    <div className="assistant-panel flex h-full w-full flex-col overflow-hidden bg-[#050505] text-white">
-      <div className="border-b border-white/[0.05] px-3.5 pb-3.5 pt-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="assistant-orb relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-white/10 bg-[#0c0c0c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_26px_rgba(0,0,0,0.36)]">
-              <div className="absolute inset-0 rounded-[0.95rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-              <svg className="relative h-4 w-4 text-white/90" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M8 8.75h8M8 12h5m-2-7 1.2 2.3L15 8.5l-2.2 1.2L11 12l-1.2-2.3L7.5 8.5l2.3-1.2L11 5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <p className="brand-title text-[0.92rem] font-semibold text-white">Assistant</p>
-              <p className="mt-0.5 text-[9px] uppercase tracking-[0.34em] text-[#bba48f]">Read-only mode</p>
-            </div>
+    <div
+      className="flex h-full w-full flex-col"
+      style={{ background: "#161b22", color: "#e6edf3" }}
+    >
+      {/* Header */}
+      <div
+        className="shrink-0 px-4 py-3 flex items-center justify-between"
+        style={{ borderBottom: "1px solid #21262d" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-md assistant-orb"
+            style={{ background: "linear-gradient(135deg, #1f6feb, #388bfd)" }}
+          >
+            <svg viewBox="0 0 16 16" className="h-4 w-4 fill-white">
+              <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.134Z"/>
+              <path d="M8 1c-1.573 0-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4s.875 1.755 1.904 2.223C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777C13.125 5.755 14 5.007 14 4s-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1ZM2.056 4h11.888L8 7.083 2.056 4ZM8 5a1 1 0 0 1 0-2 1 1 0 0 1 0 2Z"/>
+            </svg>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={openKnowledgeBase}
-              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
-              aria-label="Open knowledge base"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={openNotifications}
-              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
-              aria-label="Open operational notifications"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 7v5l3 2m5-2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={toggleAssistant}
-              className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-white/[0.05] text-white/65 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.08] hover:text-white"
-              aria-label="Collapse assistant"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </button>
+          <div>
+            <p className="font-semibold text-sm leading-tight" style={{ color: "#e6edf3" }}>AI Assistant</p>
+            <p className="text-xs" style={{ color: "#388bfd" }}>Social Manager</p>
           </div>
         </div>
 
-        <div className="mt-4 rounded-[1.05rem] border border-white/[0.08] bg-black p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <div className="grid grid-cols-2 gap-1 text-[0.84rem] font-semibold">
-            {[
-              { key: "chatbot" as const, label: "Chatbot" },
-              { key: "suggestions" as const, label: "Suggestions" },
-            ].map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setTab(item.key)}
-                className={`rounded-[0.85rem] px-3 py-2 transition-all duration-250 ${
-                  tab === item.key
-                    ? "bg-white/[0.12] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                    : "text-[#85776b] hover:bg-white/[0.04] hover:text-[#cdb79f]"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        {/* Mode switcher */}
+        <div
+          className="flex rounded-md overflow-hidden text-xs font-medium"
+          style={{ border: "1px solid #30363d" }}
+        >
+          <button
+            onClick={() => switchMode("ask")}
+            className="px-3 py-1.5 transition-colors"
+            style={{
+              background: mode === "ask" ? "#238636" : "transparent",
+              color: mode === "ask" ? "#fff" : "#6e7681",
+            }}
+          >
+            Ask
+          </button>
+          <button
+            onClick={() => switchMode("agent")}
+            className="px-3 py-1.5 transition-colors"
+            style={{
+              background: mode === "agent" ? "#1f6feb" : "transparent",
+              color: mode === "agent" ? "#fff" : "#6e7681",
+              borderLeft: "1px solid #30363d",
+            }}
+          >
+            Agent
+          </button>
         </div>
       </div>
 
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 pb-3.5 pt-4">
-        {tab === "chatbot" ? (
-          <div className="flex min-h-full flex-col">
-            <div className="space-y-3">
-              <div className="rounded-[0.9rem] border border-white/[0.08] bg-[#1b1a19] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#201f1d]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] border border-white/10 bg-black text-[#f6e2c8] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M9 9.5h.01M15 9.5h.01M8.2 15h7.6M8 5h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-1.8L12 19l-2.2-3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[0.9rem] font-semibold text-white">Social Supervisor</p>
-                    <p className="mt-0.5 text-[0.76rem] text-[#b69879]">Orchestrator</p>
-                  </div>
-                </div>
-              </div>
+      {/* Mode indicator banner */}
+      <div
+        className="shrink-0 px-4 py-2 text-xs"
+        style={{
+          background: mode === "agent" ? "rgba(31,111,235,0.08)" : "rgba(35,134,54,0.06)",
+          borderBottom: "1px solid #21262d",
+          color: mode === "agent" ? "#388bfd" : "#3fb950",
+        }}
+      >
+        {mode === "agent"
+          ? "🤖 Agent mode — I will generate and post content to your platforms"
+          : "💬 Ask mode — I will answer questions and give advice (no posting)"}
+      </div>
 
-              <div className="assistant-message-card rounded-[1rem] border border-white/[0.08] bg-[#1a1918] px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:border-white/[0.12] hover:bg-[#1d1c1b]">
-                <p key={`${routeKey}-${messageIndex}`} className="assistant-message text-[0.88rem] leading-[1.5] text-[#dfd3c6]">
-                  {activitySummaryQuery.isLoading ? "Linking current workspace context..." : currentMessage}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <span className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-0.5 text-[9px] uppercase tracking-[0.24em] text-white/42">
-                    {routeMeta.title}
-                  </span>
-                  {liveSignals.slice(0, 2).map((signal) => (
-                    <span
-                      key={signal}
-                      className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-white/42"
-                    >
-                      {signal}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1" />
-
-            <div className="px-1 pb-1 pt-4">
-              <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.28em] text-white/24">
-                <span>{workspaceName}</span>
-                <span>{formatRelativeMoment(latestActivity?.created_at)}</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {suggestions.map((suggestion) => (
+      {/* Platform selector (agent mode only) */}
+      {mode === "agent" && connections.length > 0 && (
+        <div
+          className="shrink-0 px-4 py-2 flex flex-wrap gap-1.5"
+          style={{ borderBottom: "1px solid #21262d" }}
+        >
+          <span className="text-xs mr-1 self-center" style={{ color: "#484f58" }}>Post to:</span>
+          {connections.map((c) => {
+            const s = PLATFORM_STYLES[c.platform] || PLATFORM_STYLES.x;
+            const selected = selectedPlatforms.includes(c.platform);
+            return (
               <button
-                key={suggestion}
-                type="button"
-                onClick={() => setChatInput(suggestion)}
-                className="w-full rounded-[0.95rem] border border-white/[0.07] bg-[#161515] px-3.5 py-3 text-left text-[0.86rem] leading-6 text-[#d5c8bb] transition-all duration-200 hover:-translate-y-[1px] hover:border-white/[0.12] hover:bg-[#1b1a1a]"
+                key={c.platform}
+                onClick={() => togglePlatform(c.platform)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all"
+                style={{
+                  background: selected ? s.bg : "transparent",
+                  color: selected ? s.text : "#484f58",
+                  border: `1px solid ${selected ? s.border : "#30363d"}`,
+                }}
               >
-                {suggestion}
+                <span>{s.abbr}</span>
+                <span className="capitalize">{c.platform}</span>
               </button>
-            ))}
+            );
+          })}
+          {connections.length === 0 && (
+            <span className="text-xs" style={{ color: "#f85149" }}>No platforms connected</span>
+          )}
+        </div>
+      )}
+
+      {/* Messages area */}
+      <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {!hasMessages && (
+          <div className="space-y-5">
+            {/* Welcome */}
+            <div className="text-center pt-4">
+              <div
+                className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
+                style={{ background: "rgba(31,111,235,0.15)", border: "1px solid rgba(31,111,235,0.3)" }}
+              >
+                <svg viewBox="0 0 16 16" className="h-6 w-6 fill-current" style={{ color: "#388bfd" }}>
+                  <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.134Z"/>
+                </svg>
+              </div>
+              <p className="font-semibold text-sm" style={{ color: "#e6edf3" }}>
+                {mode === "ask" ? "Ask me anything" : "I'm ready to post"}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#6e7681" }}>
+                {mode === "ask"
+                  ? "Ask about social media strategy, content ideas, or analytics."
+                  : "Tell me what to post and I'll craft and publish it to your connected platforms."}
+              </p>
+            </div>
+
+            {/* Quick prompts */}
+            <div className="space-y-1.5">
+              <p className="text-xs uppercase tracking-wide font-medium" style={{ color: "#484f58" }}>
+                {mode === "ask" ? "Quick questions" : "Quick actions"}
+              </p>
+              {quickPrompts.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => sendMessage(q)}
+                  className="w-full text-left rounded-md px-3 py-2 text-xs transition-colors"
+                  style={{
+                    background: "#21262d",
+                    color: "#8b949e",
+                    border: "1px solid #30363d",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.background = "#30363d";
+                    (e.target as HTMLElement).style.color = "#e6edf3";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.background = "#21262d";
+                    (e.target as HTMLElement).style.color = "#8b949e";
+                  }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex assistant-message ${msg.role === "user" ? "justify-end" : "justify-start"} ${msg.role === "system" ? "justify-center" : ""}`}
+          >
+            {msg.role === "system" ? (
+              <div className="chat-bubble-system">{msg.content}</div>
+            ) : msg.role === "user" ? (
+              <div className="flex flex-col items-end gap-1 max-w-[88%]">
+                <div className="chat-bubble-user">{msg.content}</div>
+                <span className="text-xs" style={{ color: "#484f58" }}>{formatTime(msg.timestamp)}</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-start gap-1 max-w-[92%]">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <div
+                    className="h-4 w-4 rounded flex items-center justify-center text-white"
+                    style={{ background: "#1f6feb", fontSize: "9px", fontWeight: "bold" }}
+                  >
+                    AI
+                  </div>
+                  <span className="text-xs font-medium" style={{ color: "#6e7681" }}>AI Assistant</span>
+                </div>
+                <div className="chat-bubble-assistant" style={{ whiteSpace: "pre-wrap" }}>
+                  {msg.content}
+                </div>
+                {msg.published && msg.published.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {msg.published.map((p) => {
+                      const s = PLATFORM_STYLES[p.platform] || PLATFORM_STYLES.x;
+                      return (
+                        <span
+                          key={p.platform}
+                          className="px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}
+                        >
+                          ✓ {p.platform}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                <span className="text-xs" style={{ color: "#484f58" }}>{formatTime(msg.timestamp)}</span>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-start assistant-message">
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div
+                  className="h-4 w-4 rounded flex items-center justify-center text-white"
+                  style={{ background: "#1f6feb", fontSize: "9px", fontWeight: "bold" }}
+                >
+                  AI
+                </div>
+                <span className="text-xs font-medium" style={{ color: "#6e7681" }}>AI Assistant</span>
+              </div>
+              <div
+                className="chat-bubble-assistant flex items-center gap-2"
+                style={{ minWidth: "80px" }}
+              >
+                <div
+                  className="h-3.5 w-3.5 rounded-full border border-t-transparent animate-spin"
+                  style={{ borderColor: "#388bfd", borderTopColor: "transparent" }}
+                />
+                <span className="text-xs" style={{ color: "#6e7681" }}>
+                  {mode === "agent" ? "Drafting & posting…" : "Thinking…"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-white/[0.05] px-3.5 pb-3 pt-3">
-        <form
-          className="assistant-dock relative rounded-[1.2rem] border border-white/[0.08] bg-[#171615]/92 p-3 shadow-[0_16px_42px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!chatInput.trim()) {
-              return;
-            }
-            assistantCommandMutation.mutate({
-              prompt: chatInput.trim(),
-              route_context: routeMeta.title,
-              mode: assistantMode,
-              attached_document_ids: [],
-            });
-            setChatInput("");
-          }}
+      {/* Input dock */}
+      <div className="shrink-0 p-3" style={{ borderTop: "1px solid #21262d" }}>
+        <div
+          className="assistant-dock flex items-end gap-2 px-3 py-2"
+          style={{ borderRadius: "8px" }}
         >
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.7rem] border border-white/[0.11] bg-white/[0.04] text-white/78">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="m8.5 12 4-4a2.8 2.8 0 1 1 4 4l-5.2 5.2a4.2 4.2 0 1 1-6-6L10 6"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.78rem] text-white/62">Add context (#), extensions (@), commands (/)</p>
-              <input
-                type="text"
-                className="mt-1 w-full bg-transparent p-0 text-[0.86rem] text-white placeholder:text-white/28 focus:outline-none"
-                placeholder="Ask or instruct the assistant..."
-                value={chatInput}
-                onChange={(event) => setChatInput(event.target.value)}
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+            rows={1}
+            placeholder={
+              mode === "ask"
+                ? "Ask about social media…"
+                : "Tell me what to post…"
+            }
+            className="flex-1 resize-none bg-transparent text-sm outline-none disabled:opacity-50"
+            style={{
+              color: "#e6edf3",
+              lineHeight: "1.5",
+              fontFamily: "inherit",
+              minHeight: "24px",
+              maxHeight: "120px",
+            }}
+          />
+          <button
+            onClick={() => sendMessage()}
+            disabled={loading || !input.trim()}
+            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: mode === "agent" ? "#1f6feb" : "#238636" }}
+            onMouseEnter={(e) => !loading && !(!input.trim()) && ((e.target as HTMLElement).style.opacity = "0.85")}
+            onMouseLeave={(e) => !loading && !(!input.trim()) && ((e.target as HTMLElement).style.opacity = "1")}
+          >
+            {loading ? (
+              <div
+                className="h-3.5 w-3.5 rounded-full border border-white/40 border-t-white animate-spin"
               />
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setShowModeMenu((current) => !current);
-                setShowModelMenu(false);
-              }}
-              className="flex min-w-[74px] items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
-            >
-              <span className="capitalize">{assistantMode}</span>
-              <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none">
-                <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            ) : (
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-white">
+                <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
               </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowModelMenu((current) => !current);
-                setShowModeMenu(false);
-              }}
-              className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-white/[0.1] bg-black/35 px-3 py-2 text-[0.82rem] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.16] hover:bg-black/55"
-            >
-              <span className="truncate">{selectedModel}</span>
-              <svg className="h-4 w-4 shrink-0 text-white/70" viewBox="0 0 24 24" fill="none">
-                <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitDisabled}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8f8b85] text-black transition-all duration-200 hover:scale-[1.02] hover:bg-[#a9a39c] disabled:cursor-not-allowed disabled:bg-white/[0.1] disabled:text-white/28 disabled:hover:scale-100"
-              aria-label="Send command"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12h12m0 0-4.5-4.5M17 12l-4.5 4.5"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-          {showModeMenu ? (
-            <div className="absolute bottom-[3.8rem] left-3 z-10 w-28 rounded-2xl border border-white/10 bg-black/95 p-1 text-sm text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
-              {(["ask", "agent"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => {
-                    setAssistantMode(mode);
-                    setShowModeMenu(false);
-                    pushToast(`${mode === "ask" ? "Ask" : "Agent"} mode selected.`);
-                  }}
-                  className="w-full rounded-xl px-3 py-2 text-left capitalize text-white/78 transition hover:bg-white/10 hover:text-white"
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {showModelMenu ? (
-            <div className="absolute bottom-[3.8rem] left-24 right-12 z-10 rounded-2xl border border-white/10 bg-black/95 p-1 text-sm text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
-              {["marko-2.0-mini", "marko-2.0-standard"].map((model) => (
-                <button
-                  key={model}
-                  type="button"
-                  onClick={() => {
-                    setSelectedModel(model);
-                    setShowModelMenu(false);
-                    pushToast(`${model} selected.`);
-                  }}
-                  className="w-full rounded-xl px-3 py-2 text-left text-white/78 transition hover:bg-white/10 hover:text-white"
-                >
-                  {model}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </form>
+            )}
+          </button>
+        </div>
+        <p className="mt-1.5 text-center text-xs" style={{ color: "#484f58" }}>
+          {mode === "agent" && selectedPlatforms.length > 0
+            ? `Will post to: ${selectedPlatforms.join(", ")}`
+            : mode === "agent"
+            ? "Select platforms above"
+            : "Enter to send · Shift+Enter for new line"}
+        </p>
       </div>
     </div>
   );
