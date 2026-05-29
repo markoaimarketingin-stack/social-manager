@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { apiBaseUrl } from '../../lib/api/client';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,7 +28,7 @@ export default function AuthPage() {
         ? { email, password }
         : { email, password, name };
 
-      const response = await fetch(`http://localhost:8088${endpoint}`, {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
