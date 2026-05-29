@@ -65,16 +65,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Social Manager Agent", version="0.1.0", lifespan=lifespan)
 
-# CORS: Restrict to localhost + envvar-configurable origins for production
+# CORS: Dynamically built from CORS_ORIGINS env var + always-allowed defaults
+_cors_origins = list({
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8088",
+    "https://social-manager-sigma.vercel.app",
+    *settings.cors_origins,
+})
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8088",
-        "https://social-community-manager.vercel.app",
-        "https://social-community-manager-git-dev-arpit-fixes.vercel.app",
-    ],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
