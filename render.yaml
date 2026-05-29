@@ -1,6 +1,7 @@
 services:
   - type: web
     name: social-manager-ai-backend
+    rootDir: backend
     runtime: python:3.11
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
@@ -23,3 +24,4 @@ services:
         value: sqlite:///./social_manager.db
       - key: CORS_ORIGINS
         value: '["https://social-community-manager.vercel.app", "https://social-community-manager-bfpz.onrender.com"]'
+
