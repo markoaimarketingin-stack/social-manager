@@ -61,6 +61,7 @@ export function AssistantPanel({ workspaceId }: Props) {
 
   // Fetch connections
   useEffect(() => {
+    console.log("Loading assistant panel for workspace:", workspaceId);
     const token = localStorage.getItem("auth_token");
     if (!token) return;
     fetch(`${apiBaseUrl}/api/auth/connections`, {
@@ -72,7 +73,7 @@ export function AssistantPanel({ workspaceId }: Props) {
         setSelectedPlatforms(data.map((c) => c.platform));
       })
       .catch(console.error);
-  }, []);
+  }, [workspaceId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../features/auth/AuthContext";
 import { AssistantPanel } from "../../../components/layout/AssistantPanel";
