@@ -34,10 +34,26 @@ export default function AuthPage() {
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const rawBody = await response.text();
+      let data: any = null;
+
+      if (rawBody) {
+        try {
+          data = contentType.includes('application/json')
+            ? JSON.parse(rawBody)
+            : JSON.parse(rawBody);
+        } catch {
+          data = { detail: rawBody };
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.detail || 'Authentication failed');
+        throw new Error(data?.detail || rawBody || 'Authentication failed');
+      }
+
+      if (!data?.access_token) {
+        throw new Error('Authentication response missing token');
       }
 
       login(data.access_token, data.user);
