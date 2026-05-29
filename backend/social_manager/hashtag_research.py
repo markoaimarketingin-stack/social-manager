@@ -139,11 +139,11 @@ class HashtagResearch:
             "niche_hashtags": [h["tag"] for h in medium[:3]] + [h["tag"] for h in hard[:2]],
             "broad_hashtags": [h["tag"] for h in hard[:3]],
             "total_recommended": 8,
-            "hashtag_list": f"#{' #'.join(
+            "hashtag_list": "#" + " #".join(
                 [h['tag'] for h in easy[:2]] +
                 [h['tag'] for h in medium[:3]] +
                 [h['tag'] for h in hard[:3]]
-            )}",
+            ),
             "tips": [
                 "Use 3-4 trending/easy hashtags for immediate reach",
                 "Use 3-4 niche hashtags for targeted engagement",
