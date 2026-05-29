@@ -1234,5 +1234,8 @@ export async function mockRequest<T>(path: string, init?: RequestInit): Promise<
 }
 
 export function isDemoModeEnabled(): boolean {
-  return import.meta.env.VITE_DEMO_MODE === "true";
+  return (
+    import.meta.env.VITE_DEMO_MODE === "true" ||
+    localStorage.getItem("demo_mode_fallback") === "true"
+  );
 }

@@ -241,7 +241,7 @@ export function StrategyPage() {
                     onChange={(event) =>
                       setReviewStatus(event.target.value as ReviewStrategyRequest["status"])
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white"
+                    className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none cursor-pointer"
                   >
                     {reviewOptions.map((option) => (
                       <option key={option} value={option}>
@@ -250,13 +250,13 @@ export function StrategyPage() {
                     ))}
                   </select>
                 </label>
-
+ 
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-white">Review notes</span>
                   <textarea
                     value={reviewNotes}
                     onChange={(event) => setReviewNotes(event.target.value)}
-                    className="min-h-36 w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white"
+                    className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                   />
                 </label>
 

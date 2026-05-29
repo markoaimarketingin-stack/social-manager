@@ -10,7 +10,6 @@ import type {
   UpsertBrandProfileRequest,
 } from "../../../lib/api/types/requests";
 import { queryKeys } from "../../../lib/query/keys";
-import { Panel } from "../../../components/ui/Panel";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
 
 const emptyForm = {
@@ -61,7 +60,7 @@ export function BrandProfilePage() {
         payload,
       ),
     onSuccess: async () => {
-      setFeedback("Brand profile saved");
+      setFeedback("✓ Brand profile saved successfully");
       await queryClient.invalidateQueries({ queryKey: queryKeys.brandProfile(workspaceId) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.workspace(workspaceId) });
     },
@@ -77,7 +76,7 @@ export function BrandProfilePage() {
         payload,
       ),
     onSuccess: async () => {
-      setFeedback("Strategy workflow completed");
+      setFeedback("✓ Strategy workflow completed successfully");
       await queryClient.invalidateQueries({ queryKey: queryKeys.workflowRuns(workspaceId) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.strategies(workspaceId) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.latestStrategy(workspaceId) });
@@ -99,47 +98,65 @@ export function BrandProfilePage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 py-10 lg:px-8">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
       <SectionHeading
         eyebrow="Workspace foundation"
         title="Brand profile"
-        description="Capture the brand inputs that will eventually feed strategy and planning workflows."
+        description="Capture the brand inputs that feed strategy, copywriting, and modeling workflows."
       />
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-[2rem] border border-line bg-white p-6 text-black">
-          <h2 className="text-xl font-semibold">
-            {workspaceQuery.data?.name ?? "Workspace"} profile
+      <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <section
+          className="rounded-2xl border p-6 text-white space-y-6"
+          style={{ background: "#161b22", borderColor: "#30363d" }}
+        >
+          <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
+            {workspaceQuery.data?.name ?? "Workspace"} Profile Details
           </h2>
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            {[
-              { key: "brand_name", label: "Brand name" },
-              { key: "industry", label: "Industry" },
-              { key: "website_url", label: "Website URL" },
-            ].map((field) => (
-              <label key={field.key} className="block">
-                <span className="mb-2 block text-sm font-medium">{field.label}</span>
-                <input
-                  value={formState[field.key as keyof typeof formState]}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      [field.key]: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                />
-              </label>
-            ))}
+          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { key: "brand_name", label: "Brand name" },
+                { key: "industry", label: "Industry" },
+              ].map((field) => (
+                <label key={field.key} className="block">
+                  <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">{field.label}</span>
+                  <input
+                    value={formState[field.key as keyof typeof formState]}
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        [field.key]: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+                  />
+                </label>
+              ))}
+            </div>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">Website URL</span>
+              <input
+                value={formState.website_url}
+                onChange={(event) =>
+                  setFormState((current) => ({
+                    ...current,
+                    website_url: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+              />
+            </label>
 
             {[
-              { key: "description", label: "Description" },
-              { key: "voice_summary", label: "Voice summary" },
-              { key: "mission", label: "Mission" },
+              { key: "description", label: "Description / Product details" },
+              { key: "voice_summary", label: "Voice summary (friendly, expert, direct etc.)" },
+              { key: "mission", label: "Mission & Value Statement" },
             ].map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-2 block text-sm font-medium">{field.label}</span>
+                <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">{field.label}</span>
                 <textarea
                   value={formState[field.key as keyof typeof formState]}
                   onChange={(event) =>
@@ -148,20 +165,32 @@ export function BrandProfilePage() {
                       [field.key]: event.target.value,
                     }))
                   }
-                  className="min-h-28 w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                 />
               </label>
             ))}
 
-            {feedback ? <p className="text-sm text-black/70">{feedback}</p> : null}
+            {feedback && (
+              <p
+                className="text-xs font-semibold"
+                style={{ color: feedback.startsWith("✓") ? "#3fb950" : "#f85149" }}
+              >
+                {feedback}
+              </p>
+            )}
 
-            <div className="flex flex-wrap gap-3 mt-4">
+            <div className="flex flex-wrap gap-2.5 pt-2">
               <button
                 type="submit"
                 disabled={saveBrandProfileMutation.isPending}
-                className="rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] transition-all hover:bg-black/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
+                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-[0_4px_12px_rgba(35,134,54,0.2)] disabled:opacity-55"
+                style={{
+                  background: "#238636",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
               >
-                {saveBrandProfileMutation.isPending ? "Saving..." : "Save brand profile"}
+                {saveBrandProfileMutation.isPending ? "Saving..." : "Save Brand Profile"}
               </button>
               <button
                 type="button"
@@ -171,29 +200,38 @@ export function BrandProfilePage() {
                     goal: "Generate a first strategy snapshot from Sprint 1 inputs",
                   })
                 }
-                className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
+                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5 disabled:opacity-55 text-white/80"
               >
-                {strategyRunMutation.isPending ? "Running..." : "Run strategy workflow"}
+                {strategyRunMutation.isPending ? "Running..." : "Run Strategy Workflow"}
               </button>
             </div>
           </form>
         </section>
 
-        <Panel eyebrow="What this powers" title="Typed workflow inputs">
-          <div className="mt-5 space-y-4 text-sm leading-7 text-ink/85">
+        {/* Strategic context */}
+        <div
+          className="rounded-2xl border p-5 text-white space-y-4"
+          style={{ background: "#161b22", borderColor: "#30363d" }}
+        >
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white/60">What this powers</h3>
+          <div className="space-y-4 text-xs leading-relaxed text-white/60">
             <p>Brand inputs will become typed workflow inputs instead of mutable shared app state.</p>
-            <p>
-              Workspace members:{" "}
-              <span className="font-semibold">{workspaceQuery.data?.member_count ?? 0}</span> |
-              Audience segments:{" "}
-              <span className="font-semibold">{workspaceQuery.data?.audience_segment_count ?? 0}</span>
-            </p>
-            <p className="text-white/55">
+            <div className="flex items-center gap-4 py-2 border-y border-[#21262d]">
+              <p>
+                Workspace Members:{" "}
+                <span className="font-bold text-white">{workspaceQuery.data?.member_count ?? 0}</span>
+              </p>
+              <p>
+                Audience Segments:{" "}
+                <span className="font-bold text-white">{workspaceQuery.data?.audience_segment_count ?? 0}</span>
+              </p>
+            </div>
+            <p className="text-white/40 leading-relaxed">
               Strategy generation writes a typed workflow run now, so backend logic can attach directly
               to the same contract later.
             </p>
           </div>
-        </Panel>
+        </div>
       </div>
     </div>
   );

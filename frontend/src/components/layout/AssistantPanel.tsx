@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { apiBaseUrl } from "../../lib/api/client";
+import { useWorkspaceChrome } from "../../features/workspace/components/WorkspaceChromeContext";
 
 type Mode = "ask" | "agent";
+type Tab = "chatbot" | "suggestions";
 
 interface Message {
   id: string;
@@ -17,10 +19,10 @@ interface Connection {
 }
 
 const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string; abbr: string }> = {
-  linkedin:  { bg: "rgba(0,119,181,0.15)",   text: "#58a6ff",  border: "rgba(0,119,181,0.3)",   abbr: "LI" },
-  instagram: { bg: "rgba(225,48,108,0.15)",  text: "#f78166",  border: "rgba(225,48,108,0.3)",  abbr: "IG" },
-  facebook:  { bg: "rgba(24,119,242,0.15)",  text: "#79c0ff",  border: "rgba(24,119,242,0.3)",  abbr: "FB" },
-  x:         { bg: "rgba(255,255,255,0.08)", text: "#e6edf3",  border: "rgba(255,255,255,0.2)", abbr: "X" },
+  linkedin:  { bg: "rgba(0,119,181,0.12)",   text: "#388bfd",  border: "rgba(0,119,181,0.25)",  abbr: "LI" },
+  instagram: { bg: "rgba(225,48,108,0.12)",  text: "#ff7b72",  border: "rgba(225,48,108,0.25)", abbr: "IG" },
+  facebook:  { bg: "rgba(24,119,242,0.12)",  text: "#79c0ff",  border: "rgba(24,119,242,0.25)", abbr: "FB" },
+  x:         { bg: "rgba(255,255,255,0.06)", text: "#c9d1d9",  border: "rgba(255,255,255,0.15)", abbr: "X" },
 };
 
 function uid() {
@@ -50,12 +52,14 @@ type Props = {
 };
 
 export function AssistantPanel({ workspaceId }: Props) {
+  const { toggleAssistant } = useWorkspaceChrome();
   const [mode, setMode] = useState<Mode>("ask");
+  const [activeTab, setActiveTab] = useState<Tab>("chatbot");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState("marko-2.0-mini");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -69,7 +73,6 @@ export function AssistantPanel({ workspaceId }: Props) {
     })
       .then((r) => r.ok ? r.json() : [])
       .then((data: Connection[]) => {
-        setConnections(data);
         setSelectedPlatforms(data.map((c) => c.platform));
       })
       .catch(console.error);
@@ -85,7 +88,7 @@ export function AssistantPanel({ workspaceId }: Props) {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 100)}px`;
   }, [input]);
 
   const addMessage = (role: Message["role"], content: string, extra?: Partial<Message>) => {
@@ -104,6 +107,7 @@ export function AssistantPanel({ workspaceId }: Props) {
     const prompt = (text ?? input).trim();
     if (!prompt) return;
     setInput("");
+    setActiveTab("chatbot"); // Auto switch to chatbot if suggestion clicked
 
     addMessage("user", prompt);
     setLoading(true);
@@ -119,11 +123,17 @@ export function AssistantPanel({ workspaceId }: Props) {
         body.platforms = selectedPlatforms;
       }
 
+      // Add custom api keys to headers if configured locally
+      const groqKey = localStorage.getItem("groq_api_key");
+      const openaiKey = localStorage.getItem("openai_api_key");
+
       const res = await fetch(`${apiBaseUrl}/api/chat/interact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(groqKey ? { "X-Groq-Api-Key": groqKey } : {}),
+          ...(openaiKey ? { "X-OpenAI-Api-Key": openaiKey } : {}),
         },
         body: JSON.stringify(body),
       });
@@ -159,15 +169,9 @@ export function AssistantPanel({ workspaceId }: Props) {
     }
   };
 
-  const togglePlatform = (platform: string) => {
-    setSelectedPlatforms((prev) =>
-      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
-    );
-  };
 
   const switchMode = (newMode: Mode) => {
     setMode(newMode);
-    if (messages.length === 0) return;
     addMessage(
       "system",
       newMode === "agent"
@@ -176,251 +180,228 @@ export function AssistantPanel({ workspaceId }: Props) {
     );
   };
 
+  const handleModelChange = (val: string) => {
+    if (val === "manage-keys") {
+      window.dispatchEvent(new Event("open-settings-modal"));
+    } else {
+      setSelectedModel(val);
+    }
+  };
+
   const hasMessages = messages.length > 0;
   const quickPrompts = mode === "ask" ? QUICK_ASKS : QUICK_AGENT_PROMPTS;
 
   return (
     <div
-      className="flex h-full w-full flex-col"
-      style={{ background: "#161b22", color: "#e6edf3" }}
+      className="flex h-full w-full flex-col border-l border-[#161b22]"
+      style={{ background: "#06090e", color: "#e6edf3" }}
     >
       {/* Header */}
       <div
-        className="shrink-0 px-4 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #21262d" }}
+        className="shrink-0 px-4 py-3.5 flex items-center justify-between"
+        style={{ borderBottom: "1px solid #161b22" }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-md assistant-orb"
-            style={{ background: "linear-gradient(135deg, #1f6feb, #388bfd)" }}
+            className="flex h-6 w-6 items-center justify-center rounded-lg text-white"
+            style={{ background: "linear-gradient(135deg, #1f6feb, #388bfd)", border: "1px solid rgba(255,255,255,0.1)" }}
           >
-            <svg viewBox="0 0 16 16" className="h-4 w-4 fill-white">
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
               <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.134Z"/>
-              <path d="M8 1c-1.573 0-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4s.875 1.755 1.904 2.223C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777C13.125 5.755 14 5.007 14 4s-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1ZM2.056 4h11.888L8 7.083 2.056 4ZM8 5a1 1 0 0 1 0-2 1 1 0 0 1 0 2Z"/>
             </svg>
           </div>
           <div>
-            <p className="font-semibold text-sm leading-tight" style={{ color: "#e6edf3" }}>AI Assistant</p>
-            <p className="text-xs" style={{ color: "#388bfd" }}>Social Manager</p>
+            <h4 className="font-bold text-xs" style={{ color: "#ffffff", lineHeight: 1.1 }}>Assistant</h4>
+            <span
+              className="text-[9px] font-bold tracking-wider"
+              style={{ color: mode === "agent" ? "#388bfd" : "#8b949e" }}
+            >
+              {mode === "agent" ? "AGENT MODE" : "READ-ONLY MODE"}
+            </span>
           </div>
         </div>
 
-        {/* Mode switcher */}
-        <div
-          className="flex rounded-md overflow-hidden text-xs font-medium"
-          style={{ border: "1px solid #30363d" }}
-        >
+        {/* Action Controls */}
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={() => switchMode("ask")}
-            className="px-3 py-1.5 transition-colors"
-            style={{
-              background: mode === "ask" ? "#238636" : "transparent",
-              color: mode === "ask" ? "#fff" : "#6e7681",
-            }}
+            onClick={() => setMessages([])}
+            className="p-1 rounded hover:bg-white/5 text-white/50 hover:text-white transition-colors"
+            title="Clear Chat"
           >
-            Ask
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
           </button>
           <button
-            onClick={() => switchMode("agent")}
-            className="px-3 py-1.5 transition-colors"
-            style={{
-              background: mode === "agent" ? "#1f6feb" : "transparent",
-              color: mode === "agent" ? "#fff" : "#6e7681",
-              borderLeft: "1px solid #30363d",
-            }}
+            onClick={() => toggleAssistant()}
+            className="p-1 rounded hover:bg-white/5 text-white/50 hover:text-white transition-colors"
+            title="Collapse Panel"
           >
-            Agent
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
+              <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Mode indicator banner */}
-      <div
-        className="shrink-0 px-4 py-2 text-xs"
-        style={{
-          background: mode === "agent" ? "rgba(31,111,235,0.08)" : "rgba(35,134,54,0.06)",
-          borderBottom: "1px solid #21262d",
-          color: mode === "agent" ? "#388bfd" : "#3fb950",
-        }}
-      >
-        {mode === "agent"
-          ? "🤖 Agent mode — I will generate and post content to your platforms"
-          : "💬 Ask mode — I will answer questions and give advice (no posting)"}
+      {/* Internal Tabs Switcher */}
+      <div className="shrink-0 px-4 py-2 border-b border-[#161b22] flex gap-4 text-xs font-semibold">
+        <button
+          onClick={() => setActiveTab("chatbot")}
+          className="flex items-center gap-1.5 pb-2 transition-all border-b-2 relative -bottom-[9px]"
+          style={{
+            color: activeTab === "chatbot" ? "#388bfd" : "#6e7681",
+            borderColor: activeTab === "chatbot" ? "#388bfd" : "transparent",
+          }}
+        >
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
+            <path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+            <path d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9.06 9.06 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.437 10.437 0 0 1-1.805 3.195.5.5 0 0 0 .425.808a10.43 10.43 0 0 0 1.575-.105zM1.01 8c0-3.31 3.13-6 7-6s7 2.69 7 6-3.13 6-7 6a8.032 8.032 0 0 1-2.31-.34A.5.5 0 0 0 5 13.7c-.42.27-1.42.75-2.77 1.07a8.497 8.497 0 0 0 1.01-1.92.5.5 0 0 0-.17-.552C2.07 11.23 1.01 9.7 1.01 8z"/>
+          </svg>
+          Chatbot
+        </button>
+        <button
+          onClick={() => setActiveTab("suggestions")}
+          className="flex items-center gap-1.5 pb-2 transition-all border-b-2 relative -bottom-[9px]"
+          style={{
+            color: activeTab === "suggestions" ? "#388bfd" : "#6e7681",
+            borderColor: activeTab === "suggestions" ? "#388bfd" : "transparent",
+          }}
+        >
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
+            <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 8.5 13h-1a.5.5 0 0 1-.46-.31l-.762-1.77a2.235 2.235 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.34l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/>
+          </svg>
+          Suggestions
+        </button>
       </div>
 
-      {/* Platform selector (agent mode only) */}
-      {mode === "agent" && connections.length > 0 && (
-        <div
-          className="shrink-0 px-4 py-2 flex flex-wrap gap-1.5"
-          style={{ borderBottom: "1px solid #21262d" }}
-        >
-          <span className="text-xs mr-1 self-center" style={{ color: "#484f58" }}>Post to:</span>
-          {connections.map((c) => {
-            const s = PLATFORM_STYLES[c.platform] || PLATFORM_STYLES.x;
-            const selected = selectedPlatforms.includes(c.platform);
-            return (
-              <button
-                key={c.platform}
-                onClick={() => togglePlatform(c.platform)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all"
-                style={{
-                  background: selected ? s.bg : "transparent",
-                  color: selected ? s.text : "#484f58",
-                  border: `1px solid ${selected ? s.border : "#30363d"}`,
-                }}
-              >
-                <span>{s.abbr}</span>
-                <span className="capitalize">{c.platform}</span>
-              </button>
-            );
-          })}
-          {connections.length === 0 && (
-            <span className="text-xs" style={{ color: "#f85149" }}>No platforms connected</span>
-          )}
-        </div>
-      )}
-
-      {/* Messages area */}
-      <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {!hasMessages && (
-          <div className="space-y-5">
-            {/* Welcome */}
-            <div className="text-center pt-4">
-              <div
-                className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
-                style={{ background: "rgba(31,111,235,0.15)", border: "1px solid rgba(31,111,235,0.3)" }}
-              >
-                <svg viewBox="0 0 16 16" className="h-6 w-6 fill-current" style={{ color: "#388bfd" }}>
-                  <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.134Z"/>
-                </svg>
-              </div>
-              <p className="font-semibold text-sm" style={{ color: "#e6edf3" }}>
-                {mode === "ask" ? "Ask me anything" : "I'm ready to post"}
-              </p>
-              <p className="text-xs mt-1" style={{ color: "#6e7681" }}>
-                {mode === "ask"
-                  ? "Ask about social media strategy, content ideas, or analytics."
-                  : "Tell me what to post and I'll craft and publish it to your connected platforms."}
-              </p>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin space-y-4">
+        {activeTab === "suggestions" ? (
+          /* Suggestions Panel View */
+          <div className="space-y-4 animate-fadeIn">
+            <div className="p-3.5 rounded-xl border border-[#21262d] bg-[#0d1117]/60">
+              <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Prompt Library</h5>
+              <p className="text-[10px] text-white/40">Select a focused strategic action to run instantly.</p>
             </div>
-
-            {/* Quick prompts */}
-            <div className="space-y-1.5">
-              <p className="text-xs uppercase tracking-wide font-medium" style={{ color: "#484f58" }}>
-                {mode === "ask" ? "Quick questions" : "Quick actions"}
-              </p>
+            <div className="space-y-2">
               {quickPrompts.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left rounded-md px-3 py-2 text-xs transition-colors"
-                  style={{
-                    background: "#21262d",
-                    color: "#8b949e",
-                    border: "1px solid #30363d",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLElement).style.background = "#30363d";
-                    (e.target as HTMLElement).style.color = "#e6edf3";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLElement).style.background = "#21262d";
-                    (e.target as HTMLElement).style.color = "#8b949e";
-                  }}
+                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#0d1117]/80 hover:bg-[#161b22] border border-[#21262d] text-white/70 hover:text-white hover:border-[#388bfd]/50"
                 >
                   {q}
                 </button>
               ))}
             </div>
           </div>
-        )}
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex assistant-message ${msg.role === "user" ? "justify-end" : "justify-start"} ${msg.role === "system" ? "justify-center" : ""}`}
-          >
-            {msg.role === "system" ? (
-              <div className="chat-bubble-system">{msg.content}</div>
-            ) : msg.role === "user" ? (
-              <div className="flex flex-col items-end gap-1 max-w-[88%]">
-                <div className="chat-bubble-user">{msg.content}</div>
-                <span className="text-xs" style={{ color: "#484f58" }}>{formatTime(msg.timestamp)}</span>
-              </div>
-            ) : (
-              <div className="flex flex-col items-start gap-1 max-w-[92%]">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <div
-                    className="h-4 w-4 rounded flex items-center justify-center text-white"
-                    style={{ background: "#1f6feb", fontSize: "9px", fontWeight: "bold" }}
-                  >
-                    AI
-                  </div>
-                  <span className="text-xs font-medium" style={{ color: "#6e7681" }}>AI Assistant</span>
+        ) : (
+          /* Chatbot Panel View */
+          <div className="space-y-4 animate-fadeIn">
+            {!hasMessages && (
+              <div className="text-center py-10 space-y-3">
+                <div className="h-10 w-10 mx-auto flex items-center justify-center rounded-full bg-white/[0.02] border border-[#21262d] text-white/50">
+                  💬
                 </div>
-                <div className="chat-bubble-assistant" style={{ whiteSpace: "pre-wrap" }}>
-                  {msg.content}
+                <div>
+                  <p className="text-xs font-bold text-white/80">
+                    {mode === "ask" ? "Ask me anything" : "I'm ready to post"}
+                  </p>
+                  <p className="text-[10px] text-white/40 mt-1 max-w-[200px] mx-auto leading-relaxed">
+                    {mode === "ask"
+                      ? "Ask about strategy, draft content, or retrieve information."
+                      : "Provide a description of your post, and I will publish it to your connected platforms."}
+                  </p>
                 </div>
-                {msg.published && msg.published.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {msg.published.map((p) => {
-                      const s = PLATFORM_STYLES[p.platform] || PLATFORM_STYLES.x;
-                      return (
-                        <span
-                          key={p.platform}
-                          className="px-2 py-0.5 rounded-full text-xs font-medium"
-                          style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}
-                        >
-                          ✓ {p.platform}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-                <span className="text-xs" style={{ color: "#484f58" }}>{formatTime(msg.timestamp)}</span>
               </div>
             )}
-          </div>
-        ))}
 
-        {/* Loading indicator */}
-        {loading && (
-          <div className="flex justify-start assistant-message">
-            <div className="flex flex-col items-start gap-1">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <div
-                  className="h-4 w-4 rounded flex items-center justify-center text-white"
-                  style={{ background: "#1f6feb", fontSize: "9px", fontWeight: "bold" }}
-                >
-                  AI
-                </div>
-                <span className="text-xs font-medium" style={{ color: "#6e7681" }}>AI Assistant</span>
-              </div>
+            {messages.map((msg) => (
               <div
-                className="chat-bubble-assistant flex items-center gap-2"
-                style={{ minWidth: "80px" }}
+                key={msg.id}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} ${msg.role === "system" ? "justify-center" : ""}`}
               >
-                <div
-                  className="h-3.5 w-3.5 rounded-full border border-t-transparent animate-spin"
-                  style={{ borderColor: "#388bfd", borderTopColor: "transparent" }}
-                />
-                <span className="text-xs" style={{ color: "#6e7681" }}>
-                  {mode === "agent" ? "Drafting & posting…" : "Thinking…"}
-                </span>
+                {msg.role === "system" ? (
+                  <div
+                    className="px-3 py-1 rounded-full text-[10px] font-bold border"
+                    style={{ background: "rgba(35,134,54,0.06)", color: "#3fb950", borderColor: "rgba(35,134,54,0.2)" }}
+                  >
+                    {msg.content}
+                  </div>
+                ) : msg.role === "user" ? (
+                  <div className="flex flex-col items-end gap-1 max-w-[85%]">
+                    <div className="rounded-xl px-3 py-2 text-xs bg-[#1f6feb] text-white shadow-md leading-relaxed">
+                      {msg.content}
+                    </div>
+                    <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-1 max-w-[90%]">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold bg-[#161b22] text-white/70 border border-[#30363d]">
+                        AI
+                      </div>
+                      <span className="text-[10px] font-bold text-white/40">AI Assistant</span>
+                    </div>
+                    <div className="rounded-xl px-3.5 py-2.5 text-xs bg-[#161b22] border border-[#21262d] text-white/90 leading-relaxed shadow-sm whitespace-pre-wrap">
+                      {msg.content}
+                    </div>
+                    {msg.published && msg.published.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {msg.published.map((p) => {
+                          const s = PLATFORM_STYLES[p.platform] || PLATFORM_STYLES.x;
+                          return (
+                            <span
+                              key={p.platform}
+                              className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border"
+                              style={{ background: s.bg, color: s.text, borderColor: s.border }}
+                            >
+                              ✓ {p.platform}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
+                  </div>
+                )}
               </div>
-            </div>
+            ))}
+
+            {/* Loading indicator */}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold bg-[#161b22] text-white/70 border border-[#30363d]">
+                      AI
+                    </div>
+                    <span className="text-[10px] font-bold text-white/40">AI Assistant</span>
+                  </div>
+                  <div className="rounded-xl px-3 py-2 text-xs bg-[#161b22] border border-[#21262d] text-white/40 flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full border border-t-transparent animate-spin border-[#388bfd]" />
+                    <span>{mode === "agent" ? "Posting to platforms..." : "Thinking..."}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
-      {/* Input dock */}
-      <div className="shrink-0 p-3" style={{ borderTop: "1px solid #21262d" }}>
+      {/* Input Dock at Bottom */}
+      <div className="shrink-0 p-3 bg-[#03060a]" style={{ borderTop: "1px solid #161b22" }}>
         <div
-          className="assistant-dock flex items-end gap-2 px-3 py-2"
-          style={{ borderRadius: "8px" }}
+          className="flex flex-col gap-2 p-2 rounded-xl bg-[#0d1117] border border-[#21262d]"
         >
+          {/* Helper details line */}
+          <span className="text-[9px] text-white/25 px-1 font-semibold">
+            Add context (#), extensions (@), commands (/)
+          </span>
+
           <textarea
             ref={textareaRef}
             value={input}
@@ -428,46 +409,73 @@ export function AssistantPanel({ workspaceId }: Props) {
             onKeyDown={handleKeyDown}
             disabled={loading}
             rows={1}
-            placeholder={
-              mode === "ask"
-                ? "Ask about social media…"
-                : "Tell me what to post…"
-            }
-            className="flex-1 resize-none bg-transparent text-sm outline-none disabled:opacity-50"
+            placeholder={mode === "ask" ? "Ask or instruct the assistant..." : "Tell me what to post..."}
+            className="w-full resize-none bg-transparent text-xs outline-none disabled:opacity-50 px-1 py-1"
             style={{
               color: "#e6edf3",
               lineHeight: "1.5",
-              fontFamily: "inherit",
               minHeight: "24px",
-              maxHeight: "120px",
+              maxHeight: "100px",
             }}
           />
-          <button
-            onClick={() => sendMessage()}
-            disabled={loading || !input.trim()}
-            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: mode === "agent" ? "#1f6feb" : "#238636" }}
-            onMouseEnter={(e) => !loading && !(!input.trim()) && ((e.target as HTMLElement).style.opacity = "0.85")}
-            onMouseLeave={(e) => !loading && !(!input.trim()) && ((e.target as HTMLElement).style.opacity = "1")}
-          >
-            {loading ? (
-              <div
-                className="h-3.5 w-3.5 rounded-full border border-white/40 border-t-white animate-spin"
-              />
-            ) : (
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-white">
-                <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
-              </svg>
-            )}
-          </button>
+
+          {/* Bottom Dock Controls Bar */}
+          <div className="flex items-center justify-between pt-1.5 border-t border-[#161b22] px-1">
+            <div className="flex items-center gap-1.5">
+              {/* Mode Selector Dropdown */}
+              <select
+                value={mode}
+                onChange={(e) => switchMode(e.target.value as Mode)}
+                disabled={loading}
+                className="bg-[#161b22] hover:bg-white/5 border border-[#30363d] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                style={{
+                  backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 6px center",
+                  backgroundSize: "10px",
+                }}
+              >
+                <option value="ask">Ask</option>
+                <option value="agent">Agent</option>
+              </select>
+
+              {/* Model Selector Dropdown */}
+              <select
+                value={selectedModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                disabled={loading}
+                className="bg-[#161b22] hover:bg-white/5 border border-[#30363d] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                style={{
+                  backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 6px center",
+                  backgroundSize: "10px",
+                }}
+              >
+                <option value="marko-2.0-mini">marko-2.0-mini</option>
+                <option value="groq-llama-3.1-8b">groq-llama-3.1-8b</option>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="manage-keys">Manage API Keys...</option>
+              </select>
+            </div>
+
+            {/* Send Button */}
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              className="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed text-white shadow-sm"
+              style={{ background: mode === "agent" ? "#1f6feb" : "#238636" }}
+            >
+              {loading ? (
+                <div className="h-3 w-3 rounded-full border border-white/40 border-t-white animate-spin" />
+              ) : (
+                <svg viewBox="0 0 16 16" className="h-3 w-3 fill-current">
+                  <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Z"/>
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
-        <p className="mt-1.5 text-center text-xs" style={{ color: "#484f58" }}>
-          {mode === "agent" && selectedPlatforms.length > 0
-            ? `Will post to: ${selectedPlatforms.join(", ")}`
-            : mode === "agent"
-            ? "Select platforms above"
-            : "Enter to send · Shift+Enter for new line"}
-        </p>
       </div>
     </div>
   );

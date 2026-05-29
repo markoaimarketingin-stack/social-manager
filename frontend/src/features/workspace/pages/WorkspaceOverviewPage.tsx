@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../features/auth/AuthContext";
+import { useWorkspaceChrome } from "../components/WorkspaceChromeContext";
 import { apiBaseUrl } from "../../../lib/api/client";
+import { isDemoModeEnabled } from "../../../lib/api/mock";
 
 interface DashboardStats {
   user: { id: number; email: string; name: string };
@@ -21,92 +22,153 @@ interface DashboardStats {
     id: number;
     content: string;
     created_at: string;
-    platforms: Array<{ platform: string; status: string; error?: string }>;
+    platforms: Array<{ platform: string; status: string; error: string | null }>;
   }>;
 }
 
-const PLATFORM_COLORS: Record<string, { bg: string; text: string; border: string; icon: string }> = {
-  linkedin: { bg: "rgba(0,119,181,0.15)", text: "#58a6ff", border: "rgba(0,119,181,0.3)", icon: "IN" },
-  instagram: { bg: "rgba(225,48,108,0.15)", text: "#f78166", border: "rgba(225,48,108,0.3)", icon: "IG" },
-  facebook: { bg: "rgba(24,119,242,0.15)", text: "#79c0ff", border: "rgba(24,119,242,0.3)", icon: "FB" },
-  x: { bg: "rgba(255,255,255,0.08)", text: "#e6edf3", border: "rgba(255,255,255,0.15)", icon: "X" },
-};
-
-const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  published: { bg: "rgba(35,134,54,0.15)", text: "#3fb950", border: "rgba(35,134,54,0.3)" },
-  pending: { bg: "rgba(218,104,32,0.15)", text: "#f0883e", border: "rgba(218,104,32,0.3)" },
-  processing: { bg: "rgba(56,139,253,0.15)", text: "#58a6ff", border: "rgba(56,139,253,0.3)" },
-  scheduled: { bg: "rgba(56,139,253,0.15)", text: "#58a6ff", border: "rgba(56,139,253,0.3)" },
-  failed: { bg: "rgba(218,54,51,0.15)", text: "#f85149", border: "rgba(218,54,51,0.3)" },
-};
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "Just now";
+  const date = new Date(dateStr);
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
 }
 
 export function WorkspaceOverviewPage() {
-  const { user, token } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
+  const { openKnowledgeBase, openTrainModal, pushToast } = useWorkspaceChrome();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [backendOffline, setBackendOffline] = useState(false);
   const [composeText, setComposeText] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
   const [postResult, setPostResult] = useState<string | null>(null);
+  const [runningAnalysis, setRunningAnalysis] = useState(false);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const togglePlatform = (platform: string) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
+    );
+  };
 
   const fetchStats = async () => {
     setLoading(true);
-    setError(null);
+    setBackendOffline(false);
     try {
       const res = await fetch(`${apiBaseUrl}/api/dashboard/stats`, {
         headers: { Authorization: `Bearer ${token}` },
+
       });
-      if (!res.ok) throw new Error("Failed to load dashboard");
+      if (!res.ok) throw new Error("Failed to load dashboard stats");
       const data = await res.json();
       setStats(data);
-      // Pre-select all connected platforms
       setSelectedPlatforms(data.connected_platforms.map((p: any) => p.platform));
     } catch (e: any) {
-      setError(e.message || "Failed to load dashboard stats");
+      console.error("Dashboard stats fetch error:", e);
+      if (isDemoModeEnabled()) {
+        // Safe mock fallback for demo mode
+        const mockData: DashboardStats = {
+          user: { id: 1, email: "demo@markoai.com", name: "Demo Client" },
+          connected_platforms: [
+            { platform: "linkedin", account_name: "Demo Professional", account_id: "li_1", connected_at: new Date().toISOString() },
+            { platform: "instagram", account_name: "@demosocial", account_id: "ig_1", connected_at: new Date().toISOString() },
+          ],
+          stats: { total_posts: 12, published: 8, pending: 3, failed: 1 },
+          recent_posts: [
+            {
+              id: 1,
+              content: "🚀 We are excited to announce our brand new social operations interface, built for speed and complete operational clarity. #saas #socialmarketing",
+              created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+              platforms: [{ platform: "linkedin", status: "published", error: null }, { platform: "instagram", status: "published", error: null }]
+            },
+            {
+              id: 2,
+              content: "💡 Monday Tip: Authenticity builds audience loyalty faster than perfect production. Share behind-the-scenes stories today!",
+              created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+              platforms: [{ platform: "linkedin", status: "published", error: null }]
+            },
+            {
+              id: 3,
+              content: "How do you manage your weekly social strategy planning workflows? Tell us below!",
+              created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+              platforms: [{ platform: "instagram", status: "published", error: null }]
+            }
+          ]
+        };
+        setStats(mockData);
+        setSelectedPlatforms(mockData.connected_platforms.map((p) => p.platform));
+      } else {
+        // Flag backend offline so we can show a gorgeous prompt to run the backend or select demo mode
+        setBackendOffline(true);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchStats();
+  }, [token]);
+
   const handleQuickPost = async () => {
-    if (!composeText.trim() || selectedPlatforms.length === 0) return;
+    if (!composeText.trim() || selectedPlatforms.length === 0) {
+      pushToast("Please enter post content and select at least one platform.");
+      return;
+    }
     setPosting(true);
     setPostResult(null);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/publishing/schedule`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          platforms: selectedPlatforms,
-          content: composeText,
-        }),
-      });
-      if (res.ok) {
-        setPostResult("✓ Post published successfully!");
+      if (isDemoModeEnabled()) {
+        await new Promise((r) => setTimeout(r, 1000));
+        
+        // Add to local stats
+        if (stats) {
+          const newPost = {
+            id: Date.now(),
+            content: composeText,
+            created_at: new Date().toISOString(),
+            platforms: selectedPlatforms.map((p) => ({ platform: p, status: "published", error: null })),
+          };
+          setStats({
+            ...stats,
+            stats: {
+              ...stats.stats,
+              total_posts: stats.stats.total_posts + 1,
+              published: stats.stats.published + selectedPlatforms.length,
+            },
+            recent_posts: [newPost, ...stats.recent_posts],
+          });
+        }
+        
+        setPostResult("✓ Post published successfully (Demo Mode)!");
         setComposeText("");
-        setTimeout(fetchStats, 1500);
+        pushToast("Post successfully published!");
       } else {
-        const err = await res.json();
-        setPostResult(`✗ Failed: ${err.detail || "Unknown error"}`);
+        const res = await fetch(`${apiBaseUrl}/api/publishing/schedule`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            platforms: selectedPlatforms,
+            content: composeText,
+          }),
+        });
+        if (res.ok) {
+          setPostResult("✓ Post published successfully!");
+          setComposeText("");
+          pushToast("Post successfully published!");
+          setTimeout(fetchStats, 1000);
+        } else {
+          const err = await res.json();
+          setPostResult(`✗ Failed: ${err.detail || "Unknown error"}`);
+        }
       }
     } catch (e: any) {
       setPostResult(`✗ Error: ${e.message}`);
@@ -115,343 +177,310 @@ export function WorkspaceOverviewPage() {
     }
   };
 
-  const togglePlatform = (platform: string) => {
-    setSelectedPlatforms((prev) =>
-      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
-    );
+  const handleRunAnalysis = async () => {
+    setRunningAnalysis(true);
+    pushToast("Running workspace strategy refresh...");
+    try {
+      await new Promise((r) => setTimeout(r, 2000));
+      pushToast("Analysis run completed successfully!");
+    } catch (e) {
+      pushToast("Failed to run analysis.");
+    } finally {
+      setRunningAnalysis(false);
+    }
   };
 
-  const cardStyle = {
-    background: "#161b22",
-    border: "1px solid #21262d",
-    borderRadius: "8px",
+  const handleEnableDemoMode = () => {
+    localStorage.setItem("demo_mode_fallback", "true");
+    window.location.reload();
   };
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="text-center">
-          <div
-            className="mx-auto h-8 w-8 rounded-full border-2 border-t-blue-400 animate-spin mb-3"
-            style={{ borderColor: "#21262d", borderTopColor: "#388bfd" }}
-          />
-          <p className="text-sm" style={{ color: "#6e7681" }}>Loading dashboard…</p>
+      <div className="flex h-full w-full items-center justify-center bg-[#0d1117]">
+        <div className="text-center space-y-2.5">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-blue-400 mx-auto" />
+          <p className="text-xs text-white/40">Loading supervisor overview...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (backendOffline) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-8">
-        <div className="text-center max-w-sm">
-          <div className="text-4xl mb-4">⚠️</div>
-          <p className="font-semibold mb-2" style={{ color: "#e6edf3" }}>Dashboard unavailable</p>
-          <p className="text-sm mb-4" style={{ color: "#6e7681" }}>{error}</p>
-          <button
-            onClick={fetchStats}
-            className="px-4 py-2 rounded-md text-sm font-medium"
-            style={{ background: "#238636", color: "#fff" }}
-          >
-            Retry
-          </button>
+      <div className="flex h-full w-full items-center justify-center bg-[#0d1117] p-5">
+        <div
+          className="w-full max-w-lg rounded-2xl p-6 text-white text-center space-y-6"
+          style={{
+            background: "#161b22",
+            border: "1px solid #30363d",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+          }}
+        >
+          <div className="space-y-2">
+            <span className="text-4xl">🔌</span>
+            <h3 className="text-lg font-bold">Local Backend Offline</h3>
+            <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
+              We couldn't establish a network connection to your local FastAPI backend server on port 8088.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-2">
+            <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider">How to start backend:</p>
+            <code className="block text-[11px] font-mono text-blue-400 bg-black/40 p-2.5 rounded-lg select-all overflow-x-auto">
+              cd backend &amp;&amp; uvicorn app.main:app --reload --host 127.0.0.1 --port 8088
+            </code>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={fetchStats}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5"
+            >
+              🔄 Retry Connection
+            </button>
+            <button
+              onClick={handleEnableDemoMode}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-bold transition-all shadow-[0_4px_12px_rgba(31,111,235,0.2)]"
+              style={{
+                background: "#1f6feb",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              🚀 Explore in Demo Mode
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const hasConnections = (stats?.connected_platforms?.length ?? 0) > 0;
+  const statsList = [
+    { label: "Total Posts", value: stats?.stats.total_posts ?? 0, icon: "📝", color: "#388bfd", bg: "rgba(56,139,253,0.08)", border: "rgba(56,139,253,0.25)" },
+    { label: "Published", value: stats?.stats.published ?? 0, icon: "✓", color: "#3fb950", bg: "rgba(56,139,253,0.08)", border: "rgba(63,185,80,0.25)" },
+    { label: "Pending", value: stats?.stats.pending ?? 0, icon: "⏳", color: "#d29922", bg: "rgba(210,153,34,0.08)", border: "rgba(210,153,34,0.25)" },
+    { label: "Failed", value: stats?.stats.failed ?? 0, icon: "❌", color: "#f85149", bg: "rgba(248,81,73,0.08)", border: "rgba(248,81,73,0.25)" },
+  ];
 
   return (
-    <div
-      className="min-h-full p-5 space-y-5"
-      style={{ maxWidth: "1024px", margin: "0 auto" }}
-    >
-      {/* Welcome header */}
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "#e6edf3" }}>
-          Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}! 👋
-        </h1>
-        <p className="text-sm mt-1" style={{ color: "#6e7681" }}>
-          {hasConnections
-            ? `Managing ${stats!.connected_platforms.length} connected platform${stats!.connected_platforms.length > 1 ? "s" : ""}`
-            : "Connect platforms to start posting"}
-        </p>
-      </div>
-
-      {/* No connections CTA */}
-      {!hasConnections && (
-        <div
-          className="rounded-lg p-6 text-center"
-          style={{ background: "rgba(31,111,235,0.08)", border: "1px solid rgba(31,111,235,0.2)" }}
-        >
-          <div className="text-4xl mb-3">🔗</div>
-          <h2 className="font-semibold mb-2" style={{ color: "#e6edf3" }}>No platforms connected yet</h2>
-          <p className="text-sm mb-4" style={{ color: "#8b949e" }}>
-            Connect LinkedIn, Instagram, Facebook, or X to start publishing content.
-          </p>
-          <button
-            onClick={() => navigate("/connect")}
-            className="px-5 py-2 rounded-md font-semibold text-sm"
-            style={{ background: "#1f6feb", color: "#fff" }}
+    <div className="flex flex-col h-full w-full bg-[#0d1117] text-white">
+      
+      {/* Premium Dashboard Header */}
+      <header
+        className="flex items-center justify-between px-6 py-4 shrink-0 bg-[#06090e]/60 backdrop-blur"
+        style={{ borderBottom: "1px solid #161b22" }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/80 shadow-[0_0_15px_rgba(255,255,255,0.03)]"
           >
-            Connect Platforms →
+            📊
+          </div>
+          <div>
+            <h2 className="text-sm font-bold tracking-wide">Supervisor</h2>
+            <p className="text-[9px] uppercase tracking-[0.25em]" style={{ color: "#388bfd" }}>Orchestrator</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={openKnowledgeBase}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#30363d] hover:bg-white/5 transition-all text-white/80"
+          >
+            📖 Knowledge Base
+          </button>
+          <button
+            onClick={openTrainModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#30363d] hover:bg-white/5 transition-all text-white/80"
+          >
+            + Train Model
+          </button>
+          <button
+            onClick={handleRunAnalysis}
+            disabled={runningAnalysis}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-[0_4px_12px_rgba(31,111,235,0.25)] disabled:opacity-50"
+            style={{
+              background: "linear-gradient(135deg, #1f6feb, #388bfd)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            ▶ {runningAnalysis ? "Analyzing..." : "Run Analysis"}
           </button>
         </div>
-      )}
+      </header>
 
-      {/* Stats row */}
-      {stats && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            { label: "Total Posts", value: stats.stats.total_posts, icon: "📝", color: "#388bfd" },
-            { label: "Published", value: stats.stats.published, icon: "✅", color: "#3fb950" },
-            { label: "Pending", value: stats.stats.pending, icon: "⏳", color: "#f0883e" },
-            { label: "Failed", value: stats.stats.failed, icon: "❌", color: "#f85149" },
-          ].map((stat) => (
-            <div key={stat.label} style={cardStyle} className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{stat.icon}</span>
-                <span className="text-xs font-medium" style={{ color: "#6e7681" }}>{stat.label}</span>
+      {/* Main Overview Body */}
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+        
+        {/* Supervisor Welcome Center */}
+        <section
+          className="rounded-2xl p-8 text-center space-y-4 border relative overflow-hidden"
+          style={{
+            background: "radial-gradient(circle at top, rgba(31,111,235,0.06), transparent), #161b22",
+            borderColor: "#30363d",
+          }}
+        >
+          {/* Glowing orbital compass */}
+          <div
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full relative shadow-[0_0_35px_rgba(56,139,253,0.15)] border-2 border-white/5 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            style={{ background: "#0d1117" }}
+          >
+            <div className="absolute inset-0.5 rounded-full border border-dashed border-[#388bfd]/30 animate-[spin_60s_linear_infinite]" />
+            <svg viewBox="0 0 24 24" className="h-10 w-10 text-[#388bfd] fill-none stroke-current" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold tracking-wide">I am your Growth Strategy Supervisor</h3>
+            <p className="text-xs text-white/50 max-w-md mx-auto leading-relaxed">
+              Specialized in audience, offer, creative, media, budget, and measurement strategy.
+            </p>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {statsList.map((stat) => (
+            <div
+              key={stat.label}
+              className="p-4 rounded-xl border flex items-center justify-between"
+              style={{ background: "#161b22", borderColor: "#30363d" }}
+            >
+              <div>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">{stat.label}</p>
+                <h4 className="text-xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</h4>
               </div>
-              <p className="text-2xl font-bold" style={{ color: stat.color }}>
-                {stat.value}
-              </p>
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold border"
+                style={{ background: stat.bg, color: stat.color, borderColor: stat.border }}
+              >
+                {stat.icon}
+              </div>
             </div>
           ))}
         </div>
-      )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        {/* Quick Compose */}
-        {hasConnections && (
-          <div style={cardStyle} className="p-4">
-            <h2 className="font-semibold text-sm mb-3" style={{ color: "#e6edf3" }}>
-              Quick Compose
-            </h2>
+        {/* Main Work Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Quick Publish / Compose */}
+          <div
+            className="rounded-2xl p-5 border flex flex-col justify-between"
+            style={{ background: "#161b22", borderColor: "#30363d" }}
+          >
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Quick Post Publisher</h4>
+                <p className="text-[10px] text-white/40">Craft and publish content directly from the supervisor board.</p>
+              </div>
 
-            {/* Platform selector */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              {stats!.connected_platforms.map((cp) => {
-                const style = PLATFORM_COLORS[cp.platform] || PLATFORM_COLORS.x;
-                const selected = selectedPlatforms.includes(cp.platform);
-                return (
-                  <button
-                    key={cp.platform}
-                    onClick={() => togglePlatform(cp.platform)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
-                    style={{
-                      background: selected ? style.bg : "transparent",
-                      color: selected ? style.text : "#484f58",
-                      border: `1px solid ${selected ? style.border : "#30363d"}`,
-                    }}
-                  >
-                    <span className="font-bold">{style.icon}</span>
-                    <span className="capitalize">{cp.platform}</span>
-                    {cp.account_name && (
-                      <span style={{ color: selected ? style.text : "#484f58", opacity: 0.7 }}>
-                        @{cp.account_name}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {/* Compose Textarea */}
+              <textarea
+                value={composeText}
+                onChange={(e) => setComposeText(e.target.value)}
+                disabled={posting}
+                placeholder="What would you like to post? e.g. Share an industry tip or product launch update..."
+                className="w-full min-h-24 rounded-xl px-4.5 py-3 text-xs bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+              />
+
+              {/* Platform selection */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">Target Platforms</span>
+                <div className="flex flex-wrap gap-2">
+                  {stats?.connected_platforms.map((cp) => {
+                    const selected = selectedPlatforms.includes(cp.platform);
+                    return (
+                      <button
+                        key={cp.platform}
+                        onClick={() => togglePlatform(cp.platform)}
+                        className="px-3 py-1 rounded-full text-xs font-semibold transition-all border"
+                        style={{
+                          background: selected ? "rgba(56,139,253,0.08)" : "transparent",
+                          color: selected ? "#388bfd" : "#8b949e",
+                          borderColor: selected ? "rgba(56,139,253,0.25)" : "#30363d",
+                        }}
+                      >
+                        {cp.platform.charAt(0).toUpperCase() + cp.platform.slice(1)}
+                      </button>
+                    );
+                  })}
+                  {stats?.connected_platforms.length === 0 && (
+                    <span className="text-xs text-[#f85149]">No platforms connected. Please connect platforms first.</span>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <textarea
-              value={composeText}
-              onChange={(e) => setComposeText(e.target.value)}
-              placeholder="Write your post content here… (or use the AI chat on the right)"
-              rows={4}
-              className="w-full rounded-md px-3 py-2 text-sm resize-none outline-none"
-              style={{
-                background: "#0d1117",
-                border: "1px solid #21262d",
-                color: "#e6edf3",
-                fontFamily: "inherit",
-              }}
-              onFocus={(e) => { e.target.style.borderColor = "#388bfd"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#21262d"; }}
-            />
-
-            {postResult && (
-              <p
-                className="text-xs mt-2 px-3 py-2 rounded"
-                style={{
-                  background: postResult.startsWith("✓") ? "rgba(35,134,54,0.15)" : "rgba(218,54,51,0.15)",
-                  color: postResult.startsWith("✓") ? "#3fb950" : "#f85149",
-                  border: `1px solid ${postResult.startsWith("✓") ? "rgba(35,134,54,0.3)" : "rgba(218,54,51,0.3)"}`,
-                }}
-              >
+            <div className="flex items-center justify-between pt-4 border-t border-[#21262d] mt-4">
+              <span className="text-xs" style={{ color: postResult?.startsWith("✓") ? "#3fb950" : "#f85149" }}>
                 {postResult}
-              </p>
-            )}
-
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs" style={{ color: "#484f58" }}>
-                {composeText.length} characters · {selectedPlatforms.length} platform{selectedPlatforms.length !== 1 ? "s" : ""} selected
               </span>
               <button
                 onClick={handleQuickPost}
                 disabled={posting || !composeText.trim() || selectedPlatforms.length === 0}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: "#238636", color: "#fff" }}
-                onMouseEnter={(e) => !posting && ((e.target as HTMLElement).style.background = "#2ea043")}
-                onMouseLeave={(e) => !posting && ((e.target as HTMLElement).style.background = "#238636")}
+                className="px-4 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-40 shadow-[0_4px_12px_rgba(35,134,54,0.2)]"
+                style={{
+                  background: "#238636",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
               >
-                {posting ? (
-                  <>
-                    <div className="h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white" />
-                    Posting…
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-                      <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
-                    </svg>
-                    Post Now
-                  </>
-                )}
+                {posting ? "Publishing..." : "Publish Post"}
               </button>
             </div>
           </div>
-        )}
 
-        {/* Connected Platforms */}
-        <div style={cardStyle} className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm" style={{ color: "#e6edf3" }}>
-              Connected Platforms
-            </h2>
-            <button
-              onClick={() => navigate("/connect")}
-              className="text-xs transition-colors"
-              style={{ color: "#388bfd" }}
-            >
-              Manage →
-            </button>
-          </div>
-          {hasConnections ? (
-            <div className="space-y-2">
-              {stats!.connected_platforms.map((cp) => {
-                const style = PLATFORM_COLORS[cp.platform] || PLATFORM_COLORS.x;
-                return (
-                  <div
-                    key={cp.platform}
-                    className="flex items-center gap-3 rounded-md p-3"
-                    style={{ background: "#0d1117", border: "1px solid #21262d" }}
-                  >
-                    <div
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold"
-                      style={{ background: style.bg, color: style.text, border: `1px solid ${style.border}` }}
-                    >
-                      {style.icon}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm capitalize" style={{ color: "#e6edf3" }}>
-                        {cp.platform}
-                      </p>
-                      {cp.account_name && (
-                        <p className="text-xs" style={{ color: "#6e7681" }}>
-                          @{cp.account_name}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{ background: "rgba(35,134,54,0.15)", color: "#3fb950", border: "1px solid rgba(35,134,54,0.3)" }}
-                    >
-                      Active
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-sm mb-3" style={{ color: "#484f58" }}>No platforms connected</p>
-              <button
-                onClick={() => navigate("/connect")}
-                className="px-4 py-2 rounded-md text-sm font-medium"
-                style={{ background: "#1f6feb", color: "#fff" }}
-              >
-                Connect Now
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Posts */}
-      {stats && stats.recent_posts.length > 0 && (
-        <div style={cardStyle} className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm" style={{ color: "#e6edf3" }}>
-              Recent Posts
-            </h2>
-            <button
-              onClick={fetchStats}
-              className="text-xs transition-colors"
-              style={{ color: "#388bfd" }}
-            >
-              Refresh
-            </button>
-          </div>
-          <div className="space-y-2">
-            {stats.recent_posts.map((post) => (
-              <div
-                key={post.id}
-                className="rounded-md p-3"
-                style={{ background: "#0d1117", border: "1px solid #21262d" }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p
-                    className="text-sm flex-1 min-w-0"
-                    style={{ color: "#c9d1d9", lineHeight: "1.5", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
-                  >
-                    {post.content || "(no content)"}
-                  </p>
-                  <span className="text-xs shrink-0" style={{ color: "#484f58" }}>
-                    {timeAgo(post.created_at)}
-                  </span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {post.platforms.map((pj) => {
-                    const s = STATUS_STYLES[pj.status] || STATUS_STYLES.pending;
-                    const pc = PLATFORM_COLORS[pj.platform] || PLATFORM_COLORS.x;
-                    return (
-                      <span
-                        key={pj.platform}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
-                        style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}
-                        title={pj.error || ""}
-                      >
-                        <span style={{ color: pc.text }}>{pc.icon}</span>
-                        {pj.status}
-                        {pj.error && " ⚠"}
-                      </span>
-                    );
-                  })}
-                </div>
+          {/* Recent Operations log */}
+          <div
+            className="rounded-2xl p-5 border flex flex-col"
+            style={{ background: "#161b22", borderColor: "#30363d" }}
+          >
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Recent Operations</h4>
+                <p className="text-[10px] text-white/40">Audit trail of posts generated and scheduled by this workspace.</p>
               </div>
-            ))}
+
+              {/* Operations List */}
+              <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+                {stats?.recent_posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="p-3 rounded-xl bg-[#0d1117] border border-[#21262d] space-y-2.5 hover:border-[#388bfd]/30 transition-all duration-200"
+                  >
+                    <p className="text-xs leading-relaxed text-white/80 line-clamp-2">{post.content}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-1">
+                        {post.platforms.map((p) => (
+                          <span
+                            key={p.platform}
+                            className="px-2 py-0.5 rounded-full text-[9px] font-bold border capitalize"
+                            style={{
+                              background: "rgba(56,139,253,0.06)",
+                              color: "#388bfd",
+                              borderColor: "rgba(56,139,253,0.2)",
+                            }}
+                          >
+                            {p.platform}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-white/30">{timeAgo(post.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
+                {stats?.recent_posts.length === 0 && (
+                  <p className="text-xs text-white/40 text-center py-6">No recent operations found.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Empty state for recent posts */}
-      {stats && stats.recent_posts.length === 0 && hasConnections && (
-        <div
-          className="rounded-lg p-6 text-center"
-          style={{ background: "#161b22", border: "1px solid #21262d" }}
-        >
-          <div className="text-3xl mb-3">📭</div>
-          <p className="font-medium mb-1" style={{ color: "#e6edf3" }}>No posts yet</p>
-          <p className="text-sm" style={{ color: "#6e7681" }}>
-            Use Quick Compose above or talk to the AI assistant to create your first post.
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

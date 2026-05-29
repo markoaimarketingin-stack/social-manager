@@ -10,7 +10,6 @@ import type {
   UpdateAudienceSegmentRequest,
 } from "../../../lib/api/types/requests";
 import { queryKeys } from "../../../lib/query/keys";
-import { Panel } from "../../../components/ui/Panel";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
 
 const initialFormState = {
@@ -76,64 +75,72 @@ export function AudienceSegmentsPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 py-10 lg:px-8">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
       <SectionHeading
         eyebrow="Audience foundation"
         title="Audience segments"
-        description="Create the structured audience inputs the later strategy workflows will consume."
+        description="Create the structured audience inputs strategy workflows consume."
       />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-[2rem] border border-line bg-white p-6 text-black">
-          <h2 className="text-xl font-semibold">
-            {editingSegmentId ? "Edit segment" : "Add segment"}
+        <section
+          className="rounded-2xl border p-6 text-white space-y-6"
+          style={{ background: "#161b22", borderColor: "#30363d" }}
+        >
+          <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
+            {editingSegmentId ? "Edit Audience Segment" : "Add Audience Segment"}
           </h2>
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
             {[
               { key: "name", label: "Segment name" },
-              { key: "age_range", label: "Age range" },
-              { key: "primary_platform", label: "Primary platform" },
+              { key: "age_range", label: "Age range (e.g. 25-35)" },
+              { key: "primary_platform", label: "Primary platform (e.g. linkedin, instagram)" },
               { key: "interests", label: "Interests (comma separated)" },
             ].map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-2 block text-sm font-medium">{field.label}</span>
+                <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">{field.label}</span>
                 <input
                   value={formState[field.key as keyof typeof formState]}
                   onChange={(event) =>
                     setFormState((current) => ({ ...current, [field.key]: event.target.value }))
                   }
-                  className="w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
                 />
               </label>
             ))}
 
             {[
-              { key: "description", label: "Description" },
-              { key: "messaging_angle", label: "Messaging angle" },
+              { key: "description", label: "Description / Persona traits" },
+              { key: "messaging_angle", label: "Messaging angle / Core hook" },
             ].map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-2 block text-sm font-medium">{field.label}</span>
+                <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">{field.label}</span>
                 <textarea
                   value={formState[field.key as keyof typeof formState]}
                   onChange={(event) =>
                     setFormState((current) => ({ ...current, [field.key]: event.target.value }))
                   }
-                  className="min-h-28 w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                 />
               </label>
             ))}
 
-            <div className="flex flex-wrap gap-3 mt-2">
+            <div className="flex flex-wrap gap-2.5 pt-2">
               <button
                 type="submit"
                 disabled={upsertMutation.isPending}
-                className="rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] transition-all hover:bg-black/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
+                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-[0_4px_12px_rgba(35,134,54,0.2)] disabled:opacity-55"
+                style={{
+                  background: "#238636",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
               >
                 {upsertMutation.isPending
                   ? "Saving..."
                   : editingSegmentId
-                    ? "Save changes"
-                    : "Add segment"}
+                    ? "Save Changes"
+                    : "Add Segment"}
               </button>
               {editingSegmentId ? (
                 <button
@@ -142,39 +149,59 @@ export function AudienceSegmentsPage() {
                     setEditingSegmentId(null);
                     setFormState(initialFormState);
                   }}
-                  className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5 text-white/80"
                 >
-                  Cancel edit
+                  Cancel Edit
                 </button>
               ) : null}
             </div>
           </form>
         </section>
 
-        <Panel eyebrow="Saved segments" title="Segment library">
-          <div className="mt-5 space-y-4">
+        {/* Saved segments list */}
+        <div
+          className="rounded-2xl border p-5 text-white flex flex-col"
+          style={{ background: "#161b22", borderColor: "#30363d" }}
+        >
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-4">Segment Library</h3>
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
             {(audienceSegmentsQuery.data ?? []).map((segment) => (
-              <article key={segment.id} className="rounded-3xl border border-line bg-white/5 p-5">
+              <article
+                key={segment.id}
+                className="rounded-xl border p-4 bg-[#0d1117]/60 space-y-3.5 hover:border-[#388bfd]/30 transition-all duration-200"
+                style={{ borderColor: "#21262d" }}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold">{segment.name}</h2>
-                    <p className="mt-2 text-sm text-white/55">
+                    <h2 className="text-xs font-bold text-white">{segment.name}</h2>
+                    <p className="mt-1.5 text-[11px] text-white/50 leading-relaxed">
                       {segment.description || "No description yet."}
                     </p>
                   </div>
-                  <span className="rounded-full border border-line px-3 py-1 text-xs text-white/55">
+                  <span
+                    className="rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0"
+                    style={{
+                      background: "rgba(56,139,253,0.06)",
+                      color: "#388bfd",
+                      borderColor: "rgba(56,139,253,0.2)",
+                    }}
+                  >
                     {segment.primary_platform || "Platform TBD"}
                   </span>
                 </div>
 
-                <p className="mt-4 text-sm text-ink/80">
-                  Interests: {segment.interests.length ? segment.interests.join(", ") : "None listed"}
-                </p>
-                <p className="mt-1 text-sm text-ink/80">
-                  Messaging angle: {segment.messaging_angle || "Not defined yet"}
-                </p>
+                <div className="text-[10px] space-y-1 text-white/40 pt-2 border-t border-[#21262d]">
+                  <p>
+                    <span className="font-semibold text-white/60">Interests:</span>{" "}
+                    {segment.interests.length ? segment.interests.join(", ") : "None listed"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-white/60">Messaging Angle:</span>{" "}
+                    {segment.messaging_angle || "Not defined yet"}
+                  </p>
+                </div>
 
-                <div className="mt-5 flex gap-3">
+                <div className="flex gap-2 pt-1.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -188,14 +215,14 @@ export function AudienceSegmentsPage() {
                         messaging_angle: segment.messaging_angle ?? "",
                       });
                     }}
-                    className="rounded-full border border-line px-4 py-2 text-sm transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-[#30363d] hover:bg-white/5 text-white/80"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteMutation.mutate(segment.id)}
-                    className="rounded-full border border-red-500/30 bg-red-500/5 px-4 py-2 text-sm text-red-600 transition-all hover:bg-red-500/10 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-[#f85149]"
                   >
                     Delete
                   </button>
@@ -204,12 +231,12 @@ export function AudienceSegmentsPage() {
             ))}
 
             {audienceSegmentsQuery.data?.length ? null : (
-              <div className="rounded-3xl border border-dashed border-line p-6 text-sm text-white/55">
+              <div className="rounded-xl border border-dashed border-[#30363d] p-6 text-center text-xs text-white/40 leading-relaxed">
                 No audience segments yet. Add the first one to give future workflows structured input.
               </div>
             )}
           </div>
-        </Panel>
+        </div>
       </div>
     </div>
   );
