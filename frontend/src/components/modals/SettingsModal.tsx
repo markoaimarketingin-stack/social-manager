@@ -8,6 +8,7 @@ type SettingsModalProps = {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [groqKey, setGroqKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
+  const [customBackendUrl, setCustomBackendUrl] = useState("");
   const [isDemoFallback, setIsDemoFallback] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -15,6 +16,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (isOpen) {
       setGroqKey(localStorage.getItem("groq_api_key") || "");
       setOpenaiKey(localStorage.getItem("openai_api_key") || "");
+      setCustomBackendUrl(localStorage.getItem("custom_backend_url") || "");
       setIsDemoFallback(localStorage.getItem("demo_mode_fallback") === "true");
       setSaved(false);
     }
@@ -25,6 +27,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const handleSave = () => {
     localStorage.setItem("groq_api_key", groqKey.trim());
     localStorage.setItem("openai_api_key", openaiKey.trim());
+    localStorage.setItem("custom_backend_url", customBackendUrl.trim());
     if (isDemoFallback) {
       localStorage.setItem("demo_mode_fallback", "true");
     } else {
@@ -96,6 +99,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             />
             <span className="text-[10px] text-white/35 mt-1 block">
               Used for custom OpenAI model generations and actions.
+            </span>
+          </label>
+
+          {/* Deployed Backend API URL */}
+          <label className="block">
+            <span className="block text-xs font-bold uppercase tracking-wider text-white/60 mb-1.5">
+              Deployed Backend API URL
+            </span>
+            <input
+              type="text"
+              placeholder="https://your-backend-api.onrender.com"
+              value={customBackendUrl}
+              onChange={(e) => setCustomBackendUrl(e.target.value)}
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors text-white"
+            />
+            <span className="text-[10px] text-white/35 mt-1 block">
+              Enter your deployed FastAPI server URL (leave empty to use local port 8088).
             </span>
           </label>
 

@@ -2,9 +2,10 @@ import { isDemoModeEnabled, mockRequest } from "./mock";
 
 const DEFAULT_API_BASE_URL = "";
 const RAW_API_BASE_URL =
-  import.meta.env.VITE_API_URL?.toString() ??
-  import.meta.env.VITE_API_BASE_URL?.toString() ??
-  DEFAULT_API_BASE_URL;
+  localStorage.getItem("custom_backend_url") ||
+  (import.meta.env.VITE_API_URL?.toString() ??
+    import.meta.env.VITE_API_BASE_URL?.toString() ??
+    DEFAULT_API_BASE_URL);
 
 export const apiBaseUrl = RAW_API_BASE_URL.replace(/\/$/, "");
 

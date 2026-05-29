@@ -49,6 +49,13 @@ export function WorkspaceOverviewPage() {
   const [posting, setPosting] = useState(false);
   const [postResult, setPostResult] = useState<string | null>(null);
   const [runningAnalysis, setRunningAnalysis] = useState(false);
+  const [customBackendInput, setCustomBackendInput] = useState(localStorage.getItem("custom_backend_url") || "");
+
+  const handleSaveBackendUrl = () => {
+    localStorage.setItem("custom_backend_url", customBackendInput.trim());
+    pushToast("Backend URL updated! Retrying connection...");
+    window.location.reload();
+  };
 
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms((prev) =>
@@ -207,10 +214,12 @@ export function WorkspaceOverviewPage() {
   }
 
   if (backendOffline) {
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
     return (
-      <div className="flex h-full w-full items-center justify-center bg-[#0d1117] p-5">
+      <div className="flex h-full w-full items-center justify-center bg-[#0d1117] p-5 animate-fadeIn">
         <div
-          className="w-full max-w-lg rounded-2xl p-6 text-white text-center space-y-6"
+          className="w-full max-w-lg rounded-2xl p-6 text-white text-center space-y-6 animate-scaleIn"
           style={{
             background: "#161b22",
             border: "1px solid #30363d",
@@ -219,18 +228,52 @@ export function WorkspaceOverviewPage() {
         >
           <div className="space-y-2">
             <span className="text-4xl">🔌</span>
-            <h3 className="text-lg font-bold">Local Backend Offline</h3>
+            <h3 className="text-lg font-bold">
+              {isLocalhost ? "Local Backend Offline" : "Backend Connection Offline"}
+            </h3>
             <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
-              We couldn't establish a network connection to your local FastAPI backend server on port 8088.
+              {isLocalhost
+                ? "We couldn't establish a network connection to your local FastAPI backend server on port 8088."
+                : "We couldn't connect to your FastAPI backend API server. If your server is hosted elsewhere, configure its URL below."}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-2">
-            <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider">How to start backend:</p>
-            <code className="block text-[11px] font-mono text-blue-400 bg-black/40 p-2.5 rounded-lg select-all overflow-x-auto">
-              cd backend &amp;&amp; uvicorn app.main:app --reload --host 127.0.0.1 --port 8088
-            </code>
+          {/* Backend URL Input Section */}
+          <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-3">
+            <label className="block">
+              <span className="block text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1.5">
+                Deployed Backend API URL
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://your-backend-api.onrender.com"
+                  value={customBackendInput}
+                  onChange={(e) => setCustomBackendInput(e.target.value)}
+                  className="flex-1 rounded-lg px-3.5 py-2 text-xs bg-[#161b22] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors text-white"
+                />
+                <button
+                  onClick={handleSaveBackendUrl}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-[#1f6feb] border border-white/5 text-white hover:bg-[#388bfd] transition-colors shrink-0"
+                >
+                  Save & Connect
+                </button>
+              </div>
+              <span className="text-[9px] text-white/30 mt-1.5 block">
+                Stores your production API base URL locally (e.g. Render, Railway, AWS). Leave blank to use localhost:8088.
+              </span>
+            </label>
           </div>
+
+          {/* Localhost startup command instruction */}
+          {isLocalhost && (
+            <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-2">
+              <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider">How to start backend locally:</p>
+              <code className="block text-[11px] font-mono text-blue-400 bg-black/40 p-2.5 rounded-lg select-all overflow-x-auto">
+                cd backend &amp;&amp; uvicorn app.main:app --reload --host 127.0.0.1 --port 8088
+              </code>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
@@ -335,9 +378,9 @@ export function WorkspaceOverviewPage() {
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-lg font-bold tracking-wide">I am your Growth Strategy Supervisor</h3>
+            <h3 className="text-lg font-bold tracking-wide">I am your Social Media Supervisor</h3>
             <p className="text-xs text-white/50 max-w-md mx-auto leading-relaxed">
-              Specialized in audience, offer, creative, media, budget, and measurement strategy.
+              Specialized in brand strategy, audience engagement, copywriting, A/B testing, and cross-platform publishing.
             </p>
           </div>
         </section>

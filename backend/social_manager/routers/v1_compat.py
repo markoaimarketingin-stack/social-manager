@@ -373,7 +373,7 @@ async def start_strategy_run(workspace_id: str, req: StartStrategyRunRequest):
         "version_number": current_version + 1,
         "is_active": True,
         "status": "in_review",
-        "title": f"{brand_name} growth strategy v{current_version + 1}",
+        "title": f"{brand_name} social media strategy v{current_version + 1}",
         "summary": f"AI-generated strategy for {brand_name} focused on {req.goal}.",
         "positioning_statement": f"{brand_name} helps its audience feel confident and informed.",
         "audience_focus": "Primary attention on the most engaged audience segments.",

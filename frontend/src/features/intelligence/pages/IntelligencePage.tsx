@@ -135,7 +135,7 @@ export function IntelligencePage() {
             <div className="space-y-4 text-xs">
               <div className="rounded-xl border p-4 bg-[#0d1117]/40 space-y-1.5" style={{ borderColor: "#21262d" }}>
                 <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold">Active Strategy</span>
-                <p className="font-bold">{strategy?.title ?? "Standard Growth Strategy"}</p>
+                <p className="font-bold">{strategy?.title ?? "Standard Social Media Strategy"}</p>
                 <p className="text-white/50 leading-relaxed">
                   {strategy?.summary ??
                     "Curated occasions and premium positioning aligned to lifestyle reels."}

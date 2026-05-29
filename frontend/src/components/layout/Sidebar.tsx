@@ -26,76 +26,74 @@ const NAV_GROUPS = (workspaceId: string) => [
     ],
   },
   {
-    title: "Agents",
-    isNested: true,
-    subgroups: [
+    title: "Specialist Agents",
+    items: [
       {
-        title: "Audience & Market",
-        items: [
-          {
-            label: "ICP Strategy",
-            to: `/workspaces/${workspaceId}/segments`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                <path fillRule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
-                <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
-              </svg>
-            ),
-          },
-          {
-            label: "Demand Landscape",
-            to: `/workspaces/${workspaceId}/trends`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-              </svg>
-            ),
-          },
-          {
-            label: "Competitor Signals",
-            to: `/workspaces/${workspaceId}/competitors`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                <path d="M4.285 9.567a.5.5 0 0 1 .683.183A3.498 3.498 0 0 0 8 11.5a3.498 3.498 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.498 4.498 0 0 1 8 12.5a4.498 4.498 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683z"/>
-              </svg>
-            ),
-          },
-          {
-            label: "Market Expansion",
-            to: `/workspaces/${workspaceId}/intelligence`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/>
-              </svg>
-            ),
-          },
-        ],
+        label: "Trends",
+        to: `/workspaces/${workspaceId}/trends`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+        ),
       },
       {
-        title: "Offer & Creative",
-        items: [
-          {
-            label: "Offer Strategy",
-            to: `/workspaces/${workspaceId}/positioning`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0zm-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                <path d="M2 13c0 1 1 1 1 1h5.256A4.493 4.493 0 0 1 8 12.5a4.49 4.49 0 0 1 1.544-3.393C8.383 9.043 7.243 9 5 9c-4 0-5 3-5 4s1 1 1 1h1z"/>
-              </svg>
-            ),
-          },
-          {
-            label: "Value Prop Messaging",
-            to: `/workspaces/${workspaceId}/strategy`,
-            icon: (
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-              </svg>
-            ),
-          },
-        ],
+        label: "Competitors",
+        to: `/workspaces/${workspaceId}/competitors`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M4.285 9.567a.5.5 0 0 1 .683.183A3.498 3.498 0 0 0 8 11.5a3.498 3.498 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.498 4.498 0 0 1 8 12.5a4.498 4.498 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683z"/>
+          </svg>
+        ),
+      },
+      {
+        label: "Audience",
+        to: `/workspaces/${workspaceId}/segments`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+            <path fillRule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+            <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+          </svg>
+        ),
+      },
+      {
+        label: "Brand Profile",
+        to: `/workspaces/${workspaceId}/brand-profile`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14a6 6 0 1 1 0-12A6 6 0 0 1 8 14zm1-9H7v4h2V5zm0 5H7v2h2v-2z"/>
+          </svg>
+        ),
+      },
+      {
+        label: "Copywriter",
+        to: `/workspaces/${workspaceId}/copywriter`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+          </svg>
+        ),
+      },
+      {
+        label: "A/B Testing",
+        to: `/workspaces/${workspaceId}/ab-copy-tester`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M5.5 0a.5.5 0 0 1 .5.5v8.5a1 1 0 0 0 1 1h7a.5.5 0 0 1 0 1h-7A2 2 0 0 1 5 8.5V.5a.5.5 0 0 1 .5-.5z"/>
+            <path d="M2.5 3A2.5 2.5 0 0 0 0 5.5v8A2.5 2.5 0 0 0 2.5 16h8A2.5 2.5 0 0 0 13 13.5v-8A2.5 2.5 0 0 0 10.5 3h-8z"/>
+          </svg>
+        ),
+      },
+      {
+        label: "Community",
+        to: `/workspaces/${workspaceId}/community`,
+        icon: (
+          <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2.5a1 1 0 0 0-.8.4L.5 14.5A.5.5 0 0 1 0 14V2z"/>
+          </svg>
+        ),
       },
     ],
   },
@@ -131,7 +129,7 @@ export function Sidebar({
             MarkoAI
           </p>
           <p className="text-[9px] uppercase tracking-[0.25em]" style={{ color: "#388bfd" }}>
-            Social Intelligence
+            SOCIAL INTELLIGENCE
           </p>
         </div>
       </div>
@@ -177,96 +175,44 @@ export function Sidebar({
               {group.title}
             </p>
 
-            {group.isNested ? (
-              <div className="space-y-4 pl-1">
-                {group.subgroups?.map((sub) => (
-                  <div key={sub.title} className="space-y-1">
-                    <p
-                      className="px-2 text-[9px] font-semibold uppercase tracking-wider text-white/35"
-                    >
-                      {sub.title}
-                    </p>
-                    <div className="space-y-0.5">
-                      {sub.items.map((item) => (
-                        <NavLink
-                          key={item.label}
-                          to={item.to}
-                          className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all duration-200 no-underline ${
-                              isActive
-                                ? "text-white"
-                                : "text-white/60 hover:text-white/90 hover:bg-white/[0.03]"
-                            }`
-                          }
-                          style={({ isActive }) =>
-                            isActive
-                              ? {
-                                  background: "rgba(31,111,235,0.1)",
-                                  border: "1px solid rgba(31,111,235,0.25)",
-                                  fontWeight: 600,
-                                }
-                              : {
-                                  border: "1px solid transparent",
-                                }
-                          }
-                        >
-                          {({ isActive }) => (
-                            <>
-                              <span
-                                style={{ color: isActive ? "#388bfd" : "#484f58" }}
-                                className="shrink-0"
-                              >
-                                {item.icon}
-                              </span>
-                              <span className="truncate">{item.label}</span>
-                            </>
-                          )}
-                        </NavLink>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-0.5 pl-1">
-                {group.items?.map((item) => (
-                  <NavLink
-                    key={item.label}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all duration-200 no-underline ${
-                        isActive
-                          ? "text-white"
-                          : "text-white/60 hover:text-white/90 hover:bg-white/[0.03]"
-                      }`
-                    }
-                    style={({ isActive }) =>
+            <div className="space-y-0.5 pl-1">
+              {group.items?.map((item) => (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all duration-200 no-underline ${
                       isActive
-                        ? {
-                            background: "rgba(31,111,235,0.1)",
-                            border: "1px solid rgba(31,111,235,0.25)",
-                            fontWeight: 600,
-                          }
-                        : {
-                            border: "1px solid transparent",
-                          }
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span
-                          style={{ color: isActive ? "#388bfd" : "#484f58" }}
-                          className="shrink-0"
-                        >
-                          {item.icon}
-                        </span>
-                        <span className="truncate">{item.label}</span>
-                      </>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            )}
+                        ? "text-white"
+                        : "text-white/60 hover:text-white/90 hover:bg-white/[0.03]"
+                    }`
+                  }
+                  style={({ isActive }) =>
+                    isActive
+                      ? {
+                          background: "rgba(31,111,235,0.1)",
+                          border: "1px solid rgba(31,111,235,0.25)",
+                          fontWeight: 600,
+                        }
+                      : {
+                          border: "1px solid transparent",
+                        }
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        style={{ color: isActive ? "#388bfd" : "#484f58" }}
+                        className="shrink-0"
+                      >
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.label}</span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           </div>
         ))}
       </nav>
@@ -333,7 +279,7 @@ export function Sidebar({
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#8b949e"; }}
           >
             <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current">
-              <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2a1.5 1.5 0 0 0-1.5-1.5h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+              <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2a1.5 1.5 0 0 0-1.5-1.5h-8a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
               <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
             </svg>
           </button>

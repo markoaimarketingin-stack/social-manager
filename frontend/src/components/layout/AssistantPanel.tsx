@@ -118,6 +118,7 @@ export function AssistantPanel({ workspaceId }: Props) {
         message: prompt,
         history: messages.map((m) => ({ role: m.role, content: m.content })),
         mode,
+        model: selectedModel,
       };
       if (mode === "agent") {
         body.platforms = selectedPlatforms;
@@ -401,6 +402,42 @@ export function AssistantPanel({ workspaceId }: Props) {
           <span className="text-[9px] text-white/25 px-1 font-semibold">
             Add context (#), extensions (@), commands (/)
           </span>
+
+          {/* Connected Platforms Selector Pills (Only in Agent mode) */}
+          {mode === "agent" && (
+            <div className="flex items-center gap-2 px-1 py-1.5 border-b border-[#161b22] select-none animate-fadeIn">
+              <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Post To:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {["facebook", "instagram", "linkedin", "x"].map((platform) => {
+                  const isSelected = selectedPlatforms.includes(platform);
+                  const s = PLATFORM_STYLES[platform] || PLATFORM_STYLES.x;
+                  return (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPlatforms((prev) =>
+                          prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
+                        );
+                      }}
+                      className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase transition-all duration-200 border cursor-pointer ${
+                        isSelected
+                          ? "shadow-[0_2px_8px_rgba(31,111,235,0.15)]"
+                          : "opacity-40 hover:opacity-75"
+                      }`}
+                      style={{
+                        background: isSelected ? s.bg : "transparent",
+                        color: isSelected ? s.text : "#8b949e",
+                        borderColor: isSelected ? s.border : "#30363d",
+                      }}
+                    >
+                      {isSelected ? "✓" : "+"} {platform}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <textarea
             ref={textareaRef}

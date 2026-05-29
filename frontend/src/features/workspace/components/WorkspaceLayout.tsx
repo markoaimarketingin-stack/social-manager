@@ -146,6 +146,40 @@ export function WorkspaceLayout() {
                         ))}
                       </div>
                     )}
+                    {/* Knowledge Base Button */}
+                    <button
+                      onClick={() => setKbOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200"
+                      style={{ color: "#8b949e", border: "1px solid #21262d", background: "#0d1117" }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.color = "#ffffff";
+                        (e.currentTarget as HTMLElement).style.borderColor = "#30363d";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.color = "#8b949e";
+                        (e.currentTarget as HTMLElement).style.borderColor = "#21262d";
+                      }}
+                    >
+                      📚 Knowledge Base
+                    </button>
+
+                    {/* Train Model Button */}
+                    <button
+                      onClick={() => setTrainOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200"
+                      style={{ color: "#8b949e", border: "1px solid #21262d", background: "#0d1117" }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.color = "#ffffff";
+                        (e.currentTarget as HTMLElement).style.borderColor = "#30363d";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.color = "#8b949e";
+                        (e.currentTarget as HTMLElement).style.borderColor = "#21262d";
+                      }}
+                    >
+                      🧠 Train Model
+                    </button>
+
                     <button
                       onClick={() => setAssistantCollapsed((c) => !c)}
                       className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200"

@@ -84,7 +84,7 @@ def generate_suggestions(state: SocialManagerState) -> SocialManagerState:
         campaign_context = injector.get_campaign_context(max_chars=1500)
         
         # Generate contextual suggestions
-        prompt = f"""You are a Growth Strategy Advisor. Based on this industry and audience, suggest 3 high-impact actions.
+        prompt = f"""You are a Social Media Strategy Advisor. Based on this industry and audience, suggest 3 high-impact actions.
 
 INDUSTRY: {industry}
 
