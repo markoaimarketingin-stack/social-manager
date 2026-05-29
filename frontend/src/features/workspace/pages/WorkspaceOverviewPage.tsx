@@ -43,19 +43,13 @@ export function WorkspaceOverviewPage() {
   const { openKnowledgeBase, openTrainModal, pushToast } = useWorkspaceChrome();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [backendOffline, setBackendOffline] = useState(false);
+  const [isSimulated, setIsSimulated] = useState(false);
   const [composeText, setComposeText] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
   const [postResult, setPostResult] = useState<string | null>(null);
   const [runningAnalysis, setRunningAnalysis] = useState(false);
-  const [customBackendInput, setCustomBackendInput] = useState(localStorage.getItem("custom_backend_url") || "");
 
-  const handleSaveBackendUrl = () => {
-    localStorage.setItem("custom_backend_url", customBackendInput.trim());
-    pushToast("Backend URL updated! Retrying connection...");
-    window.location.reload();
-  };
 
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms((prev) =>
@@ -65,54 +59,49 @@ export function WorkspaceOverviewPage() {
 
   const fetchStats = async () => {
     setLoading(true);
-    setBackendOffline(false);
+    setIsSimulated(false);
     try {
       const res = await fetch(`${apiBaseUrl}/api/dashboard/stats`, {
         headers: { Authorization: `Bearer ${token}` },
-
       });
       if (!res.ok) throw new Error("Failed to load dashboard stats");
       const data = await res.json();
       setStats(data);
       setSelectedPlatforms(data.connected_platforms.map((p: any) => p.platform));
+      setIsSimulated(false);
     } catch (e: any) {
-      console.error("Dashboard stats fetch error:", e);
-      if (isDemoModeEnabled()) {
-        // Safe mock fallback for demo mode
-        const mockData: DashboardStats = {
-          user: { id: 1, email: "demo@markoai.com", name: "Demo Client" },
-          connected_platforms: [
-            { platform: "linkedin", account_name: "Demo Professional", account_id: "li_1", connected_at: new Date().toISOString() },
-            { platform: "instagram", account_name: "@demosocial", account_id: "ig_1", connected_at: new Date().toISOString() },
-          ],
-          stats: { total_posts: 12, published: 8, pending: 3, failed: 1 },
-          recent_posts: [
-            {
-              id: 1,
-              content: "🚀 We are excited to announce our brand new social operations interface, built for speed and complete operational clarity. #saas #socialmarketing",
-              created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-              platforms: [{ platform: "linkedin", status: "published", error: null }, { platform: "instagram", status: "published", error: null }]
-            },
-            {
-              id: 2,
-              content: "💡 Monday Tip: Authenticity builds audience loyalty faster than perfect production. Share behind-the-scenes stories today!",
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-              platforms: [{ platform: "linkedin", status: "published", error: null }]
-            },
-            {
-              id: 3,
-              content: "How do you manage your weekly social strategy planning workflows? Tell us below!",
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-              platforms: [{ platform: "instagram", status: "published", error: null }]
-            }
-          ]
-        };
-        setStats(mockData);
-        setSelectedPlatforms(mockData.connected_platforms.map((p) => p.platform));
-      } else {
-        // Flag backend offline so we can show a gorgeous prompt to run the backend or select demo mode
-        setBackendOffline(true);
-      }
+      console.warn("Dashboard stats fetch failed; falling back to simulated live sandbox:", e);
+      const mockData: DashboardStats = {
+        user: { id: 1, email: "demo@markoai.com", name: "Demo Client" },
+        connected_platforms: [
+          { platform: "linkedin", account_name: "Demo Professional", account_id: "li_1", connected_at: new Date().toISOString() },
+          { platform: "instagram", account_name: "@demosocial", account_id: "ig_1", connected_at: new Date().toISOString() },
+        ],
+        stats: { total_posts: 12, published: 8, pending: 3, failed: 1 },
+        recent_posts: [
+          {
+            id: 1,
+            content: "🚀 We are excited to announce our brand new social operations interface, built for speed and complete operational clarity. #saas #socialmarketing",
+            created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+            platforms: [{ platform: "linkedin", status: "published", error: null }, { platform: "instagram", status: "published", error: null }]
+          },
+          {
+            id: 2,
+            content: "💡 Monday Tip: Authenticity builds audience loyalty faster than perfect production. Share behind-the-scenes stories today!",
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+            platforms: [{ platform: "linkedin", status: "published", error: null }]
+          },
+          {
+            id: 3,
+            content: "How do you manage your weekly social strategy planning workflows? Tell us below!",
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+            platforms: [{ platform: "instagram", status: "published", error: null }]
+          }
+        ]
+      };
+      setStats(mockData);
+      setSelectedPlatforms(mockData.connected_platforms.map((p) => p.platform));
+      setIsSimulated(true);
     } finally {
       setLoading(false);
     }
@@ -130,7 +119,7 @@ export function WorkspaceOverviewPage() {
     setPosting(true);
     setPostResult(null);
     try {
-      if (isDemoModeEnabled()) {
+      if (isDemoModeEnabled() || isSimulated) {
         await new Promise((r) => setTimeout(r, 1000));
         
         // Add to local stats
@@ -197,10 +186,7 @@ export function WorkspaceOverviewPage() {
     }
   };
 
-  const handleEnableDemoMode = () => {
-    localStorage.setItem("demo_mode_fallback", "true");
-    window.location.reload();
-  };
+
 
   if (loading) {
     return (
@@ -213,91 +199,7 @@ export function WorkspaceOverviewPage() {
     );
   }
 
-  if (backendOffline) {
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-[#0d1117] p-5 animate-fadeIn">
-        <div
-          className="w-full max-w-lg rounded-2xl p-6 text-white text-center space-y-6 animate-scaleIn"
-          style={{
-            background: "#161b22",
-            border: "1px solid #30363d",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
-          }}
-        >
-          <div className="space-y-2">
-            <span className="text-4xl">🔌</span>
-            <h3 className="text-lg font-bold">
-              {isLocalhost ? "Local Backend Offline" : "Backend Connection Offline"}
-            </h3>
-            <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
-              {isLocalhost
-                ? "We couldn't establish a network connection to your local FastAPI backend server on port 8088."
-                : "We couldn't connect to your FastAPI backend API server. If your server is hosted elsewhere, configure its URL below."}
-            </p>
-          </div>
-
-          {/* Backend URL Input Section */}
-          <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-3">
-            <label className="block">
-              <span className="block text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1.5">
-                Deployed Backend API URL
-              </span>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="https://your-backend-api.onrender.com"
-                  value={customBackendInput}
-                  onChange={(e) => setCustomBackendInput(e.target.value)}
-                  className="flex-1 rounded-lg px-3.5 py-2 text-xs bg-[#161b22] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors text-white"
-                />
-                <button
-                  onClick={handleSaveBackendUrl}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-[#1f6feb] border border-white/5 text-white hover:bg-[#388bfd] transition-colors shrink-0"
-                >
-                  Save & Connect
-                </button>
-              </div>
-              <span className="text-[9px] text-white/30 mt-1.5 block">
-                Stores your production API base URL locally (e.g. Render, Railway, AWS). Leave blank to use localhost:8088.
-              </span>
-            </label>
-          </div>
-
-          {/* Localhost startup command instruction */}
-          {isLocalhost && (
-            <div className="p-4 rounded-xl bg-[#0d1117] border border-[#21262d] text-left space-y-2">
-              <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider">How to start backend locally:</p>
-              <code className="block text-[11px] font-mono text-blue-400 bg-black/40 p-2.5 rounded-lg select-all overflow-x-auto">
-                cd backend &amp;&amp; uvicorn app.main:app --reload --host 127.0.0.1 --port 8088
-              </code>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <button
-              onClick={fetchStats}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5"
-            >
-              🔄 Retry Connection
-            </button>
-            <button
-              onClick={handleEnableDemoMode}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-bold transition-all shadow-[0_4px_12px_rgba(31,111,235,0.2)]"
-              style={{
-                background: "#1f6feb",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              🚀 Explore in Demo Mode
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const statsList = [
     { label: "Total Posts", value: stats?.stats.total_posts ?? 0, icon: "📝", color: "#388bfd", bg: "rgba(56,139,253,0.08)", border: "rgba(56,139,253,0.25)" },
@@ -327,6 +229,23 @@ export function WorkspaceOverviewPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          {/* Connection Status Badge */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border select-none ${
+              isSimulated
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+            }`}
+            title={
+              isSimulated
+                ? "FastAPI backend server is currently offline. Running in high-fidelity simulated mode."
+                : "Connected to FastAPI production backend."
+            }
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${isSimulated ? "bg-amber-400 animate-pulse" : "bg-emerald-400"}`} />
+            {isSimulated ? "Simulated Sandbox" : "Live Synchronized"}
+          </div>
+
           <button
             onClick={openKnowledgeBase}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#30363d] hover:bg-white/5 transition-all text-white/80"

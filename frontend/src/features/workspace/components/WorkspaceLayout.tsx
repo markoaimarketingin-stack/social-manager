@@ -74,7 +74,7 @@ export function WorkspaceLayout() {
         pushToast,
       }}
     >
-      <div className="flex h-screen w-screen flex-col overflow-hidden" style={{ background: "#06090e" }}>
+      <div className="flex h-screen w-screen flex-col overflow-hidden" style={{ background: "#000000" }}>
         
         {/* Offline Demo Mode Banner */}
         {isDemoFallback && (
@@ -98,7 +98,7 @@ export function WorkspaceLayout() {
           {/* Sidebar */}
           <aside
             className="hidden h-full shrink-0 lg:flex"
-            style={{ width: "240px", background: "#06090e", borderRight: "1px solid #161b22" }}
+            style={{ width: "240px", background: "#000000", borderRight: "1px solid #111111" }}
           >
             <Sidebar
               workspaceId={workspaceId}
@@ -116,8 +116,8 @@ export function WorkspaceLayout() {
               <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 {/* Top bar */}
                 <div
-                  className="flex h-12 shrink-0 items-center justify-between px-5 bg-[#06090e]"
-                  style={{ borderBottom: "1px solid #161b22" }}
+                  className="flex h-12 shrink-0 items-center justify-between px-5 bg-[#000000]"
+                  style={{ borderBottom: "1px solid #111111" }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium" style={{ color: "#484f58" }}>
@@ -201,7 +201,7 @@ export function WorkspaceLayout() {
                   </div>
                 </div>
 
-                <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ background: "#0d1117" }}>
+                <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ background: "#000000" }}>
                   <Outlet context={{ workspaceId }} />
                 </div>
               </section>
@@ -210,7 +210,7 @@ export function WorkspaceLayout() {
               {!assistantCollapsed && (
                 <aside
                   className="hidden h-full shrink-0 xl:flex"
-                  style={{ width: "320px", background: "#06090e", borderLeft: "1px solid #161b22" }}
+                  style={{ width: "320px", background: "#000000", borderLeft: "1px solid #111111" }}
                 >
                   <AssistantPanel workspaceId={workspaceId} />
                 </aside>

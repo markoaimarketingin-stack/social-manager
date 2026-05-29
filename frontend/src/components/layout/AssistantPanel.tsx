@@ -194,13 +194,13 @@ export function AssistantPanel({ workspaceId }: Props) {
 
   return (
     <div
-      className="flex h-full w-full flex-col border-l border-[#161b22]"
-      style={{ background: "#06090e", color: "#e6edf3" }}
+      className="flex h-full w-full flex-col border-l border-[#111111]"
+      style={{ background: "#000000", color: "#e6edf3" }}
     >
       {/* Header */}
       <div
         className="shrink-0 px-4 py-3.5 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #161b22" }}
+        style={{ borderBottom: "1px solid #111111" }}
       >
         <div className="flex items-center gap-2">
           <div
@@ -394,9 +394,9 @@ export function AssistantPanel({ workspaceId }: Props) {
       </div>
 
       {/* Input Dock at Bottom */}
-      <div className="shrink-0 p-3 bg-[#03060a]" style={{ borderTop: "1px solid #161b22" }}>
+      <div className="shrink-0 p-3 bg-[#000000]" style={{ borderTop: "1px solid #111111" }}>
         <div
-          className="flex flex-col gap-2 p-2 rounded-xl bg-[#0d1117] border border-[#21262d]"
+          className="flex flex-col gap-2 p-2 rounded-xl bg-[#080808] border border-[#161616]"
         >
           {/* Helper details line */}
           <span className="text-[9px] text-white/25 px-1 font-semibold">

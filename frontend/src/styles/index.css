@@ -7,26 +7,26 @@
 
 :root {
   color: #e2e8f0;
-  background: #0d1117;
+  background: #000000;
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   color-scheme: dark;
 
-  /* Core surfaces */
-  --bg-base: #0d1117;
-  --bg-elevated: #161b22;
-  --bg-overlay: #21262d;
-  --bg-muted: #30363d;
+  /* Core surfaces - Pitch Black & Carbon VS Code Dark Theme */
+  --bg-base: #000000;
+  --bg-elevated: #09090b;
+  --bg-overlay: #141416;
+  --bg-muted: #1e1e21;
 
-  /* Borders */
-  --border-subtle: rgba(48, 54, 61, 0.8);
-  --border-default: rgba(48, 54, 61, 1);
-  --border-emphasis: rgba(110, 118, 129, 0.4);
+  /* Borders - Minimal carbon borders */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-emphasis: rgba(255, 255, 255, 0.15);
 
   /* Text */
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
-  --text-link: #58a6ff;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-link: #388bfd;
 
   /* Accents */
   --accent-blue: #1f6feb;
@@ -41,20 +41,20 @@
   --platform-linkedin: #0077b5;
   --platform-instagram: #e1306c;
   --platform-facebook: #1877f2;
-  --platform-x: #000000;
+  --platform-x: #e6edf3;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.8);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.9);
+  --shadow-lg: 0 8px 36px rgba(0,0,0,0.95);
 
   /* Shell compat */
-  --shell-bg: #0d1117;
-  --shell-panel: #161b22;
-  --shell-panel-soft: rgba(255, 255, 255, 0.04);
-  --shell-line: rgba(48, 54, 61, 0.8);
-  --shell-line-strong: rgba(110, 118, 129, 0.4);
-  --shell-muted: rgba(139, 148, 158, 0.8);
+  --shell-bg: #000000;
+  --shell-panel: #09090b;
+  --shell-panel-soft: rgba(255, 255, 255, 0.02);
+  --shell-line: rgba(255, 255, 255, 0.05);
+  --shell-line-strong: rgba(255, 255, 255, 0.12);
+  --shell-muted: rgba(148, 163, 184, 0.8);
   --shell-radius-xl: 0.75rem;
   --shell-radius-2xl: 0.5rem;
 }

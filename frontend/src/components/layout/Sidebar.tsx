@@ -112,11 +112,11 @@ export function Sidebar({
     : user?.email?.[0]?.toUpperCase() ?? "D";
 
   return (
-    <div className="flex h-full w-full flex-col" style={{ background: "#06090e", color: "#e6edf3" }}>
+    <div className="flex h-full w-full flex-col" style={{ background: "#000000", color: "#e6edf3" }}>
       {/* Brand header */}
       <div
         className="flex items-center gap-3 px-5 py-4 shrink-0"
-        style={{ borderBottom: "1px solid #161b22" }}
+        style={{ borderBottom: "1px solid #111111" }}
       >
         <div
           className="flex h-9 w-9 items-center justify-center rounded-xl text-white text-sm font-bold shrink-0 shadow-[0_0_15px_rgba(31,111,235,0.25)]"
@@ -138,7 +138,7 @@ export function Sidebar({
       {connections.length > 0 && (
         <div
           className="px-5 py-2 flex flex-wrap gap-1.5 shrink-0 bg-white/[0.01]"
-          style={{ borderBottom: "1px solid #161b22" }}
+          style={{ borderBottom: "1px solid #111111" }}
         >
           {connections.map((c) => {
             const colors: Record<string, string> = {
@@ -218,7 +218,7 @@ export function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="shrink-0 p-3 space-y-2 bg-[#03060a]" style={{ borderTop: "1px solid #161b22" }}>
+      <div className="shrink-0 p-3 space-y-2 bg-[#000000]" style={{ borderTop: "1px solid #111111" }}>
         {/* Connect platforms button */}
         <button
           onClick={onGoConnect}
@@ -240,7 +240,7 @@ export function Sidebar({
         {/* User profile */}
         <div
           className="flex items-center gap-2 rounded-lg p-2"
-          style={{ background: "#0d1117", border: "1px solid #161b22" }}
+          style={{ background: "#080808", border: "1px solid #111111" }}
         >
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-[0_0_10px_rgba(56,139,253,0.15)]"
