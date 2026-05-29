@@ -66,15 +66,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Social Manager Agent", version="0.1.0", lifespan=lifespan)
 
 # CORS: Restrict to localhost + envvar-configurable origins for production
+allowed_origins = list(dict.fromkeys(settings.cors_origins + [settings.frontend_url, settings.backend_url]))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8088",
-        "https://social-community-manager.vercel.app",
-        "https://social-community-manager-git-dev-arpit-fixes.vercel.app",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -563,6 +558,17 @@ async def root():
         "health": "/health",
         "frontend": "http://localhost:5173"
     })
+
+@app.head("/")
+async def root_head():
+    return JSONResponse(
+        {
+            "service": "Social Community Manager API",
+            "version": "2.0.0",
+            "docs": "/docs",
+            "health": "/health"
+        }
+    )
 
 # ===== FEATURE ROUTERS (NEW INTELLIGENCE FEATURES) =====
 # Include all new feature routers: Trends, Competitors, Segmentation, Positioning, Copy

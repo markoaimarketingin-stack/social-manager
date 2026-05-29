@@ -26,8 +26,9 @@ export default function AuthPage() {
       const body = isLogin 
         ? { email, password }
         : { email, password, name };
+      const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-      const response = await fetch(`http://localhost:8088${endpoint}`, {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

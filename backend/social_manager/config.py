@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Read from CORS_ORIGINS env var; falls back to localhost defaults
     cors_origins_raw: str = Field(
-        default="http://localhost:3000,http://localhost:8088",
+        default="http://localhost:3000,http://localhost:5173,http://localhost:8088",
         validation_alias="CORS_ORIGINS",
     )
 
