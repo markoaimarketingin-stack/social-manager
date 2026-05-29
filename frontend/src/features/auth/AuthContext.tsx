@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiBaseUrl } from '../../lib/api/client';
 
 interface User {
   id: number;
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedToken = localStorage.getItem('auth_token');
       if (storedToken) {
         try {
-          const response = await fetch('http://localhost:8088/api/users/me', {
+          const response = await fetch(`${apiBaseUrl}/api/users/me`, {
             headers: {
               'Authorization': `Bearer ${storedToken}`
             }
