@@ -4,147 +4,60 @@
 
 # Current Phase
 
-Frontend reconstruction and deployment parity phase.
+# PROJECT STATUS — current snapshot
 
-The rebuild is now:
-- visually operational
-- workflow-complete at demo level
-- architecturally stabilized
-- founder-demo ready
+This document summarizes the repository state based on code present in the workspace (May 30, 2026). All statements are evidence-based and describe what is implemented now.
 
-The project is NOT yet production-ready.
+## High-level completion estimates
 
----
+- Overall project completion (visual/workflow parity): **~60%**
+- Frontend completion: **~80%** (UI pages and components are largely implemented; many flows use the `mock.ts` demo store)
+- Backend completion: **~45%** (routers, models, adapters present; durable integrations and migrations incomplete)
+- Production readiness: **Low** — critical items (durable queue, migrations, auth hardening) are unfinished.
 
-# Completed
+## Real vs Mocked (short)
 
-## Backend Foundation
+- Real/Implemented: workflow persistence, revision lineage, activity timeline, routers for auth/publishing/chat/intelligence, platform adapter interfaces, approval logic, in-memory publishing workers.
+- Partial/Mocked: LLM generation fallbacks, provider publishing (SandboxMode), OAuth flows, analytics ingestion, some real integrations in `real_features` guarded by `initialize()`/credentials.
 
-- FastAPI app structure
-- SQLAlchemy models
-- Alembic migrations
-- workspace-scoped services
-- typed schemas
-- modular workflows
-- deterministic workflow execution
-- activity events
-- revision continuity
-- publishing queue foundations
+## Recently added/changed systems (observable in git and files)
 
-## Frontend Reconstruction
+- `backend/social_manager/platforms/` — platform adapters and `PlatformAdapterHub` (hub + adapters for facebook/instagram/linkedin/x/youtube)
+- `backend/social_manager/real_features_endpoints.py` — new "real" feature routers (real trends, metrics, image generation, email, influencer discovery, A/B testing)
+- `backend/social_manager/feature_endpoints.py` — intelligence endpoints (trend, competitor, segmentation, copy generation)
+- `backend/social_manager/routers/chat.py` — assistant router with `ask` and `agent` modes (agent mode can draft and publish)
+- `backend/social_manager/workers/queue.py` — in-memory `PublishingQueue` and `PublishingService`
+- `backend/social_manager/workers/__init__.py` — worker initialization that bridges `platform_hub` and publishing worker
 
-- command-center shell
-- sidebar/topbar reconstruction
-- assistant rail
-- dashboard reconstruction
-- strategy workspace
-- planning workspace
-- review queue
-- publishing queue
-- operational workflow UX
-- activity timeline surfaces
+## Known limitations (evidence)
 
-## Workflow Areas
+- Alembic migrations: `alembic/versions/` is empty; code uses `Base.metadata.create_all()` in places → no committed migrations.
+- Multiple publish execution paths: FastAPI background tasks, in-memory `PublishingQueue`, and some inline publishes (chat agent) — risks duplication and divergence.
+- In-memory queue is not durable; jobs can be lost if process restarts.
+- `platform_hub` global singleton introduces hidden mutable state.
+- Chat `agent` mode performs direct publishes without enforced approval or canonical enqueueing.
 
-- strategy generation
-- planning generation
-- draft generation
-- review progression
-- publish-ready progression
-- workflow lineage persistence
+## Technical debt
 
----
+- Missing durable queue integration (Redis/Celery/RQ) or DB-backed worker.
+- Missing Alembic migration history and migration CI.
+- Duplicate publish logic across routers and workers.
+- Policy checks and RBAC present but not consistently enforced across all publish entrypoints.
 
-# Intentionally Mocked
+## Immediate priorities (recommended)
 
-The following are intentionally mocked or deterministic:
+1. Consolidate publish pipeline: choose a canonical durable job system and route all publishes through it.
+2. Disable or gate chat `agent` direct-publish path until policy/RBAC/approval checks are enforced.
+3. Add Alembic migration scripts for current schema and add migration CI.
+4. Replace or back the in-memory queue with a durable broker or DB-backed worker.
+5. Harden auth flows and enforce RBAC for publish operations.
 
-- LLM generation
-- publishing providers
-- analytics ingestion
-- realtime collaboration
-- advanced notifications
-- OAuth publishing
-- external platform APIs
+## Risks
 
-This is intentional during frontend parity and workflow stabilization.
+- Risk of accidental live publishes if provider credentials are present and chat `agent` flows are used.
+- Data integrity risks due to missing migrations and volatile in-memory queue.
+- Operational complexity from global mutable `platform_hub` and multiple publish paths.
 
 ---
 
-# Current Priorities
-
-## Immediate Priority
-
-- frontend deployment
-- visual polish
-- founder-facing UX parity
-- interaction polish
-- stability cleanup
-
-## NOT current priorities
-
-- distributed orchestration
-- websocket infrastructure
-- microservices
-- advanced analytics
-- vector DB infrastructure
-- autonomous agent systems
-
----
-
-# Known Issues
-
-- some interactions are frontend-only
-- some workflow actions are deterministic placeholders
-- PostgreSQL production verification incomplete
-- some screens still feel visually inconsistent
-- assistant rail still needs restraint refinement
-- some legacy frontend parity gaps remain
-
----
-
-# Architectural Constraints
-
-## NEVER reintroduce
-
-- giant frontend state blobs
-- fake supervisor orchestration
-- hidden workflow synchronization
-- websocket dependency assumptions
-- tightly coupled frontend/backend state
-- mega providers/contexts
-
-## ALWAYS preserve
-
-- typed API contracts
-- workflow modularity
-- workspace scoping
-- isolated persistence
-- frontend visual restraint
-- premium command-center UX
-
----
-
-# Deployment Status
-
-## Frontend
-
-Deploy-ready in demo/mock mode.
-
-## Backend
-
-Locally runnable and migration-capable.
-
-Not yet production hardened.
-
----
-
-# Recommended Next Milestones
-
-1. frontend deployment
-2. founder feedback collection
-3. interaction polish
-4. auth hardening
-5. real provider integration
-6. publishing infrastructure
-7. production observability
+This page is intentionally concise. See `HANDOFF.md` for file-level entry points and `ARCHITECTURE_RULES.md` for coding constraints and detected drift.
