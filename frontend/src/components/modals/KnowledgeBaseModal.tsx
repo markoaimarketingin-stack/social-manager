@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiBaseUrl } from "../../lib/api/client";
-import { isDemoModeEnabled } from "../../lib/api/mock";
+import { apiFetch } from "../../lib/api/client";
 
 type KnowledgeBaseModalProps = {
   isOpen: boolean;
@@ -16,33 +15,6 @@ interface Document {
   processing_status: string;
 }
 
-const DEFAULT_DEMO_DOCS: Document[] = [
-  {
-    id: 101,
-    filename: "brand_voice_guidelines.txt",
-    category: "brand voice",
-    file_type: "txt",
-    uploaded_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    processing_status: "completed",
-  },
-  {
-    id: 102,
-    filename: "target_audience_personas.txt",
-    category: "audience profile",
-    file_type: "txt",
-    uploaded_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    processing_status: "completed",
-  },
-  {
-    id: 103,
-    filename: "competitor_social_audit.txt",
-    category: "competitor signals",
-    file_type: "txt",
-    uploaded_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    processing_status: "completed",
-  },
-];
-
 export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,25 +24,10 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
     setLoading(true);
     setError(null);
     try {
-      if (isDemoModeEnabled()) {
-        await new Promise((r) => setTimeout(r, 600));
-        const stored = localStorage.getItem("demo_kb_docs");
-        if (!stored) {
-          localStorage.setItem("demo_kb_docs", JSON.stringify(DEFAULT_DEMO_DOCS));
-          setDocuments(DEFAULT_DEMO_DOCS);
-        } else {
-          setDocuments(JSON.parse(stored));
-        }
-      } else {
-        const res = await fetch(`${apiBaseUrl}/api/knowledge_base/documents`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to load documents");
-        const data = await res.json();
-        setDocuments(data);
-      }
+      const res = await apiFetch("/api/knowledge_base/documents");
+      if (!res.ok) throw new Error("Failed to load documents");
+      const data = await res.json();
+      setDocuments(Array.isArray(data) ? data : data.documents ?? []);
     } catch (err: any) {
       setError(err.message || "Failed to fetch documents.");
     } finally {
@@ -88,21 +45,9 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
     if (!window.confirm("Are you sure you want to delete this document from the training context?")) return;
 
     try {
-      if (isDemoModeEnabled()) {
-        const stored = JSON.parse(localStorage.getItem("demo_kb_docs") || "[]");
-        const updated = stored.filter((d: any) => d.id !== id);
-        localStorage.setItem("demo_kb_docs", JSON.stringify(updated));
-        setDocuments(updated);
-      } else {
-        const res = await fetch(`${apiBaseUrl}/api/knowledge_base/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to delete document");
-        setDocuments((prev) => prev.filter((d) => d.id !== id));
-      }
+      const res = await apiFetch(`/api/knowledge_base/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete document");
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (err: any) {
       alert(`Error deleting document: ${err.message}`);
     }

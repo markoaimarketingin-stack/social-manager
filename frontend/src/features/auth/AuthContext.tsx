@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiBaseUrl } from '../../lib/api/client';
+import { apiFetch } from '../../lib/api/client';
 
 interface User {
   id: number;
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedToken = localStorage.getItem('auth_token');
       if (storedToken) {
         try {
-          const response = await fetch(`${apiBaseUrl}/api/users/me`, {
+          const response = await apiFetch('/api/users/me', {
             headers: {
               'Authorization': `Bearer ${storedToken}`
             }
@@ -47,6 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (error) {
           console.error("Failed to verify token", error);
+          localStorage.removeItem('auth_token');
+          setToken(null);
+          setUser(null);
         }
       }
       setLoading(false);
@@ -69,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

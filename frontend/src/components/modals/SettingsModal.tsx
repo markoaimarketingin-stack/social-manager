@@ -9,7 +9,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [groqKey, setGroqKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [customBackendUrl, setCustomBackendUrl] = useState("");
-  const [isDemoFallback, setIsDemoFallback] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -17,7 +16,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setGroqKey(localStorage.getItem("groq_api_key") || "");
       setOpenaiKey(localStorage.getItem("openai_api_key") || "");
       setCustomBackendUrl(localStorage.getItem("custom_backend_url") || "");
-      setIsDemoFallback(localStorage.getItem("demo_mode_fallback") === "true");
       setSaved(false);
     }
   }, [isOpen]);
@@ -28,11 +26,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     localStorage.setItem("groq_api_key", groqKey.trim());
     localStorage.setItem("openai_api_key", openaiKey.trim());
     localStorage.setItem("custom_backend_url", customBackendUrl.trim());
-    if (isDemoFallback) {
-      localStorage.setItem("demo_mode_fallback", "true");
-    } else {
-      localStorage.removeItem("demo_mode_fallback");
-    }
+    localStorage.removeItem("demo_mode_fallback");
     setSaved(true);
     setTimeout(() => {
       onClose();
@@ -54,7 +48,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex items-center justify-between pb-4 border-b border-[#21262d]">
           <div>
             <h3 className="text-lg font-bold tracking-wide">Manage Models & API Keys</h3>
-            <p className="text-xs text-white/40">Configure your custom LLM keys and demo modes.</p>
+            <p className="text-xs text-white/40">Configure API keys and backend routing.</p>
           </div>
           <button
             onClick={onClose}
@@ -119,23 +113,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </span>
           </label>
 
-          {/* Demo Fallback Switch */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#0d1117] border border-[#21262d]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Offline Demo Mode</p>
-              <p className="text-[10px] text-white/40 mt-0.5">Use local mock data instead of calling backend APIs.</p>
-            </div>
-            <button
-              onClick={() => setIsDemoFallback(!isDemoFallback)}
-              className="relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              style={{ background: isDemoFallback ? "#238636" : "#30363d" }}
-            >
-              <span
-                className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                style={{ transform: isDemoFallback ? "translateX(20px)" : "translateX(0px)" }}
-              />
-            </button>
-          </div>
         </div>
 
         {/* Footer Actions */}

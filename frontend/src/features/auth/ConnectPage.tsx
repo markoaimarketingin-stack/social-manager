@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
-import { apiBaseUrl } from "../../lib/api/client";
+import { apiBaseUrl, apiFetch } from "../../lib/api/client";
 
 type Connection = {
   platform: string;
@@ -84,7 +84,7 @@ export default function ConnectPage() {
 
   const fetchProviders = async () => {
     try {
-      const res = await fetch(`${apiBaseUrl}/api/auth/providers`);
+      const res = await apiFetch("/api/auth/providers");
       if (!res.ok) return;
       const data = await res.json();
       const providerMap = (data.providers ?? []).reduce(
@@ -103,7 +103,7 @@ export default function ConnectPage() {
   const fetchConnections = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${apiBaseUrl}/api/auth/connections`, {
+      const res = await apiFetch("/api/auth/connections", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) setConnections(await res.json());
@@ -127,7 +127,7 @@ export default function ConnectPage() {
     if (!window.confirm(`Disconnect ${platform}? This will stop posting to this platform.`)) return;
     setDisconnecting(platform);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/auth/${platform}/disconnect`, {
+      const res = await apiFetch(`/api/auth/${platform}/disconnect`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

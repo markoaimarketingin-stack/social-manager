@@ -4,7 +4,7 @@ Loads all settings from environment variables / .env file.
 """
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from typing import List, Optional
 
 
@@ -12,12 +12,15 @@ class Settings(BaseSettings):
     """Application settings loaded from environment."""
 
     # 🎛️ Server 🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️🎛️
-    port: int = 8088
-    frontend_url: str = "http://localhost:5173"
-    backend_url: str = "http://localhost:8088"
+    port: int = Field(default=8088, validation_alias=AliasChoices("PORT", "API_PORT"))
+    frontend_url: str = Field(default="http://localhost:5173", validation_alias=AliasChoices("FRONTEND_URL", "VITE_FRONTEND_URL"))
+    backend_url: str = Field(default="http://localhost:8088", validation_alias=AliasChoices("BACKEND_URL", "API_BASE_URL"))
 
     # ── Database ──────────────────────────────────────────────────────────────
-    social_manager_db_url: str = "sqlite:///./social_manager.db"
+    social_manager_db_url: str = Field(
+        default="sqlite:///./social_manager.db",
+        validation_alias=AliasChoices("SOCIAL_MANAGER_DB_URL", "DATABASE_URL"),
+    )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Read from CORS_ORIGINS env var; falls back to localhost defaults
@@ -39,9 +42,9 @@ class Settings(BaseSettings):
     twilio_key: str | None = None
 
     # ── Google ────────────────────────────────────────────────────────────────
-    google_client_id: str | None = None
-    google_client_secret: str | None = None
-    google_api_key: str | None = None
+    google_client_id: str | None = Field(default=None, validation_alias=AliasChoices("GOOGLE_CLIENT_ID", "YOUTUBE_CLIENT_ID"))
+    google_client_secret: str | None = Field(default=None, validation_alias=AliasChoices("GOOGLE_CLIENT_SECRET", "YOUTUBE_CLIENT_SECRET"))
+    google_api_key: str | None = Field(default=None, validation_alias=AliasChoices("GOOGLE_API_KEY", "YOUTUBE_API_KEY"))
 
     # ── Twitter / X  (App-level OAuth credentials — kept in .env) ────────────
     twitter_api_key: str | None = None

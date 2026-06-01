@@ -7,7 +7,7 @@ from __future__ import annotations
 import random
 import string
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, Float, DateTime, Boolean, ForeignKey, Enum
+from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, Float, DateTime, Boolean, ForeignKey, Enum, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from social_manager.config import settings
 
@@ -359,6 +359,67 @@ def init_db(seed: int = 42):
     """
     random.seed(seed)
     Base.metadata.create_all(bind=engine)
+    _repair_existing_schema()
     print(f"[OK] Database initialized with seed={seed}")
+
+
+def _repair_existing_schema():
+    """Add columns introduced after early dev databases were created.
+
+    SQLAlchemy's create_all creates missing tables but does not alter existing
+    ones. This keeps local/prototype Postgres and SQLite databases compatible
+    without requiring Alembic setup before development can continue.
+    """
+    inspector = inspect(engine)
+
+    def has_table(table_name: str) -> bool:
+        return inspector.has_table(table_name)
+
+    def existing_columns(table_name: str) -> set[str]:
+        return {column["name"] for column in inspector.get_columns(table_name)}
+
+    dialect = engine.dialect.name
+    json_type = "JSON" if dialect != "sqlite" else "TEXT"
+    datetime_type = "TIMESTAMP" if dialect in {"postgresql", "postgres"} else "DATETIME"
+
+    repairs = {
+        "posts": {
+            "user_id": "INTEGER",
+            "campaign_id": "INTEGER",
+            "platform": "VARCHAR",
+            "content": "TEXT",
+            "copy_variant": "VARCHAR",
+            "asset_ids": json_type,
+            "status": "VARCHAR",
+            "created_at": datetime_type,
+            "scheduled_at": datetime_type,
+            "published_at": datetime_type,
+            "approval_status": "VARCHAR",
+            "approved_by": "VARCHAR",
+        },
+        "publishing_jobs": {
+            "post_id": "INTEGER",
+            "platform": "VARCHAR",
+            "platform_post_id": "VARCHAR",
+            "status": "VARCHAR",
+            "attempt_count": "INTEGER",
+            "max_attempts": "INTEGER",
+            "error_message": "TEXT",
+            "idempotency_key": "VARCHAR",
+            "created_at": datetime_type,
+            "updated_at": datetime_type,
+        },
+    }
+
+    with engine.begin() as connection:
+        for table_name, columns in repairs.items():
+            if not has_table(table_name):
+                continue
+
+            present = existing_columns(table_name)
+            for column_name, column_type in columns.items():
+                if column_name in present:
+                    continue
+                connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
 
 

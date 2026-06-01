@@ -13,6 +13,7 @@ import { PublishingPage } from "../features/publishing/pages/PublishingPage";
 import { ReviewPage } from "../features/review/pages/ReviewPage";
 import { StrategyPage } from "../features/strategy/pages/StrategyPage";
 import { useAuth } from "../features/auth/AuthContext";
+import { PlatformWorkspacePage } from "../features/platforms/pages/PlatformWorkspacePage";
 
 function HomeRedirect() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -23,8 +24,8 @@ function HomeRedirect() {
       </div>
     );
   }
-  if (!isAuthenticated) return <Navigate replace to="/auth" />;
-  return <Navigate replace to={`/workspaces/${user!.id}/dashboard`} />;
+  if (!isAuthenticated || !user) return <Navigate replace to="/auth" />;
+  return <Navigate replace to={`/workspaces/${user.id}/dashboard`} />;
 }
 
 export function AppRouter() {
@@ -63,6 +64,7 @@ export function AppRouter() {
           <Route path="planning" element={<PlanningPage />} />
           <Route path="review" element={<ReviewPage />} />
           <Route path="publishing" element={<PublishingPage />} />
+          <Route path="platforms/:platformSlug" element={<PlatformWorkspacePage />} />
         </Route>
 
         <Route path="*" element={<Navigate replace to="/" />} />

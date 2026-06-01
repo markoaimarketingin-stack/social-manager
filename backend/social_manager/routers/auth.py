@@ -65,26 +65,31 @@ SUPPORTED_PROVIDERS = {
         "label": "Facebook Page",
         "required": ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
         "configured": lambda: bool(settings.facebook_app_id and settings.facebook_app_secret),
+        "env_token_configured": lambda: bool(settings.facebook_access_token and settings.facebook_page_id),
     },
     "instagram": {
         "label": "Instagram",
         "required": ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
         "configured": lambda: bool(settings.facebook_app_id and settings.facebook_app_secret),
+        "env_token_configured": lambda: bool(settings.instagram_access_token and settings.instagram_business_account_id),
     },
     "linkedin": {
         "label": "LinkedIn",
         "required": ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"],
         "configured": lambda: bool(settings.linkedin_client_id and settings.linkedin_client_secret),
+        "env_token_configured": lambda: bool(settings.linkedin_access_token),
     },
     "x": {
         "label": "X / Twitter",
         "required": ["TWITTER_API_KEY", "TWITTER_API_SECRET"],
         "configured": lambda: bool(settings.twitter_api_key and settings.twitter_api_secret),
+        "env_token_configured": lambda: False,
     },
     "youtube": {
         "label": "YouTube",
         "required": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
         "configured": lambda: bool(settings.google_client_id and settings.google_client_secret),
+        "env_token_configured": lambda: False,
     },
 }
 
@@ -104,6 +109,104 @@ def provider_config_redirect(platform: str) -> RedirectResponse:
     )
 
 
+async def import_env_connection(platform: str, user_id: int, db: Session) -> RedirectResponse:
+    """Create/update a user connection from legacy env tokens when OAuth app keys are not ready."""
+    access_token = None
+    refresh_token = None
+    access_token_secret = None
+    expires_at = None
+    platform_account_id = None
+    platform_account_name = None
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        if platform == "facebook":
+            access_token = settings.facebook_access_token
+            platform_account_id = settings.facebook_page_id
+            platform_account_name = "Facebook Page"
+            page_resp = await client.get(
+                f"https://graph.facebook.com/v18.0/{platform_account_id}",
+                params={"fields": "name", "access_token": access_token},
+            )
+            if page_resp.status_code == 200:
+                platform_account_name = page_resp.json().get("name") or platform_account_name
+            else:
+                return frontend_redirect(
+                    {
+                        "error": "env_token_invalid",
+                        "platform": platform,
+                        "description": "FACEBOOK_ACCESS_TOKEN or FACEBOOK_PAGE_ID could not be verified.",
+                    }
+                )
+
+        elif platform == "instagram":
+            access_token = settings.instagram_access_token
+            platform_account_id = settings.instagram_business_account_id
+            platform_account_name = "Instagram Business"
+            ig_resp = await client.get(
+                f"https://graph.facebook.com/v18.0/{platform_account_id}",
+                params={"fields": "username,name", "access_token": access_token},
+            )
+            if ig_resp.status_code == 200:
+                data = ig_resp.json()
+                platform_account_name = data.get("username") or data.get("name") or platform_account_name
+            else:
+                return frontend_redirect(
+                    {
+                        "error": "env_token_invalid",
+                        "platform": platform,
+                        "description": "INSTAGRAM_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID could not be verified.",
+                    }
+                )
+
+        elif platform == "linkedin":
+            access_token = settings.linkedin_access_token
+            platform_account_name = "LinkedIn"
+            me_resp = await client.get(
+                "https://api.linkedin.com/v2/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            if me_resp.status_code == 200:
+                data = me_resp.json()
+                platform_account_id = data.get("sub")
+                platform_account_name = data.get("name") or platform_account_name
+            else:
+                return frontend_redirect(
+                    {
+                        "error": "env_token_invalid",
+                        "platform": platform,
+                        "description": "LINKEDIN_ACCESS_TOKEN could not be verified.",
+                    }
+                )
+
+    if not access_token:
+        return provider_config_redirect(platform)
+
+    social_repo = SocialConnectionRepository(db)
+    existing = social_repo.get_user_connection(user_id, platform)
+    if existing:
+        existing.access_token = access_token
+        existing.refresh_token = refresh_token
+        existing.access_token_secret = access_token_secret
+        existing.platform_account_id = platform_account_id
+        existing.platform_account_name = platform_account_name
+        existing.expires_at = expires_at
+        existing.updated_at = datetime.utcnow()
+        db.commit()
+    else:
+        social_repo.create(
+            user_id=user_id,
+            platform=platform,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            access_token_secret=access_token_secret,
+            platform_account_id=platform_account_id,
+            platform_account_name=platform_account_name,
+            expires_at=expires_at,
+        )
+
+    return frontend_redirect({"connected": platform, "success": "true", "source": "env"})
+
+
 def pkce_challenge(verifier: str) -> str:
     digest = hashlib.sha256(verifier.encode("utf-8")).digest()
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
@@ -117,7 +220,9 @@ def get_auth_providers():
             {
                 "platform": platform,
                 "label": meta["label"],
-                "configured": meta["configured"](),
+                "configured": meta["configured"]() or meta["env_token_configured"](),
+                "oauth_configured": meta["configured"](),
+                "env_token_configured": meta["env_token_configured"](),
                 "required_env": meta["required"],
             }
             for platform, meta in SUPPORTED_PROVIDERS.items()
@@ -126,13 +231,15 @@ def get_auth_providers():
 
 
 @router.get("/{platform}/connect")
-def connect_platform(platform: str, user_id: int = Depends(get_current_user_id)):
+async def connect_platform(platform: str, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Start the OAuth flow for the requested platform."""
     platform = platform.lower()
     if platform not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
 
     if not SUPPORTED_PROVIDERS[platform]["configured"]():
+        if SUPPORTED_PROVIDERS[platform]["env_token_configured"]():
+            return await import_env_connection(platform, user_id, db)
         return provider_config_redirect(platform)
 
     redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"

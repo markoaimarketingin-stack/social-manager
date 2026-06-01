@@ -1,5 +1,3 @@
-import { isDemoModeEnabled, mockRequest } from "./mock";
-
 const DEFAULT_API_BASE_URL = "";
 const RAW_API_BASE_URL =
   localStorage.getItem("custom_backend_url") ||
@@ -29,18 +27,7 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  if (isDemoModeEnabled()) {
-    return mockRequest<T>(path, init);
-  }
-
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-      ...(init?.headers ?? {}),
-    },
-  });
+  const response = await apiFetch(path, init);
 
   if (!response.ok) {
     let errorMessage = `${init?.method ?? "GET"} ${path} failed`;
@@ -58,6 +45,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
+  const requestInit = {
+    ...init,
+    headers: {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...getAuthHeaders(),
+      ...(init?.headers ?? {}),
+    },
+  } satisfies RequestInit;
+
+  try {
+    return await fetch(`${apiBaseUrl}${path}`, requestInit);
+  } catch (error) {
+    if (!apiBaseUrl) throw error;
+    return fetch(path, requestInit);
+  }
 }
 
 export function apiGet<T>(path: string): Promise<T> {

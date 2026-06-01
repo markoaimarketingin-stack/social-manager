@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
-import { apiBaseUrl } from "../../lib/api/client";
-import { isDemoModeEnabled } from "../../lib/api/mock";
+import { apiFetch } from "../../lib/api/client";
 
 type TrainModelModalProps = {
   isOpen: boolean;
@@ -27,7 +26,7 @@ export function TrainModelModal({ isOpen, onClose, onSuccess }: TrainModelModalP
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setFeedback("⚠️ Please select a file first.");
+      setFeedback("Please select a file first.");
       return;
     }
 
@@ -35,65 +34,34 @@ export function TrainModelModal({ isOpen, onClose, onSuccess }: TrainModelModalP
     setFeedback(null);
 
     try {
-      if (isDemoModeEnabled()) {
-        // Simulate local demo upload
-        await new Promise((r) => setTimeout(r, 1200));
-        
-        // Add to local mock documents list
-        const demoDocs = JSON.parse(localStorage.getItem("demo_kb_docs") || "[]");
-        const newDoc = {
-          id: Date.now(),
-          filename: file.name,
-          category: category,
-          file_type: file.name.split(".").pop() || "txt",
-          uploaded_at: new Date().toISOString(),
-          processing_status: "completed",
-          content_length: file.size,
-        };
-        demoDocs.push(newDoc);
-        localStorage.setItem("demo_kb_docs", JSON.stringify(demoDocs));
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("category", category);
 
-        setFeedback("✓ Document trained and context queued successfully (Demo Mode)!");
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 1200);
-      } else {
-        // Real API Upload
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("category", category);
+      const res = await apiFetch("/api/knowledge_base/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        const res = await fetch(`${apiBaseUrl}/api/knowledge_base/upload`, {
-          method: "POST",
-          headers: {
-            // Note: browser automatically sets multipart/form-data boundary
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Upload failed");
-        }
-
-        setFeedback("✓ Document uploaded and trained successfully!");
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 1200);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Upload failed");
       }
+
+      setFeedback("Document uploaded and trained successfully!");
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setTimeout(() => {
+        onSuccess?.();
+        onClose();
+      }, 1200);
     } catch (err: any) {
-      setFeedback(`❌ Error: ${err.message || "Failed to upload file."}`);
+      setFeedback(`Error: ${err.message || "Failed to upload file."}`);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -167,13 +135,13 @@ export function TrainModelModal({ isOpen, onClose, onSuccess }: TrainModelModalP
                 {file ? file.name : "Upload briefs, voice guides, or audience files"}
               </p>
               <p className="text-[10px] text-white/30">
-                PDF, DOCX, TXT, CSV. {isDemoModeEnabled() ? "Demo mode keeps this local." : "Size up to 10MB."}
+                PDF, DOCX, TXT, CSV. Size up to 10MB.
               </p>
             </div>
           </div>
 
           {feedback && (
-            <p className="text-xs text-center" style={{ color: feedback.startsWith("❌") ? "#f85149" : "#3fb950" }}>
+            <p className="text-xs text-center" style={{ color: feedback.startsWith("Error:") ? "#f85149" : "#3fb950" }}>
               {feedback}
             </p>
           )}

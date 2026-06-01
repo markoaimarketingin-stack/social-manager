@@ -18,7 +18,7 @@ from social_manager.config import settings
 from social_manager.workers import init_workers, shutdown_workers, publishing_service
 from social_manager.approvals import policy_engine, approval_workflow, UserRole, RoleBasedAccessControl
 from social_manager.analytics import metrics_service, kpi_computer, dashboard_generator
-from social_manager.knowledge_base import KnowledgeBaseManager, init_knowledge_base_with_samples
+from social_manager.knowledge_base import KnowledgeBaseManager
 from social_manager.feature_endpoints import all_feature_routers
 from social_manager.real_features_endpoints import all_real_feature_routers
 from social_manager.routers.auth import router as auth_router
@@ -43,7 +43,6 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("✓ Starting Social Manager...")
     init_db(seed=42)
-    init_knowledge_base_with_samples()  # Load sample documents
     await init_workers(
         platform_credentials={
             "twitter_api_key": settings.twitter_api_key or "",
@@ -313,19 +312,6 @@ async def system_status():
         "workers": "running",
         "queue_pending": len(publishing_service.queue.pending_jobs),
     }
-
-@app.post("/api/system/seed-dummy-data")
-async def seed_dummy_data():
-    """Seed the database with dummy data for testing."""
-    import subprocess
-    import sys
-    try:
-        seed_script = os.path.join(os.path.dirname(__file__), "social_manager", "seed_dummy_data.py")
-        subprocess.run([sys.executable, seed_script], check=True)
-        return {"status": "success", "message": "Dummy data seeded successfully"}
-    except Exception as e:
-        logger.error(f"Failed to seed dummy data: {e}")
-        raise HTTPException(status_code=500, detail="Failed to seed dummy data")
 
 # ===== KNOWLEDGE BASE MANAGEMENT =====
 
