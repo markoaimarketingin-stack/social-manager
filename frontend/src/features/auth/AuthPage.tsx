@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { apiBaseUrl } from '../../lib/api/client';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +17,26 @@ export default function AuthPage() {
   
   const from = location.state?.from?.pathname || '/connect';
 
+  const authRequest = async (endpoint: string, body: { email: string; password: string; name?: string }) => {
+    const bases = Array.from(new Set([apiBaseUrl, ""]));
+    let lastError: unknown = null;
+
+    for (const baseUrl of bases) {
+      try {
+        const response = await fetch(`${baseUrl}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        return response;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('Failed to fetch');
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -26,13 +47,8 @@ export default function AuthPage() {
       const body = isLogin 
         ? { email, password }
         : { email, password, name };
-      const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const response = await authRequest(endpoint, body);
 
       const contentType = response.headers.get('content-type') || '';
       const rawBody = await response.text();

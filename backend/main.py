@@ -55,6 +55,9 @@ async def lifespan(app: FastAPI):
             "linkedin_client_secret": settings.linkedin_client_secret or "",
             "instagram_access_token": settings.instagram_access_token or "",
             "instagram_business_account_id": settings.instagram_business_account_id or "",
+            "facebook_access_token": settings.facebook_access_token or "",
+            "facebook_page_id": settings.facebook_page_id or "",
+            "youtube_api_key": settings.google_api_key or "",
         },
         sandbox_mode=False  # Auto-detect per adapter
     )

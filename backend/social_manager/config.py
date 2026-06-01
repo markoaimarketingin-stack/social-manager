@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     # ── Google ────────────────────────────────────────────────────────────────
     google_client_id: str | None = None
+    google_client_secret: str | None = None
     google_api_key: str | None = None
 
     # ── Twitter / X  (App-level OAuth credentials — kept in .env) ────────────
@@ -75,7 +76,13 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> List[str]:
         """Parse comma-separated CORS origins into a list."""
-        return [o.strip() for o in self.cors_origins_raw.split(",") if o.strip()]
+        local_dev_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8088",
+            "http://127.0.0.1:8088",
+        ]
+        return list(dict.fromkeys([o.strip() for o in self.cors_origins_raw.split(",") if o.strip()] + local_dev_origins))
 
     @property
     def is_postgres(self) -> bool:

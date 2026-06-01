@@ -167,6 +167,11 @@ def get_user_platform_hub(user_id: int, db_session) -> PlatformAdapterHub:
                 client_secret=settings.linkedin_client_secret or "",
                 sandbox=False
             ))
+        elif conn.platform == "youtube":
+            hub.register_adapter("youtube", YouTubeAdapter(
+                api_key=conn.access_token,
+                sandbox=False
+            ))
             
     return hub
 
