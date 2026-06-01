@@ -2,12 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
+from jose import JWTError
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from social_manager.db import SessionLocal, UserRepository
 from social_manager.config import settings
+from social_manager.core.auth import (
+    create_access_token as core_create_access_token,
+    decode_token as core_decode_token,
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+)
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -23,20 +30,10 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 # ── JWT Config ────────────────────────────────────────────────────────────────
-# Use a fallback key for development if none provided in env
-SECRET_KEY = getattr(settings, "jwt_secret_key", "dev_secret_key_change_me_in_prod")
-ALGORITHM = getattr(settings, "jwt_algorithm", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
-
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    if expires_delta is None:
+        expires_delta = timedelta(minutes=15)
+    return core_create_access_token(data, expires_delta)
 
 # ── DB Dependency ─────────────────────────────────────────────────────────────
 def get_db():
@@ -130,7 +127,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = core_decode_token(token)
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception

@@ -16,11 +16,13 @@ from typing import Optional
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from jose import JWTError, jwt
+from jose import JWTError
 from sqlalchemy.orm import Session
 
 from social_manager.config import settings
 from social_manager.db import SessionLocal, SocialConnectionRepository
+from social_manager.routers.users import get_current_user
+from social_manager.core.auth import create_state_token, verify_state_token
 
 logger = logging.getLogger(__name__)
 
@@ -35,29 +37,7 @@ def get_db():
         db.close()
 
 
-def get_current_user_id(request: Request) -> int:
-    """Extract user_id from a bearer JWT or from the OAuth-init query param."""
-    token = None
-    auth = request.headers.get("Authorization", "")
-    if auth.startswith("Bearer "):
-        token = auth.split(" ", 1)[1]
-
-    if not token:
-        token = request.query_params.get("user_id")
-
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    try:
-        from social_manager.routers.users import ALGORITHM, SECRET_KEY
-
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return int(user_id)
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+# Use `get_current_user` dependency (returns user object) for auth-protected routes.
 
 
 SUPPORTED_PROVIDERS = {
@@ -231,7 +211,7 @@ def get_auth_providers():
 
 
 @router.get("/{platform}/connect")
-async def connect_platform(platform: str, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+async def connect_platform(platform: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Start the OAuth flow for the requested platform."""
     platform = platform.lower()
     if platform not in SUPPORTED_PROVIDERS:
@@ -243,7 +223,9 @@ async def connect_platform(platform: str, user_id: int = Depends(get_current_use
         return provider_config_redirect(platform)
 
     redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
-    state = f"{user_id}_{uuid.uuid4().hex}"
+    # create a short-lived signed state token containing the user id and a nonce
+    state_payload = {"sub": int(current_user.id), "nonce": uuid.uuid4().hex}
+    state = create_state_token(state_payload, expires_minutes=5)
 
     if platform in ("facebook", "instagram"):
         params = {
@@ -269,7 +251,9 @@ async def connect_platform(platform: str, user_id: int = Depends(get_current_use
 
     elif platform == "x":
         code_verifier = uuid.uuid4().hex + uuid.uuid4().hex
-        state = f"{user_id}_{code_verifier}"
+        # include PKCE verifier in the signed state token
+        state_payload["cv"] = code_verifier
+        state = create_state_token(state_payload, expires_minutes=5)
         params = {
             "response_type": "code",
             "client_id": settings.twitter_api_key,
@@ -321,7 +305,10 @@ async def platform_callback(
         )
 
     try:
-        user_id = int(state.split("_", 1)[0])
+        payload = verify_state_token(state)
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state parameter")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid OAuth state parameter")
 
@@ -436,7 +423,12 @@ async def platform_callback(
                     platform_account_name = me_data.get("name")
 
             elif platform == "x":
-                code_verifier = state.split("_", 1)[1] if "_" in state else ""
+                # retrieve PKCE code_verifier from signed state payload
+                try:
+                    payload = verify_state_token(state)
+                    code_verifier = payload.get("cv", "")
+                except Exception:
+                    code_verifier = ""
                 data = {
                     "grant_type": "authorization_code",
                     "code": code,
@@ -559,10 +551,10 @@ async def platform_callback(
 
 
 @router.get("/connections")
-def get_user_connections(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+def get_user_connections(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Return all social accounts connected by the logged-in user."""
     social_repo = SocialConnectionRepository(db)
-    connections = social_repo.get_user_connections(user_id)
+    connections = social_repo.get_user_connections(current_user.id)
     return [
         {
             "platform": connection.platform,
@@ -576,13 +568,13 @@ def get_user_connections(user_id: int = Depends(get_current_user_id), db: Sessio
 
 
 @router.delete("/{platform}/disconnect")
-def disconnect_platform(platform: str, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+def disconnect_platform(platform: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Remove a platform connection for the logged-in user."""
     social_repo = SocialConnectionRepository(db)
-    conn = social_repo.get_user_connection(user_id, platform.lower())
+    conn = social_repo.get_user_connection(current_user.id, platform.lower())
     if not conn:
         raise HTTPException(status_code=404, detail=f"No {platform} connection found")
     db.delete(conn)
     db.commit()
-    logger.info("Disconnected %s for user %s", platform, user_id)
-    return {"disconnected": platform, "user_id": user_id}
+    logger.info("Disconnected %s for user %s", platform, current_user.id)
+    return {"disconnected": platform, "user_id": current_user.id}
