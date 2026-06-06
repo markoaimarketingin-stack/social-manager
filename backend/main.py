@@ -68,13 +68,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Social Manager Agent", version="0.1.0", lifespan=lifespan)
 
-# CORS: Restrict to localhost + envvar-configurable origins for production
+# CORS: Permissive for debugging — allows all origins and headers.
+# WARNING: This is insecure. Use only for local debugging or short-term troubleshooting.
 allowed_origins = list(dict.fromkeys(settings.cors_origins + [settings.frontend_url, settings.backend_url]))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_origins=[],                 # leave empty when using allow_origin_regex
+    allow_origin_regex=r".*",       # allow any origin
+    allow_credentials=True,           # allow cookies/auth; keep only if needed
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 # ===== REQUEST/RESPONSE MODELS =====

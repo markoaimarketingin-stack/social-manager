@@ -1,12 +1,12 @@
 services:
   - type: web
     name: social-manager-ai-backend
-    runtime: python:3.11
+    runtime: python:3.12
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.12.0
       - key: PORT
         value: "8088"
       - key: PYTHONUNBUFFERED
@@ -22,4 +22,9 @@ services:
       - key: SOCIAL_MANAGER_DB_URL
         value: sqlite:///./social_manager.db
       - key: CORS_ORIGINS
-        value: '["https://social-community-manager.vercel.app", "https://social-community-manager-bfpz.onrender.com"]'
+        # Use a comma-separated string (not JSON) so Settings.cors_origins parses it correctly.
+        value: "http://localhost:3000,http://localhost:5173,http://localhost:8088,https://social-manager-deployment.onrender.com,https://social-manager-7i2w44eww-markoaimarketingin-stacks-projects.vercel.app"
+      - key: FRONTEND_URL
+        value: "https://social-manager-7i2w44eww-markoaimarketingin-stacks-projects.vercel.app"
+      - key: BACKEND_URL
+        value: "https://social-manager-deployment.onrender.com"
