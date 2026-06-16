@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Any
 from datetime import datetime
 
-from social_manager.db import SessionLocal, PostRepository, SocialConnectionRepository, Post, PublishingJob
+from social_manager.db import SessionLocal, PostRepository, SocialConnectionRepository, Post, PublishingJob, SocialStrategyLogRepository
 from social_manager.routers.users import get_current_user
 from social_manager.platforms.hub import get_user_platform_hub
+from social_manager.approvals import policy_engine, approval_workflow
 
 router = APIRouter(prefix="/api/publishing", tags=["Publishing"])
 
@@ -53,12 +54,84 @@ async def schedule_post(
         if not conn_repo.get_user_connection(user_id, platform):
             raise HTTPException(status_code=400, detail=f"No active connection found for {platform}")
 
+    # Run Compliance Policy Checks
+    policy_res = policy_engine.check_content(post_data.content)
+    has_warnings = any(v.severity == "warning" for v in policy_res["violations"])
+    
+    # Set status & approval_status based on compliance outcome
+    if not policy_res["passed"]:
+        status = "draft"
+        approval_status = "rejected"
+    elif has_warnings:
+        status = "draft"
+        approval_status = "pending"
+    else:
+        status = "scheduled" if post_data.scheduled_at else "approved"
+        approval_status = "approved"
+
     # Create the Post record
     post_repo = PostRepository(db)
     post = post_repo.create(
         user_id=user_id,
         content=post_data.content,
-        scheduled_at=post_data.scheduled_at
+        scheduled_at=post_data.scheduled_at,
+        status=status,
+        approval_status=approval_status
+    )
+    
+    strategy_log_repo = SocialStrategyLogRepository(db)
+    
+    # If policy check failed (errors)
+    if not policy_res["passed"]:
+        violations_str = ", ".join([v.details for v in policy_res["violations"]])
+        strategy_log_repo.log_event(
+            event="compliance_failure",
+            details=f"Post ID {post.id} failed compliance checks. Violations: {violations_str}"
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Compliance Check Failed: {violations_str}"
+        )
+        
+    # If warning
+    if has_warnings:
+        warnings_str = ", ".join([v.details for v in policy_res["violations"] if v.severity == "warning"])
+        strategy_log_repo.log_event(
+            event="compliance_warning",
+            details=f"Post ID {post.id} created with compliance warnings (pending approval): {warnings_str}"
+        )
+        # Register in approval workflow
+        approval_workflow.submit_for_approval(
+            post_id=post.id,
+            content=post.content,
+            creator_id=str(user_id),
+            required_approvers=["manager"]
+        )
+        
+        # Create PublishingJobs for each platform (status=pending, but do not trigger background task execution)
+        jobs = []
+        for platform in post_data.platforms:
+            job = PublishingJob(
+                post_id=post.id,
+                platform=platform,
+                status="pending"
+            )
+            db.add(job)
+            db.flush()
+            jobs.append(job)
+        db.commit()
+        
+        return {
+            "status": "warning_pending_approval",
+            "post_id": post.id,
+            "job_ids": [j.id for j in jobs],
+            "message": f"Post submitted but requires approval due to warnings: {warnings_str}"
+        }
+
+    # All checks passed (success/auto-approved)
+    strategy_log_repo.log_event(
+        event="compliance_passed",
+        details=f"Post ID {post.id} passed all compliance checks (auto-approved)."
     )
     
     # Create PublishingJobs for each platform

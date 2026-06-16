@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from social_manager.routers.users import get_current_user
-from social_manager.db import SessionLocal, SocialConnectionRepository, Post, PublishingJob
+from social_manager.db import SessionLocal, SocialConnectionRepository, Post, PublishingJob, SocialStrategyLogRepository
 from social_manager.platforms.hub import get_user_platform_hub
+from social_manager.approvals import policy_engine, approval_workflow
+from social_manager.routers.publishing import execute_publishing_job
 import os
 import httpx
 import logging
@@ -140,6 +142,7 @@ async def publish_post_for_user(user_id: int, content: str, platform: str, db_se
 @router.post("/interact")
 async def chat_interact(
     req: ChatRequest,
+    background_tasks: BackgroundTasks,
     current_user=Depends(get_current_user)
 ):
     """
@@ -181,6 +184,7 @@ async def chat_interact(
             conn_repo = SocialConnectionRepository(db)
             published_results = []
             errors = []
+            status_lines = []
 
             for platform in req.platforms:
                 conn = conn_repo.get_user_connection(current_user.id, platform)
@@ -199,27 +203,106 @@ async def chat_interact(
                     # Fallback content
                     content = req.message
 
-                # Publish the post
-                result = await publish_post_for_user(current_user.id, content, platform, db)
-                if result["success"]:
+                # Run Compliance Policy Checks
+                policy_res = policy_engine.check_content(content)
+                has_warnings = any(v.severity == "warning" for v in policy_res["violations"])
+                
+                # Check risk (low-risk educational vs launch/pricing/claims)
+                risk_keywords = ["launch", "price", "pricing", "sale", "cost", "dollar", "$", "buy", "discount", "offer", "guarantee", "risk-free"]
+                content_lower = content.lower()
+                is_low_risk = not any(kw in content_lower for kw in risk_keywords)
+                
+                if not policy_res["passed"]:
+                    status = "draft"
+                    approval_status = "rejected"
+                elif has_warnings or not is_low_risk:
+                    status = "draft"
+                    approval_status = "pending"
+                else:
+                    status = "approved"
+                    approval_status = "approved"
+
+                # Create the Post record in DB
+                post = Post(
+                    user_id=current_user.id,
+                    content=content,
+                    platform=platform,
+                    status=status,
+                    approval_status=approval_status
+                )
+                db.add(post)
+                db.flush()
+
+                # Audit logging
+                strategy_log_repo = SocialStrategyLogRepository(db)
+                strategy_log_repo.log_event(
+                    event="agent_compliance_check",
+                    details=(
+                        f"Post ID {post.id} drafted by agent for {platform}. "
+                        f"Passed: {policy_res['passed']}. Low-Risk: {is_low_risk}. "
+                        f"Status: {status}. Approval: {approval_status}."
+                    )
+                )
+
+                # Process based on approval status
+                if approval_status == "rejected":
+                    violations_str = ", ".join([v.details for v in policy_res["violations"]])
+                    errors.append(f"{platform.capitalize()}: Blocked by compliance check - {violations_str}")
+                    status_lines.append(f"❌ {platform.capitalize()}: Blocked by compliance check - {violations_str}")
+                    
+                elif approval_status == "pending":
+                    # Register in approval workflow
+                    approval_workflow.submit_for_approval(
+                        post_id=post.id,
+                        content=content,
+                        creator_id=str(current_user.id),
+                        required_approvers=["manager"]
+                    )
+                    
+                    # Create the pending PublishingJob
+                    job = PublishingJob(
+                        post_id=post.id,
+                        platform=platform,
+                        status="pending"
+                    )
+                    db.add(job)
+                    db.flush()
+                    
+                    reason_str = "flagged content" if has_warnings else "product launch/pricing review required"
+                    status_lines.append(f"⏳ {platform.capitalize()}: Sent to approval queue ({reason_str}).")
+                    
+                elif approval_status == "approved":
+                    # Create PublishingJob
+                    job = PublishingJob(
+                        post_id=post.id,
+                        platform=platform,
+                        status="pending"
+                    )
+                    db.add(job)
+                    db.flush()
+                    
+                    # Enqueue in background task
+                    background_tasks.add_task(execute_publishing_job, job.id)
+                    
                     published_results.append({
                         "platform": platform,
                         "content": content,
-                        "job_id": result["job_id"],
-                        "post_id": result["post_id"],
-                        "platform_post_id": result.get("platform_post_id", "")
+                        "job_id": job.id,
+                        "post_id": post.id,
+                        "platform_post_id": ""
                     })
-                else:
-                    errors.append(f"{platform}: {result['error']}")
+                    status_lines.append(f"✅ {platform.capitalize()}: Passed policy and queued for publishing!")
 
-            # Build response message
-            if published_results:
-                platform_names = ", ".join([r["platform"].capitalize() for r in published_results])
-                response_msg = f"✅ Posted successfully to {platform_names}!"
-                if errors:
-                    response_msg += f"\n\n⚠️ Issues with: {'; '.join(errors)}"
+            db.commit()
+
+            # Build final response text
+            response_msg = ""
+            if status_lines:
+                response_msg = "\n".join(status_lines)
             else:
-                response_msg = f"❌ Could not post to any platform.\n" + "\n".join(errors)
+                response_msg = "No posts could be created."
+                if errors:
+                    response_msg += "\n" + "\n".join([f"❌ {e}" for e in errors])
 
             return {
                 "mode": "agent",

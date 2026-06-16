@@ -352,6 +352,18 @@ class ConversationRepository(BaseRepository):
         return self.session.query(Conversation).filter(Conversation.platform == platform).all()
 
 
+class SocialStrategyLogRepository(BaseRepository):
+    def __init__(self, session):
+        super().__init__(session, SocialStrategyLog)
+        
+    def log_event(self, event: str, details: str) -> SocialStrategyLog:
+        return self.create(
+            ts=datetime.utcnow().isoformat(),
+            event=event,
+            details=details
+        )
+
+
 def init_db(seed: int = 42):
     """
     Initialize database with deterministic seed for reproducibility.
