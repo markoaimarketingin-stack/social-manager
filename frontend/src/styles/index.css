@@ -166,6 +166,38 @@ button {
   opacity: 0.55;
 }
 
+.shell-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--card-gradient) var(--bg-surface);
+}
+
+.shell-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--card-shine);
+  opacity: 0.55;
+}
+
+.shell-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--card-gradient) var(--card-bg);
+}
+
+.shell-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--card-shine);
+  opacity: 0.55;
+}
+
 .grid-dots {
   background-image:
     radial-gradient(circle at center, var(--overlay-4) 1px, transparent 1px);

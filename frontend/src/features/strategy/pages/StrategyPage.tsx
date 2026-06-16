@@ -172,8 +172,8 @@ export function StrategyPage() {
                 onClick={() => setSelectedStrategyId(strategy.id)}
                 className={`w-full rounded-3xl border p-5 text-left transition ${
                   selectedStrategy?.id === strategy.id
-                    ? "border-white/15 bg-white/10"
-                    : "border-line bg-white/5 hover:bg-white/8"
+                    ? "border-white/15 bg-[#050505]"
+                    : "border-line bg-[#000000] hover:bg-white/8"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -205,19 +205,19 @@ export function StrategyPage() {
             <Panel eyebrow="Review flow" title="Approve the strategy before planning">
               <div className="mt-5 space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-3xl border border-line bg-white/5 p-4">
+                  <div className="rounded-3xl border border-line bg-[#000000] p-4">
                     <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Source workflow</p>
                     <p className="mt-3 text-sm font-medium text-white">
                       {selectedStrategy.source_workflow_run_id ? "Connected" : "Manual"}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-line bg-white/5 p-4">
+                  <div className="rounded-3xl border border-line bg-[#000000] p-4">
                     <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Reviewed at</p>
                     <p className="mt-3 text-sm font-medium text-white">
                       {formatTimestamp(selectedStrategy.reviewed_at)}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-line bg-white/5 p-4">
+                  <div className="rounded-3xl border border-line bg-[#000000] p-4">
                     <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Lineage</p>
                     <p className="mt-3 text-sm font-medium text-white">
                       {previousStrategy
@@ -227,7 +227,7 @@ export function StrategyPage() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-line bg-white/5 p-5">
+                <div className="rounded-3xl border border-line bg-[#000000] p-5">
                   <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Positioning statement</p>
                   <p className="mt-3 text-sm leading-7 text-white/85">
                     {selectedStrategy.positioning_statement}
@@ -269,7 +269,7 @@ export function StrategyPage() {
                     })
                   }
                   disabled={reviewMutation.isPending}
-                  className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                  className="rounded-full border border-white/10 bg-[#000000] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 transition-all hover:bg-[#050505] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 >
                   {reviewMutation.isPending ? "Saving review..." : "Save review decision"}
                 </button>
@@ -279,20 +279,20 @@ export function StrategyPage() {
             <Panel eyebrow="Revision compare" title="What changed from the previous version">
               {previousStrategy ? (
                 <div className="mt-5 space-y-4">
-                  <div className="rounded-3xl border border-line bg-white/5 p-5">
+                  <div className="rounded-3xl border border-line bg-[#000000] p-5">
                     <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Previous summary</p>
                     <p className="mt-3 text-sm leading-7 text-white/60">{previousStrategy.summary}</p>
                   </div>
-                  <div className="rounded-3xl border border-white/8 bg-black/35 p-5">
+                  <div className="rounded-3xl border border-white/8 bg-[#000000] p-5">
                     <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Current summary</p>
                     <p className="mt-3 text-sm leading-7 text-white/80">{selectedStrategy.summary}</p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-3xl border border-line bg-white/5 p-5">
+                    <div className="rounded-3xl border border-line bg-[#000000] p-5">
                       <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Previous audience focus</p>
                       <p className="mt-3 text-sm leading-7 text-white/60">{previousStrategy.audience_focus}</p>
                     </div>
-                    <div className="rounded-3xl border border-line bg-white/5 p-5">
+                    <div className="rounded-3xl border border-line bg-[#000000] p-5">
                       <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Current audience focus</p>
                       <p className="mt-3 text-sm leading-7 text-white/80">{selectedStrategy.audience_focus}</p>
                     </div>
@@ -311,7 +311,7 @@ export function StrategyPage() {
             <Panel eyebrow="Platform plans" title="Channel operating plans">
               <div className="mt-5 space-y-4">
                 {selectedStrategy.platform_plans.map((plan) => (
-                  <div key={plan.id} className="rounded-3xl border border-line bg-white/5 p-5">
+                  <div key={plan.id} className="rounded-3xl border border-line bg-[#000000] p-5">
                     <div className="flex items-center justify-between gap-3">
                       <h3 className="text-lg font-semibold">{plan.platform_name}</h3>
                       <StatusPill label="Planning input" tone="success" />
@@ -339,7 +339,7 @@ export function StrategyPage() {
             <Panel eyebrow="Timeline" title="Strategy activity">
               <div className="mt-5 space-y-3">
                 {strategyTimeline.slice(0, 6).map((event) => (
-                  <div key={event.id} className="rounded-3xl border border-line bg-white/5 p-5">
+                  <div key={event.id} className="rounded-3xl border border-line bg-[#000000] p-5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-white">{event.summary}</p>
                       <StatusPill label={event.event_type.replace(/_/g, " ")} tone="neutral" />

@@ -76,7 +76,7 @@ export function TopBar() {
             type="button"
             onClick={button.onClick}
             disabled={runAnalysisMutation.isPending && button.label === "Running..."}
-            className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[11px] font-medium text-white/78 transition hover:bg-white/[0.08] hover:text-white"
+            className="rounded-full border border-white/[0.08] bg-[#000000] px-3.5 py-2 text-[11px] font-medium text-white/78 transition hover:bg-white/[0.08] hover:text-white"
           >
             {button.label}
           </button>

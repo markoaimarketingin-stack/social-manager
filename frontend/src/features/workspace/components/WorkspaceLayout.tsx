@@ -175,7 +175,7 @@ export function WorkspaceLayout() {
           className="group hidden h-full w-2 shrink-0 cursor-col-resize items-stretch justify-center bg-black lg:flex"
           title="Drag to resize sidebar"
         >
-          <div className="h-full w-px bg-white/5 transition group-hover:w-1 group-hover:bg-[#388bfd]" />
+          <div className="h-full w-px bg-[#000000] transition group-hover:w-1 group-hover:bg-[#388bfd]" />
         </div>
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: "#000000" }}>
@@ -296,7 +296,7 @@ export function WorkspaceLayout() {
               className="group hidden h-full w-2 shrink-0 cursor-col-resize items-stretch justify-center bg-black xl:flex"
               title="Drag to resize assistant"
             >
-              <div className="h-full w-px bg-white/5 transition group-hover:w-1 group-hover:bg-[#388bfd]" />
+              <div className="h-full w-px bg-[#000000] transition group-hover:w-1 group-hover:bg-[#388bfd]" />
             </div>
             <aside className="hidden h-full shrink-0 bg-black xl:flex" style={{ width: assistantWidth }}>
               <AssistantPanel workspaceId={workspaceId} />
@@ -308,7 +308,7 @@ export function WorkspaceLayout() {
           <div className="fixed bottom-5 right-5 z-40">
             <button
               onClick={() => setAssistantCollapsed(false)}
-              className="rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-black text-black shadow-[0_12px_40px_rgba(0,0,0,0.45)] hover:scale-105 active:scale-95 transition-all duration-150"
+              className="rounded-full border border-white/10 bg-[#000000] px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:scale-[1.02] hover:bg-[#050505] active:scale-95 transition-all duration-150"
             >
               Open Assistant
             </button>

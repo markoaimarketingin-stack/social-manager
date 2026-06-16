@@ -281,7 +281,7 @@ export function WorkspaceOverviewPage() {
         </div>
 
         {analysis && (
-          <section className="rounded-2xl p-5 border" style={{ background: "#161b22", borderColor: analysis.backend === "ok" ? "rgba(63,185,80,0.25)" : "rgba(248,81,73,0.35)" }}>
+          <section className="rounded-2xl p-5 border" style={{ background: "#000000", borderColor: analysis.backend === "ok" ? "rgba(63,185,80,0.25)" : "rgba(248,81,73,0.35)" }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Supervisor Analysis</h4>

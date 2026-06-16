@@ -209,7 +209,7 @@ export function AssistantPanel({ workspaceId }: Props) {
           <button
             type="button"
             onClick={() => setMessages([])}
-            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
             aria-label="New conversation"
             title="Clear Chat"
           >
@@ -224,7 +224,7 @@ export function AssistantPanel({ workspaceId }: Props) {
             onClick={() => {
               window.dispatchEvent(new Event("open-settings-modal"));
             }}
-            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
             aria-label="Saved prompts"
             title="Saved Prompts"
           >
@@ -236,7 +236,7 @@ export function AssistantPanel({ workspaceId }: Props) {
           {/* History */}
           <button
             type="button"
-            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
             aria-label="History"
             title="History"
           >
@@ -250,7 +250,7 @@ export function AssistantPanel({ workspaceId }: Props) {
           {/* Close Panel */}
           <button
             type="button"
-            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
             aria-label="Close panel"
             onClick={() => toggleAssistant()}
           >
@@ -269,7 +269,7 @@ export function AssistantPanel({ workspaceId }: Props) {
               type="button"
               onClick={() => setActiveTab("chatbot")}
               className={`flex items-center justify-center gap-1.5 rounded-[0.72rem] px-3 py-2.5 text-[0.84rem] font-semibold transition ${
-                activeTab === "chatbot" ? "bg-black text-white" : "text-white/72 hover:bg-white/5"
+                activeTab === "chatbot" ? "bg-black text-white" : "text-white/72 hover:bg-[#000000]"
               }`}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.85}>
@@ -281,7 +281,7 @@ export function AssistantPanel({ workspaceId }: Props) {
               type="button"
               onClick={() => setActiveTab("suggestions")}
               className={`flex items-center justify-center gap-1.5 rounded-[0.72rem] px-3 py-2.5 text-[0.84rem] font-semibold transition ${
-                activeTab === "suggestions" ? "bg-black text-white" : "text-white/72 hover:bg-white/5"
+                activeTab === "suggestions" ? "bg-black text-white" : "text-white/72 hover:bg-[#000000]"
               }`}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.85}>
@@ -306,7 +306,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#000000]/80 hover:bg-[#0a0a0a] border border-[rgba(255,255,255,0.04)] text-white/70 hover:text-white hover:border-[#388bfd]/50 btn-press"
+                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#000000]/80 hover:bg-[#000000] border border-[rgba(255,255,255,0.04)] text-white/70 hover:text-white hover:border-[#388bfd]/50 btn-press"
                 >
                   {q}
                 </button>
@@ -453,7 +453,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 value={mode}
                 onChange={(e) => switchMode(e.target.value as Mode)}
                 disabled={loading}
-                className="bg-[#0a0a0a] hover:bg-white/5 border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                className="bg-[#000000] hover:bg-[#000000] border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
                 style={{
                   backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
                   backgroundRepeat: "no-repeat",
@@ -469,7 +469,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 value={selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
                 disabled={loading}
-                className="bg-[#0a0a0a] hover:bg-white/5 border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                className="bg-[#000000] hover:bg-[#000000] border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
                 style={{
                   backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
                   backgroundRepeat: "no-repeat",

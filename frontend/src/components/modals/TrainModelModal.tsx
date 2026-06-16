@@ -68,7 +68,7 @@ export function TrainModelModal({ isOpen, onClose, onSuccess }: TrainModelModalP
       <div
         className="w-full max-w-md rounded-2xl p-6 text-white shadow-2xl animate-scaleIn"
         style={{
-          background: "#161b22",
+          background: "#000000",
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
         }}
@@ -151,7 +151,7 @@ export function TrainModelModal({ isOpen, onClose, onSuccess }: TrainModelModalP
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+              className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[#000000] transition-colors text-white/60 hover:text-white"
             >
               Close
             </button>

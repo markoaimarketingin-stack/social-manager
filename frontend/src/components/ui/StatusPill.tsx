@@ -4,7 +4,7 @@ type StatusPillProps = {
 };
 
 const toneClasses: Record<NonNullable<StatusPillProps["tone"]>, string> = {
-  neutral: "border-white/10 bg-white/5 text-white/80",
+  neutral: "border-white/10 bg-[#000000] text-white/80",
   success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
   warning: "border-amber-400/20 bg-amber-400/10 text-amber-100",
 };

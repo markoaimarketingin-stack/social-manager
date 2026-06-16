@@ -96,7 +96,7 @@ export default function ComposePage() {
         <div className="flex gap-3">
           <button
             onClick={() => navigate('/connect')}
-            className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-ink hover:bg-white/15 transition-colors"
+            className="rounded-full bg-[#050505] px-4 py-2 text-sm font-medium text-ink hover:bg-white/15 transition-colors"
           >
             ← Connections
           </button>
@@ -147,8 +147,8 @@ export default function ComposePage() {
                   onClick={() => togglePlatform(conn.platform)}
                   className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-all ${
                     selected
-                      ? 'border-white/25 bg-white/10 text-ink shadow-[0_0_20px_rgba(255,255,255,0.05)]'
-                      : 'border-white/8 bg-white/[0.03] text-white/50 hover:bg-white/[0.06]'
+                      ? 'border-white/25 bg-[#050505] text-ink shadow-[0_0_20px_rgba(255,255,255,0.05)]'
+                      : 'border-white/8 bg-[#000000] text-white/50 hover:bg-white/[0.06]'
                   }`}
                 >
                   <span className={`h-7 w-7 rounded-lg ${meta.color} flex items-center justify-center text-white text-xs font-bold`}>
@@ -175,7 +175,7 @@ export default function ComposePage() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What do you want to say?"
-            className="mt-3 w-full resize-none rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-ink placeholder-white/25 focus:border-white/20 focus:outline-none"
+            className="mt-3 w-full resize-none rounded-2xl border border-white/8 bg-[#000000] px-4 py-3 text-sm text-ink placeholder-white/25 focus:border-white/20 focus:outline-none"
           />
           <div className="mt-2 flex items-center justify-between text-xs text-white/30">
             <span>{content.length} characters</span>

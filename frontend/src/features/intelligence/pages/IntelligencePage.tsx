@@ -70,7 +70,7 @@ export function IntelligencePage() {
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
-      <div className="flex items-center justify-between flex-wrap gap-4 shrink-0 pb-4 border-b border-[#161b22] mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-4 shrink-0 pb-4 border-b border-[rgba(255,255,255,0.08)] mb-6">
         <SectionHeading
           eyebrow="Intelligence Hub"
           title="Demand & Market Specialist"
@@ -100,7 +100,7 @@ export function IntelligencePage() {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Signal Stack</h4>
@@ -127,7 +127,7 @@ export function IntelligencePage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Strategic Anchor</h4>
@@ -153,7 +153,7 @@ export function IntelligencePage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Competitor Signals</h4>
           <p className="text-[10px] text-white/40 mb-4">Positioning vulnerabilities identified in direct competitors.</p>
@@ -176,7 +176,7 @@ export function IntelligencePage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">AI Writing Cues</h4>

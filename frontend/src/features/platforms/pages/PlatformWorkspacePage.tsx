@@ -55,7 +55,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-white/10 bg-[#0a0a0a] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${className}`}>
+    <section className={`rounded-2xl border border-white/10 bg-[#000000] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${className}`}>
       {eyebrow && <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">{eyebrow}</p>}
       <h2 className="mt-1 text-base font-bold text-white">{title}</h2>
       <div className="mt-4">{children}</div>
@@ -166,7 +166,7 @@ export function PlatformWorkspacePage() {
             <div className="flex flex-wrap gap-2">
               <Link
                 to="/connect"
-                className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white no-underline hover:bg-white/[0.08]"
+                className="rounded-xl border border-white/10 bg-[#000000] px-4 py-2 text-xs font-bold text-white no-underline hover:bg-white/[0.08]"
               >
                 {isConnected ? "Manage Connection" : "Connect Account"}
               </Link>
@@ -206,7 +206,7 @@ export function PlatformWorkspacePage() {
             <p className="text-sm leading-6 text-white/65">{platform.publishingFocus}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {platform.contentFormats.map((format) => (
-                <span key={format} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/70">
+                <span key={format} className="rounded-full border border-white/10 bg-[#000000] px-3 py-1 text-xs text-white/70">
                   {format}
                 </span>
               ))}
@@ -239,15 +239,15 @@ export function PlatformWorkspacePage() {
         <div className="grid gap-5 lg:grid-cols-3">
           <Panel title="Publishing Status" eyebrow="Queue Health">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="rounded-xl border border-white/10 bg-[#000000] p-3">
                 <p className="text-xl font-black text-emerald-400">{published}</p>
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Published</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="rounded-xl border border-white/10 bg-[#000000] p-3">
                 <p className="text-xl font-black text-amber-400">{pending}</p>
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Pending</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="rounded-xl border border-white/10 bg-[#000000] p-3">
                 <p className="text-xl font-black text-red-400">{failed}</p>
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Failed</p>
               </div>
@@ -258,7 +258,7 @@ export function PlatformWorkspacePage() {
             {platformQueue.length > 0 ? (
               <div className="space-y-3">
                 {platformQueue.slice(0, 3).map((item) => (
-                  <div key={item.id} className="rounded-xl border border-white/10 bg-black/25 p-3">
+                  <div key={item.id} className="rounded-xl border border-white/10 bg-[#000000] p-3">
                     <p className="line-clamp-2 text-xs text-white/75">{item.content || "Untitled post"}</p>
                     <p className="mt-2 text-[10px] uppercase tracking-wider text-white/35">{formatDate(item.scheduled_at)}</p>
                   </div>
@@ -283,7 +283,7 @@ export function PlatformWorkspacePage() {
                 {recentActivity.slice(0, 5).map((post) => {
                   const status = post.platforms?.find((item) => item.platform === platform.key)?.status;
                   return (
-                    <div key={post.id} className="rounded-xl border border-white/10 bg-black/25 p-3">
+                    <div key={post.id} className="rounded-xl border border-white/10 bg-[#000000] p-3">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs font-bold text-white/80">Post #{post.id}</p>
                         <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] capitalize text-white/55">
@@ -302,7 +302,7 @@ export function PlatformWorkspacePage() {
 
           <Panel title="Platform Insights" eyebrow="Readiness">
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+              <div className="rounded-xl border border-white/10 bg-[#000000] p-4">
                 <p className="text-xs font-bold text-white/70">API readiness</p>
                 <p className="mt-2 text-sm text-white/55">
                   {isProviderReady
@@ -310,7 +310,7 @@ export function PlatformWorkspacePage() {
                     : "Provider keys/scopes are not configured yet. Use backend .env values before production testing."}
                 </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+              <div className="rounded-xl border border-white/10 bg-[#000000] p-4">
                 <p className="text-xs font-bold text-white/70">Metrics ingestion</p>
                 <p className="mt-2 text-sm text-white/55">
                   Placeholder panel for future reach, engagement, saves, clicks, comments, and post-level performance endpoints.
@@ -323,7 +323,7 @@ export function PlatformWorkspacePage() {
         <Panel title="Platform-Specific Notes" eyebrow="Implementation">
           <ul className="grid gap-3 md:grid-cols-3">
             {platform.operatingNotes.map((note) => (
-              <li key={note} className="rounded-xl border border-white/10 bg-black/25 p-4 text-sm leading-6 text-white/60">
+              <li key={note} className="rounded-xl border border-white/10 bg-[#000000] p-4 text-sm leading-6 text-white/60">
                 {note}
               </li>
             ))}

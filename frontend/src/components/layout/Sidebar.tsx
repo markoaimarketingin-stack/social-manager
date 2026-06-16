@@ -285,7 +285,7 @@ export function Sidebar({ workspaceId, user, onLogout, onOpenSettings }: Sidebar
             <button
               type="button"
               onClick={onOpenSettings}
-              className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+              className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-[#000000] transition-all"
               aria-label="Settings"
               title="Settings"
             >
@@ -294,7 +294,7 @@ export function Sidebar({ workspaceId, user, onLogout, onOpenSettings }: Sidebar
             <button
               type="button"
               onClick={onLogout}
-              className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+              className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-[#000000] transition-all"
               aria-label="Logout"
               title="Logout"
             >

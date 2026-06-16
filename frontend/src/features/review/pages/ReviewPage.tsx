@@ -167,7 +167,7 @@ export function ReviewPage() {
           {/* Form input */}
           <section
             className="rounded-2xl border p-6 text-white space-y-4"
-            style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+            style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
           >
             <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">Generate A/B Copy Variants</h2>
             <p className="text-[11px] text-white/40">Provide a topic or draft message, and the AI copywriter will generate two contrasting variant pitches.</p>
@@ -201,7 +201,7 @@ export function ReviewPage() {
           {/* Guidelines */}
           <div
             className="rounded-2xl border p-5 text-white space-y-4"
-            style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+            style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-wider text-white/60">A/B Strategy Guidelines</h3>
             <div className="space-y-4 text-xs leading-relaxed text-white/60">
@@ -224,7 +224,7 @@ export function ReviewPage() {
             <div
               className="rounded-2xl border p-5 text-white flex flex-col justify-between"
               style={{
-                background: "#161b22",
+                background: "#000000",
                 borderColor: abSelected === "A" ? "#238636" : "rgba(255,255,255,0.08)",
                 boxShadow: abSelected === "A" ? "0 0 15px rgba(56,139,253,0.1)" : "none",
               }}
@@ -242,7 +242,7 @@ export function ReviewPage() {
               </div>
               <button
                 onClick={() => handleStageVariant("A")}
-                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5"
+                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-[#000000]"
                 style={{
                   background: abSelected === "A" ? "#238636" : "transparent",
                   color: "#fff",
@@ -256,7 +256,7 @@ export function ReviewPage() {
             <div
               className="rounded-2xl border p-5 text-white flex flex-col justify-between"
               style={{
-                background: "#161b22",
+                background: "#000000",
                 borderColor: abSelected === "B" ? "#238636" : "rgba(255,255,255,0.08)",
                 boxShadow: abSelected === "B" ? "0 0 15px rgba(56,139,253,0.1)" : "none",
               }}
@@ -274,7 +274,7 @@ export function ReviewPage() {
               </div>
               <button
                 onClick={() => handleStageVariant("B")}
-                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5"
+                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-[#000000]"
                 style={{
                   background: abSelected === "B" ? "#238636" : "transparent",
                   color: "#fff",
@@ -307,7 +307,7 @@ export function ReviewPage() {
       <div className="mt-6 grid min-h-0 flex-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.04)] pb-2">
@@ -353,7 +353,7 @@ export function ReviewPage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           {selectedDraft ? (
             <div className="space-y-4">
@@ -406,7 +406,7 @@ export function ReviewPage() {
                       },
                     })
                   }
-                  className="px-4 py-2.5 rounded-lg text-xs font-bold border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold border border-[rgba(255,255,255,0.08)] hover:bg-[#000000] text-white/80"
                 >
                   {updateDraftMutation.isPending ? "Saving..." : "Save Status"}
                 </button>

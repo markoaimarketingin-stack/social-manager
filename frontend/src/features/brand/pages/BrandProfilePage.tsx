@@ -108,7 +108,7 @@ export function BrandProfilePage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <section
           className="rounded-2xl border p-6 text-white space-y-6"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
             {workspaceQuery.data?.name ?? "Workspace"} Profile Details
@@ -200,7 +200,7 @@ export function BrandProfilePage() {
                     goal: "Generate a first strategy snapshot from Sprint 1 inputs",
                   })
                 }
-                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 disabled:opacity-55 text-white/80"
+                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-[#000000] disabled:opacity-55 text-white/80"
               >
                 {strategyRunMutation.isPending ? "Running..." : "Run Strategy Workflow"}
               </button>
@@ -211,7 +211,7 @@ export function BrandProfilePage() {
         {/* Strategic context */}
         <div
           className="rounded-2xl border p-5 text-white space-y-4"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-wider text-white/60">What this powers</h3>
           <div className="space-y-4 text-xs leading-relaxed text-white/60">

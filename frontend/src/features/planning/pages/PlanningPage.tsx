@@ -191,7 +191,7 @@ export function PlanningPage() {
                   content_plan_id: contentPlan?.id ?? null,
                 })
               }
-              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
+              className="rounded-full border border-white/10 bg-[#000000] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 transition-all hover:bg-[#050505] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
             >
               {generateDraftsMutation.isPending ? "Generating drafts..." : "Generate drafts from plan"}
             </button>
@@ -212,8 +212,8 @@ export function PlanningPage() {
                 onClick={() => setSelectedPlanId(plan.id)}
                 className={`w-full rounded-3xl border p-5 text-left transition ${
                   contentPlan?.id === plan.id
-                    ? "border-white/15 bg-white/10"
-                    : "border-line bg-white/5 hover:bg-white/8"
+                    ? "border-white/15 bg-[#050505]"
+                    : "border-line bg-[#000000] hover:bg-white/8"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -251,8 +251,8 @@ export function PlanningPage() {
                     onClick={() => setSelectedPostId(post.id)}
                     className={`rounded-3xl border p-5 text-left transition ${
                       selectedPostId === post.id
-                        ? "border-white/15 bg-white/10"
-                        : "border-line bg-white/5 hover:bg-white/8"
+                        ? "border-white/15 bg-[#050505]"
+                        : "border-line bg-[#000000] hover:bg-white/8"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -271,7 +271,7 @@ export function PlanningPage() {
 
             <Panel eyebrow="Workflow continuity" title="Why this plan exists">
               <div className="mt-5 space-y-4">
-                <div className="rounded-3xl border border-line bg-white/5 p-5">
+                <div className="rounded-3xl border border-line bg-[#000000] p-5">
                   <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Source strategy</p>
                   <p className="mt-3 text-lg font-semibold">{latestStrategy?.title ?? "No strategy linked"}</p>
                   <p className="mt-3 text-sm leading-7 text-white/60">
@@ -279,7 +279,7 @@ export function PlanningPage() {
                       "Planning provenance becomes visible once a strategy has been generated."}
                   </p>
                 </div>
-                <div className="rounded-3xl border border-line bg-white/5 p-5">
+                <div className="rounded-3xl border border-line bg-[#000000] p-5">
                   <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Plan lineage</p>
                   <p className="mt-3 text-sm leading-7 text-white/70">
                     {priorPlan
@@ -387,7 +387,7 @@ export function PlanningPage() {
                         payload: postForm,
                       })
                     }
-                    className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[13px] font-semibold text-white disabled:opacity-60 transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
+                    className="rounded-full border border-white/10 bg-[#000000] px-5 py-3 text-[13px] font-semibold text-white disabled:opacity-60 transition-all hover:bg-[#050505] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:pointer-events-none"
                   >
                     {updatePostMutation.isPending ? "Saving..." : "Save planned post"}
                   </button>
@@ -402,7 +402,7 @@ export function PlanningPage() {
             <Panel eyebrow="Timeline" title="Planning activity">
               <div className="mt-5 space-y-3">
                 {planningTimeline.slice(0, 6).map((event) => (
-                  <div key={event.id} className="rounded-3xl border border-line bg-white/5 p-5">
+                  <div key={event.id} className="rounded-3xl border border-line bg-[#000000] p-5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-white">{event.summary}</p>
                       <StatusPill label={event.event_type.replace(/_/g, " ")} tone="neutral" />

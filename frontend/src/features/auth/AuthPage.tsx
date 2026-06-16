@@ -95,7 +95,7 @@ export default function AuthPage() {
       <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)]" />
 
       <div className="relative mx-auto flex w-full max-w-md flex-col justify-center px-4 py-10">
-        <section className="rounded-[2rem] border border-white/10 bg-[#0d0d0d]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.42)] backdrop-blur sm:p-8 animate-fade-up">
+        <section className="rounded-[2rem] border border-white/10 bg-[#000000]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.42)] backdrop-blur sm:p-8 animate-fade-up">
           
           {/* Header Row */}
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -127,7 +127,7 @@ export default function AuthPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                  className="w-full rounded-[1rem] border border-white/10 bg-[#000000] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
                 />
               </div>
             )}
@@ -144,7 +144,7 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                className="w-full rounded-[1rem] border border-white/10 bg-[#000000] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                className="w-full rounded-[1rem] border border-white/10 bg-[#000000] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
               />
             </div>
 
@@ -191,9 +191,9 @@ export default function AuthPage() {
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-[#050505]" />
             <span className="text-[0.7rem] font-medium uppercase tracking-[0.26em] text-white/30">or</span>
-            <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-[#050505]" />
           </div>
 
           {/* Guest / Demo button */}

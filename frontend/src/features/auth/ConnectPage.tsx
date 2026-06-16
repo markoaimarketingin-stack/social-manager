@@ -155,7 +155,7 @@ export default function ConnectPage() {
     >
       <header
         className="px-6 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#161b22" }}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#000000" }}
       >
         <div className="flex items-center gap-3">
           <div
@@ -241,7 +241,7 @@ export default function ConnectPage() {
                   key={platform.id}
                   className="rounded-lg p-4 flex items-center justify-between transition-colors"
                   style={{
-                    background: "#161b22",
+                    background: "#000000",
                     border: connected
                       ? "1px solid rgba(35,134,54,0.35)"
                       : configured

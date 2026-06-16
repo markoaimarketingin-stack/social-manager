@@ -60,7 +60,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
       <div
         className="w-full max-w-2xl rounded-2xl p-6 text-white shadow-2xl animate-scaleIn flex flex-col max-h-[85vh]"
         style={{
-          background: "#161b22",
+          background: "#000000",
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
         }}
@@ -106,7 +106,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
             <div className="overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#000000]/40">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-[#0a0a0a] border-b border-[rgba(255,255,255,0.08)] text-white/60">
+                  <tr className="bg-[#000000] border-b border-[rgba(255,255,255,0.08)] text-white/60">
                     <th className="p-3 font-semibold uppercase tracking-wider">Document</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Category</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Type</th>
@@ -116,7 +116,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
                 </thead>
                 <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
                   {documents.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={doc.id} className="hover:bg-[#000000] transition-colors">
                       <td className="p-3 font-semibold truncate max-w-[180px]">{doc.filename}</td>
                       <td className="p-3">
                         <span
@@ -155,7 +155,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
         <div className="pt-4 border-t border-[rgba(255,255,255,0.04)] flex items-center justify-end shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+            className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[#000000] transition-colors text-white/60 hover:text-white"
           >
             Close
           </button>

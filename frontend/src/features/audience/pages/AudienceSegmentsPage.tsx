@@ -85,7 +85,7 @@ export function AudienceSegmentsPage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section
           className="rounded-2xl border p-6 text-white space-y-6"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
             {editingSegmentId ? "Edit Audience Segment" : "Add Audience Segment"}
@@ -149,7 +149,7 @@ export function AudienceSegmentsPage() {
                     setEditingSegmentId(null);
                     setFormState(initialFormState);
                   }}
-                  className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-[#000000] text-white/80"
                 >
                   Cancel Edit
                 </button>
@@ -161,7 +161,7 @@ export function AudienceSegmentsPage() {
         {/* Saved segments list */}
         <div
           className="rounded-2xl border p-5 text-white flex flex-col"
-          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#000000", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-4">Segment Library</h3>
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
@@ -215,7 +215,7 @@ export function AudienceSegmentsPage() {
                         messaging_angle: segment.messaging_angle ?? "",
                       });
                     }}
-                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-[#000000] text-white/80"
                   >
                     Edit
                   </button>
