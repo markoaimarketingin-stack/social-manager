@@ -40,56 +40,73 @@ def get_db():
 # Use `get_current_user` dependency (returns user object) for auth-protected routes.
 
 
+def is_valid_config(val: Optional[str]) -> bool:
+    if not val:
+        return False
+    val_lower = val.lower()
+    placeholders = ["your_", "change_me", "placeholder", "access_token", "page_id", "account_id", "client_id", "client_secret"]
+    return not any(p in val_lower for p in placeholders)
+
+
 SUPPORTED_PROVIDERS = {
     "facebook": {
         "label": "Facebook Page",
         "required": ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
-        "configured": lambda: bool(settings.facebook_app_id and settings.facebook_app_secret),
-        "env_token_configured": lambda: bool(settings.facebook_access_token and settings.facebook_page_id),
+        "configured": lambda: is_valid_config(settings.facebook_app_id) and is_valid_config(settings.facebook_app_secret),
+        "env_token_configured": lambda: is_valid_config(settings.facebook_access_token) and is_valid_config(settings.facebook_page_id),
     },
     "instagram": {
         "label": "Instagram",
         "required": ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
-        "configured": lambda: bool(settings.facebook_app_id and settings.facebook_app_secret),
-        "env_token_configured": lambda: bool(settings.instagram_access_token and settings.instagram_business_account_id),
+        "configured": lambda: is_valid_config(settings.facebook_app_id) and is_valid_config(settings.facebook_app_secret),
+        "env_token_configured": lambda: is_valid_config(settings.instagram_access_token) and is_valid_config(settings.instagram_business_account_id),
     },
     "linkedin": {
         "label": "LinkedIn",
         "required": ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"],
-        "configured": lambda: bool(settings.linkedin_client_id and settings.linkedin_client_secret),
-        "env_token_configured": lambda: bool(settings.linkedin_access_token),
+        "configured": lambda: is_valid_config(settings.linkedin_client_id) and is_valid_config(settings.linkedin_client_secret),
+        "env_token_configured": lambda: is_valid_config(settings.linkedin_access_token),
     },
     "x": {
         "label": "X / Twitter",
         "required": ["TWITTER_API_KEY", "TWITTER_API_SECRET"],
-        "configured": lambda: bool(settings.twitter_api_key and settings.twitter_api_secret),
+        "configured": lambda: is_valid_config(settings.twitter_api_key) and is_valid_config(settings.twitter_api_secret),
         "env_token_configured": lambda: False,
     },
     "youtube": {
         "label": "YouTube",
         "required": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
-        "configured": lambda: bool(settings.google_client_id and settings.google_client_secret),
+        "configured": lambda: is_valid_config(settings.google_client_id) and is_valid_config(settings.google_client_secret),
         "env_token_configured": lambda: False,
     },
 }
 
 
-def frontend_redirect(params: dict[str, str]) -> RedirectResponse:
-    return RedirectResponse(f"{settings.frontend_url}/connect?{urllib.parse.urlencode(params)}")
+def frontend_redirect(params: dict[str, str], request: Optional[Request] = None) -> RedirectResponse:
+    frontend_url = settings.frontend_url
+    if request:
+        referer = request.headers.get("referer")
+        if referer:
+            parsed = urllib.parse.urlparse(referer)
+            frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+        elif request.headers.get("origin"):
+            frontend_url = request.headers.get("origin")
+    return RedirectResponse(f"{frontend_url}/connect?{urllib.parse.urlencode(params)}")
 
 
-def provider_config_redirect(platform: str) -> RedirectResponse:
+def provider_config_redirect(platform: str, request: Optional[Request] = None) -> RedirectResponse:
     provider = SUPPORTED_PROVIDERS[platform]
     return frontend_redirect(
         {
             "error": "provider_config",
             "platform": platform,
             "description": f"{provider['label']} is not configured. Add {', '.join(provider['required'])} to backend .env.",
-        }
+        },
+        request=request
     )
 
 
-async def import_env_connection(platform: str, user_id: int, db: Session) -> RedirectResponse:
+async def import_env_connection(platform: str, user_id: int, db: Session, request: Optional[Request] = None) -> RedirectResponse:
     """Create/update a user connection from legacy env tokens when OAuth app keys are not ready."""
     access_token = None
     refresh_token = None
@@ -115,7 +132,8 @@ async def import_env_connection(platform: str, user_id: int, db: Session) -> Red
                         "error": "env_token_invalid",
                         "platform": platform,
                         "description": "FACEBOOK_ACCESS_TOKEN or FACEBOOK_PAGE_ID could not be verified.",
-                    }
+                    },
+                    request=request
                 )
 
         elif platform == "instagram":
@@ -135,7 +153,8 @@ async def import_env_connection(platform: str, user_id: int, db: Session) -> Red
                         "error": "env_token_invalid",
                         "platform": platform,
                         "description": "INSTAGRAM_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID could not be verified.",
-                    }
+                    },
+                    request=request
                 )
 
         elif platform == "linkedin":
@@ -155,11 +174,12 @@ async def import_env_connection(platform: str, user_id: int, db: Session) -> Red
                         "error": "env_token_invalid",
                         "platform": platform,
                         "description": "LINKEDIN_ACCESS_TOKEN could not be verified.",
-                    }
+                    },
+                    request=request
                 )
 
     if not access_token:
-        return provider_config_redirect(platform)
+        return provider_config_redirect(platform, request=request)
 
     social_repo = SocialConnectionRepository(db)
     existing = social_repo.get_user_connection(user_id, platform)
@@ -184,7 +204,7 @@ async def import_env_connection(platform: str, user_id: int, db: Session) -> Red
             expires_at=expires_at,
         )
 
-    return frontend_redirect({"connected": platform, "success": "true", "source": "env"})
+    return frontend_redirect({"connected": platform, "success": "true", "source": "env"}, request=request)
 
 
 def pkce_challenge(verifier: str) -> str:
@@ -211,7 +231,7 @@ def get_auth_providers():
 
 
 @router.get("/{platform}/connect")
-async def connect_platform(platform: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def connect_platform(platform: str, request: Request, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Start the OAuth flow for the requested platform."""
     platform = platform.lower()
     if platform not in SUPPORTED_PROVIDERS:
@@ -219,8 +239,8 @@ async def connect_platform(platform: str, current_user=Depends(get_current_user)
 
     if not SUPPORTED_PROVIDERS[platform]["configured"]():
         if SUPPORTED_PROVIDERS[platform]["env_token_configured"]():
-            return await import_env_connection(platform, current_user.id, db)
-        return provider_config_redirect(platform)
+            return await import_env_connection(platform, current_user.id, db, request=request)
+        return provider_config_redirect(platform, request=request)
 
     redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
     # create a short-lived signed state token containing the user id and a nonce
@@ -284,6 +304,7 @@ async def connect_platform(platform: str, current_user=Depends(get_current_user)
 async def platform_callback(
     platform: str,
     state: str,
+    request: Request,
     code: Optional[str] = None,
     error: Optional[str] = None,
     error_description: Optional[str] = None,
@@ -301,7 +322,8 @@ async def platform_callback(
                 "error": error or "missing_code",
                 "platform": platform,
                 "description": error_description or "Authorization was cancelled.",
-            }
+            },
+            request=request
         )
 
     try:
@@ -359,7 +381,8 @@ async def platform_callback(
                             "error": "no_page",
                             "platform": platform,
                             "description": "No Facebook Page was found for this account.",
-                        }
+                        },
+                        request=request
                     )
 
                 if platform == "facebook":
@@ -391,7 +414,8 @@ async def platform_callback(
                                 "error": "no_instagram_business",
                                 "platform": platform,
                                 "description": "No Instagram Business Account is linked to your Facebook Page.",
-                            }
+                            },
+                            request=request
                         )
 
             elif platform == "linkedin":
@@ -498,7 +522,8 @@ async def platform_callback(
                 "error": "oauth_exchange_failed",
                 "platform": platform,
                 "description": exc.response.text[:500],
-            }
+            },
+            request=request
         )
     except HTTPException:
         raise
@@ -509,7 +534,8 @@ async def platform_callback(
                 "error": "oauth_flow_failed",
                 "platform": platform,
                 "description": str(exc)[:500],
-            }
+            },
+            request=request
         )
 
     if not access_token:
@@ -518,7 +544,8 @@ async def platform_callback(
                 "error": "missing_access_token",
                 "platform": platform,
                 "description": "Provider did not return an access token.",
-            }
+            },
+            request=request
         )
 
     social_repo = SocialConnectionRepository(db)
@@ -547,7 +574,7 @@ async def platform_callback(
         )
         logger.info("Saved new %s connection for user %s", platform, user_id)
 
-    return frontend_redirect({"connected": platform, "success": "true"})
+    return frontend_redirect({"connected": platform, "success": "true"}, request=request)
 
 
 @router.get("/connections")
