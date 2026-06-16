@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { apiBaseUrl } from "../../lib/api/client";
 
@@ -13,9 +13,7 @@ export default function AuthPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const from = location.state?.from?.pathname || "/workspaces/demo/dashboard";
 
   const authRequest = async (endpoint: string, body: { email: string; password: string; name?: string }) => {
     const bases = Array.from(new Set([apiBaseUrl, ""]));
@@ -73,7 +71,7 @@ export default function AuthPage() {
       }
 
       login(data.access_token, data.user);
-      navigate(from, { replace: true });
+      navigate("/connect", { replace: true });
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -151,20 +151,19 @@ export default function ConnectPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#000000", color: "#e6edf3", fontFamily: '"Inter", system-ui, sans-serif' }}
+      style={{ background: "#000000", color: "#ffffff", fontFamily: '"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif' }}
     >
       <header
-        className="px-6 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#000000" }}
+        className="px-6 py-4 flex items-center justify-between"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "#000000" }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-md text-white text-xs font-bold"
-            style={{ background: "linear-gradient(135deg, #1f6feb, #388bfd)" }}
-          >
-            SM
-          </div>
-          <span className="font-semibold text-sm">Social Manager</span>
+          <img
+            src="/marko%20ai.png"
+            alt="Marko AI"
+            className="h-8 w-8 object-contain"
+          />
+          <span className="font-bold text-[1.05rem] tracking-tight text-white">Marko AI</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs mr-2" style={{ color: "#8b949e" }}>
@@ -183,7 +182,7 @@ export default function ConnectPage() {
       <div className="flex-1 flex flex-col items-center justify-start py-10 px-4">
         <div className="w-full max-w-2xl">
           <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#388bfd" }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.42)" }}>
               Platform Connections
             </p>
             <h1 className="text-2xl font-bold mb-2">Connect your social accounts</h1>
@@ -208,10 +207,10 @@ export default function ConnectPage() {
           {hasAnyConnection && (
             <div
               className="mb-6 px-4 py-4 rounded-lg flex items-center justify-between"
-              style={{ background: "rgba(31,111,235,0.1)", border: "1px solid rgba(31,111,235,0.3)" }}
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
             >
               <div>
-                <p className="font-semibold text-sm" style={{ color: "#58a6ff" }}>
+                <p className="font-semibold text-sm text-white">
                   🎉 {connections.length} platform{connections.length > 1 ? "s" : ""} connected!
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: "#8b949e" }}>
@@ -220,8 +219,8 @@ export default function ConnectPage() {
               </div>
               <button
                 onClick={goDashboard}
-                className="px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ml-4 shrink-0"
-                style={{ background: "#1f6feb", color: "#fff" }}
+                className="px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:-translate-y-0.5 active:translate-y-0 hover:shadow-[0_12px_24px_rgba(255,255,255,0.12)] flex items-center gap-2 ml-4 shrink-0 btn-press"
+                style={{ background: "#ffffff", color: "#000000" }}
               >
                 Go to Dashboard →
               </button>
@@ -306,11 +305,11 @@ export default function ConnectPage() {
                       <button
                         onClick={() => handleConnect(platform.id)}
                         disabled={!configured}
-                        className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-70"
+                        className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-70 btn-press"
                         style={{
-                          background: configured ? "#238636" : "rgba(255,255,255,0.08)",
-                          color: configured ? "#fff" : "#8b949e",
-                          border: configured ? "1px solid rgba(35,134,54,0.4)" : "1px solid #484f58",
+                          background: configured ? "#ffffff" : "rgba(255,255,255,0.08)",
+                          color: configured ? "#000000" : "#8b949e",
+                          border: configured ? "1px solid rgba(255,255,255,0.1)" : "1px solid #484f58",
                           cursor: configured ? "pointer" : "not-allowed",
                         }}
                       >
