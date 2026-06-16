@@ -394,7 +394,6 @@ export function WorkspaceOverviewPage() {
           </div>
         </div>
       </div>
+    </div>
   );
 }
-
-

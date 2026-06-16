@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 
 type SidebarProps = {
@@ -12,7 +13,7 @@ type SidebarProps = {
 type NavItem = {
   label: string;
   to: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 };
 
 // SVG Icons matching the performance marketer style
