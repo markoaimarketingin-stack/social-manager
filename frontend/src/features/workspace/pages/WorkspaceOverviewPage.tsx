@@ -196,10 +196,10 @@ export function WorkspaceOverviewPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-[#0d1117]">
+      <div className="flex h-full w-full items-center justify-center" style={{ background: "#0a0a0a" }}>
         <div className="text-center space-y-2.5">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-blue-400 mx-auto" />
-          <p className="text-xs text-white/40">Loading supervisor overview...</p>
+          <div className="h-5 w-5 animate-spin rounded-full border border-white/20 border-t-white/70 mx-auto" />
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Loading supervisor overview...</p>
         </div>
       </div>
     );
@@ -215,15 +215,20 @@ export function WorkspaceOverviewPage() {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col bg-black text-white">
-      <div className="mx-auto flex w-full max-w-[980px] flex-1 flex-col space-y-6 overflow-y-auto px-6 py-8 scrollbar-thin">
+    <div className="flex h-full w-full flex-col" style={{ background: "#0a0a0a", color: "#e2e8f0" }}>
+      <div className="mx-auto flex w-full max-w-[940px] flex-1 flex-col space-y-6 overflow-y-auto px-6 py-8 scrollbar-thin">
         <div className="flex justify-end">
           <button
             onClick={handleRunAnalysis}
             disabled={runningAnalysis}
-            className="rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/80 transition hover:bg-white/[0.08] disabled:opacity-50"
+            className="rounded-full px-4 py-1.5 text-xs font-medium transition-all"
+            style={{
+              border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.03)",
+              color: "rgba(255,255,255,0.6)",
+            }}
           >
-            {runningAnalysis ? "Analyzing..." : "Run Analysis"}
+            {runningAnalysis ? "Analyzing..." : "▷ Run Analysis"}
           </button>
         </div>
         {loadError && (
@@ -231,30 +236,44 @@ export function WorkspaceOverviewPage() {
             {loadError}
           </div>
         )}
-        <section className="rounded-2xl p-8 text-center space-y-4 border relative overflow-hidden" style={{ background: "radial-gradient(circle at top, rgba(31,111,235,0.06), transparent), #161b22", borderColor: "#30363d" }}>
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full relative shadow-[0_0_35px_rgba(56,139,253,0.15)] border-2 border-white/5" style={{ background: "#0d1117" }}>
-            <div className="absolute inset-0.5 rounded-full border border-dashed border-[#388bfd]/30 animate-[spin_60s_linear_infinite]" />
-            <svg viewBox="0 0 24 24" className="h-10 w-10 text-[#388bfd] fill-none stroke-current" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-            </svg>
+
+        {/* Hero Section — matches Performance Marketer style */}
+        <section className="flex flex-col items-center justify-center py-16 text-center space-y-5">
+          {/* Bar chart icon like the screenshot */}
+          <div
+            className="flex items-end gap-1 mb-2"
+            style={{ color: "rgba(255,255,255,0.7)" }}
+          >
+            <div className="w-2 rounded-sm" style={{ height: "14px", background: "rgba(255,255,255,0.25)" }} />
+            <div className="w-2 rounded-sm" style={{ height: "22px", background: "rgba(255,255,255,0.5)" }} />
+            <div className="w-2 rounded-sm" style={{ height: "32px", background: "rgba(255,255,255,0.9)" }} />
+            <div className="w-2 rounded-sm" style={{ height: "18px", background: "rgba(255,255,255,0.4)" }} />
+            <div className="w-2 rounded-sm" style={{ height: "26px", background: "rgba(255,255,255,0.65)" }} />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold tracking-wide">I am your Social Media Supervisor</h3>
-            <p className="text-xs text-white/50 max-w-md mx-auto leading-relaxed">
-              Monitoring platform connections, publishing queue health, knowledge context, and operational readiness.
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold text-white tracking-tight">
+            I am your Social Media Supervisor
+          </h1>
+          <p className="max-w-[440px] text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+            Specialized in orchestrating social strategy, audience insights, content direction, publishing workflows, and platform performance for unified, decision-ready growth.
+          </p>
         </section>
 
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        {/* Stats Grid */}
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           {statsList.map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl border flex items-center justify-between" style={{ background: "#161b22", borderColor: "#30363d" }}>
+            <div
+              key={stat.label}
+              className="p-4 rounded-xl border flex items-center justify-between"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+            >
               <div>
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{stat.label}</p>
                 <h4 className="text-xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</h4>
               </div>
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold border" style={{ background: stat.bg, color: stat.color, borderColor: stat.border }}>
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold border"
+                style={{ background: stat.bg, color: stat.color, borderColor: stat.border }}
+              >
                 {stat.icon}
               </div>
             </div>
@@ -286,8 +305,11 @@ export function WorkspaceOverviewPage() {
           </section>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl p-5 border flex flex-col justify-between" style={{ background: "#161b22", borderColor: "#30363d" }}>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div
+            className="rounded-xl p-5 border flex flex-col justify-between"
+            style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+          >
             <div className="space-y-4">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Quick Post Publisher</h4>
@@ -339,7 +361,10 @@ export function WorkspaceOverviewPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl p-5 border flex flex-col" style={{ background: "#161b22", borderColor: "#30363d" }}>
+          <div
+            className="rounded-xl p-5 border flex flex-col"
+            style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+          >
             <div className="space-y-4">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Recent Operations</h4>
@@ -369,7 +394,6 @@ export function WorkspaceOverviewPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

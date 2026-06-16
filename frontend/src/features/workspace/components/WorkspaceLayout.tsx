@@ -30,10 +30,10 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string; icon: strin
   youtube: { title: "YouTube", subtitle: "Channel Workspace", icon: "YT" },
 };
 
-const SIDEBAR_MIN_WIDTH = 280;
-const SIDEBAR_MAX_WIDTH = 460;
-const ASSISTANT_MIN_WIDTH = 320;
-const ASSISTANT_MAX_WIDTH = 560;
+const SIDEBAR_MIN_WIDTH = 200;
+const SIDEBAR_MAX_WIDTH = 380;
+const ASSISTANT_MIN_WIDTH = 300;
+const ASSISTANT_MAX_WIDTH = 520;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -57,10 +57,10 @@ export function WorkspaceLayout() {
   const [kbOpen, setKbOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() =>
-    getStoredWidth("marko_sidebar_width", 340, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH),
+    getStoredWidth("marko_sidebar_width", 230, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH),
   );
   const [assistantWidth, setAssistantWidth] = useState(() =>
-    getStoredWidth("marko_assistant_width", 400, ASSISTANT_MIN_WIDTH, ASSISTANT_MAX_WIDTH),
+    getStoredWidth("marko_assistant_width", 340, ASSISTANT_MIN_WIDTH, ASSISTANT_MAX_WIDTH),
   );
 
   const currentSegment = location.pathname.split("/").filter(Boolean).at(-1) ?? "dashboard";
@@ -155,8 +155,8 @@ export function WorkspaceLayout() {
         pushToast,
       }}
     >
-      <div className="flex h-screen w-screen overflow-hidden bg-black text-white">
-        <aside className="hidden h-full shrink-0 bg-black lg:flex" style={{ width: sidebarWidth }}>
+      <div className="flex h-screen w-screen overflow-hidden text-white" style={{ background: "#0a0a0a" }}>
+        <aside className="hidden h-full shrink-0 lg:flex" style={{ width: sidebarWidth, background: "#0a0a0a", borderRight: "1px solid rgba(255,255,255,0.04)" }}>
           <Sidebar
             workspaceId={workspaceId}
             user={user}
@@ -178,50 +178,64 @@ export function WorkspaceLayout() {
           <div className="h-full w-px bg-[#111827] transition group-hover:w-1 group-hover:bg-[#388bfd]" />
         </div>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-black">
-          <header className="flex h-20 shrink-0 items-center justify-between border-b border-[#080808] bg-black px-7">
-            <div className="flex w-[260px] shrink-0 items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-lg font-black text-black">
-                {page.icon}
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: "#0a0a0a" }}>
+          {/* TopBar — matches Performance Marketer style */}
+          <header
+            className="flex h-[4.5rem] shrink-0 items-center justify-between px-5"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#0a0a0a" }}
+          >
+            {/* Left: page title */}
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)" }}
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                  <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
+                </svg>
               </div>
-              <div className="min-w-0">
-                <h1 className="truncate whitespace-nowrap text-xl font-black leading-none text-white">{page.title}</h1>
-                <p className="mt-1 text-sm text-white/55">{page.subtitle}</p>
+              <div>
+                <h2 className="text-[0.93rem] font-semibold leading-tight text-white">{page.title}</h2>
+                <p className="text-[9px] font-medium uppercase tracking-[0.3em]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  {page.subtitle}
+                </p>
               </div>
             </div>
 
-            <div className="flex min-w-0 items-center gap-2">
-              <button
-                onClick={() => navigate(`/workspaces/${workspaceId}/dashboard`)}
-                className="rounded-lg bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-white/90"
-              >
-                + New run
-              </button>
-              <button
-                onClick={() => setKbOpen(true)}
-                className="rounded-lg border-2 border-white bg-black px-4 py-3 text-sm font-bold text-white transition hover:bg-white hover:text-black"
-              >
-                ▣ Knowledge base
-              </button>
-              <button
-                onClick={() => setTrainOpen(true)}
-                className="rounded-lg border border-white/70 bg-black px-4 py-3 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
-              >
-                + Train model
-              </button>
-              <button
-                onClick={() => pushToast("Approval requests will appear here when review workflows are enabled.")}
-                className="rounded-lg border border-white bg-black px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10"
-              >
-                ✓ Request Approvals
-              </button>
-              <span className="ml-1 hidden items-center gap-2 text-sm text-white/70 2xl:flex">
-                <span className="h-2.5 w-2.5 rounded-full bg-white" /> Online
-              </span>
+            {/* Right: pill action buttons */}
+            <div className="hidden items-center gap-1.5 lg:flex">
+              {[
+                { label: "Knowledge Base", icon: "◈", action: () => setKbOpen(true) },
+                { label: "Train Model", icon: "+", action: () => setTrainOpen(true) },
+                { label: "Refresh", icon: "↺", action: () => pushToast("Workspace refreshed.") },
+                { label: "Run Analysis", icon: "▷", action: () => navigate(`/workspaces/${workspaceId}/dashboard`) },
+              ].map((btn) => (
+                <button
+                  key={btn.label}
+                  onClick={btn.action}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all duration-150"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.03)",
+                    color: "rgba(255,255,255,0.65)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.9)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
+                  }}
+                >
+                  <span style={{ opacity: 0.7 }}>{btn.icon}</span>
+                  {btn.label}
+                </button>
+              ))}
             </div>
           </header>
 
-          <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden bg-black">
+          <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ background: "#0a0a0a" }}>
             <Outlet context={{ workspaceId }} />
           </div>
         </section>

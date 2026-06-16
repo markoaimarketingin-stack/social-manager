@@ -194,8 +194,8 @@ export function AssistantPanel({ workspaceId }: Props) {
 
   return (
     <div
-      className="flex h-full w-full flex-col border-l border-[#111111]"
-      style={{ background: "#000000", color: "#e6edf3" }}
+      className="flex h-full w-full flex-col"
+      style={{ background: "#080808", color: "#e6edf3", borderLeft: "1px solid rgba(255,255,255,0.04)" }}
     >
       {/* Header */}
       <div
