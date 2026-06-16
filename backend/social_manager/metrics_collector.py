@@ -81,7 +81,7 @@ class RealMetricsCollector:
         
         for post_id, history in self.metrics_history.items():
             for metric in history:
-                if metric.get("platform") == platform:
+                if metric.get("platform", "").lower() == platform.lower():
                     all_platform_posts.append(metric)
         
         if not all_platform_posts:
@@ -89,7 +89,10 @@ class RealMetricsCollector:
         
         # Aggregate metrics
         total_reach = sum(m.get("reach", 0) for m in all_platform_posts)
-        total_engagement = sum(m.get("likes", 0) + m.get("comments", 0) + m.get("shares", 0) for m in all_platform_posts)
+        total_likes = sum(m.get("likes", 0) for m in all_platform_posts)
+        total_comments = sum(m.get("comments", 0) for m in all_platform_posts)
+        total_shares = sum(m.get("shares", 0) for m in all_platform_posts)
+        total_engagement = total_likes + total_comments + total_shares
         total_followers = sum(m.get("followers", 0) for m in all_platform_posts) / max(len(all_platform_posts), 1)
         avg_engagement_rate = sum(m.get("engagement_rate", 0) for m in all_platform_posts) / max(len(all_platform_posts), 1)
         
@@ -98,6 +101,9 @@ class RealMetricsCollector:
             "period": period.value,
             "total_posts": len(set(m.get("post_id", "") for m in all_platform_posts)),
             "total_reach": int(total_reach),
+            "total_likes": int(total_likes),
+            "total_comments": int(total_comments),
+            "total_shares": int(total_shares),
             "total_engagement": int(total_engagement),
             "average_engagement_rate": round(avg_engagement_rate, 2),
             "current_followers": int(total_followers),
@@ -134,51 +140,21 @@ class RealMetricsCollector:
         }
     
     def _get_demo_platform_metrics(self, platform: str) -> Dict:
-        """Return demo metrics when no real data available."""
-        demo_metrics = {
-            "instagram": {
-                "total_reach": 45230,
-                "total_engagement": 3420,
-                "average_engagement_rate": 7.56,
-                "current_followers": 12450,
-                "follower_growth": 145
-            },
-            "tiktok": {
-                "total_reach": 128500,
-                "total_engagement": 12340,
-                "average_engagement_rate": 9.58,
-                "current_followers": 8230,
-                "follower_growth": 520
-            },
-            "linkedin": {
-                "total_reach": 23400,
-                "total_engagement": 1240,
-                "average_engagement_rate": 5.29,
-                "current_followers": 6780,
-                "follower_growth": 85
-            },
-            "x": {
-                "total_reach": 89230,
-                "total_engagement": 5420,
-                "average_engagement_rate": 6.08,
-                "current_followers": 15230,
-                "follower_growth": 230
-            }
-        }
-        
-        metrics = demo_metrics.get(platform.lower(), {
-            "total_reach": 50000,
-            "total_engagement": 3000,
-            "average_engagement_rate": 6.0,
-            "current_followers": 10000,
-            "follower_growth": 100
-        })
-        
+        """Return 0 values when no metrics exist."""
         return {
             "platform": platform,
             "period": "monthly",
-            "demo": True,
-            **metrics
+            "demo": False,
+            "total_posts": 0,
+            "total_reach": 0,
+            "total_likes": 0,
+            "total_comments": 0,
+            "total_shares": 0,
+            "total_engagement": 0,
+            "average_engagement_rate": 0.0,
+            "current_followers": 0,
+            "follower_growth": 0,
+            "top_metric": {}
         }
     
     def get_cross_platform_comparison(self) -> Dict:
@@ -187,14 +163,14 @@ class RealMetricsCollector:
         
         for history in self.metrics_history.values():
             for metric in history:
-                platforms.add(metric.get("platform", ""))
+                platforms.add(metric.get("platform", "").lower())
         
         comparison = {}
         for platform in platforms:
             comparison[platform] = self.get_platform_metrics(platform)
         
-        # Add demo data for platforms without real data
-        for platform in ["instagram", "tiktok", "linkedin", "x"]:
+        # Add default empty data for platforms without real data
+        for platform in ["instagram", "facebook", "linkedin", "x", "youtube"]:
             if platform not in comparison:
                 comparison[platform] = self._get_demo_platform_metrics(platform)
         

@@ -240,7 +240,17 @@ async def connect_platform(platform: str, request: Request, current_user=Depends
     if platform not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
 
-    if not SUPPORTED_PROVIDERS[platform]["configured"]():
+    is_configured = SUPPORTED_PROVIDERS[platform]["configured"]()
+    logger.info(
+        "connect_platform: Checking configured status for platform '%s'. Configured: %s. "
+        "App ID/Client ID present: %s, Secret present: %s.",
+        platform,
+        is_configured,
+        bool(settings.facebook_app_id) if platform in ("facebook", "instagram") else bool(settings.linkedin_client_id) if platform == "linkedin" else False,
+        bool(settings.facebook_app_secret) if platform in ("facebook", "instagram") else bool(settings.linkedin_client_secret) if platform == "linkedin" else False
+    )
+
+    if not is_configured:
         # Always redirect to import/sandbox flow if credentials are not configured
         return await import_env_connection(platform, current_user.id, db, request=request)
 

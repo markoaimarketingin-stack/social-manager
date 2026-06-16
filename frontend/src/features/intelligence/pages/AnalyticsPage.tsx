@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiGet } from "../../../lib/api/client";
 import { SectionHeading } from "../../../components/ui/SectionHeading";
 import { Panel } from "../../../components/ui/Panel";
 import { StatusPill } from "../../../components/ui/StatusPill";
@@ -13,23 +15,55 @@ interface PerformanceMetric {
   growth: number;
 }
 
-const MOCK_METRICS: PerformanceMetric[] = [
-  { platform: "Instagram", likes: 1240, comments: 240, shares: 180, engagementRate: 8.4, reach: 14500, growth: 12 },
-  { platform: "LinkedIn", likes: 850, comments: 110, shares: 95, engagementRate: 6.2, reach: 9800, growth: 8 },
-  { platform: "Facebook", likes: 620, comments: 45, shares: 30, engagementRate: 3.8, reach: 7200, growth: 3 },
-  { platform: "X", likes: 410, comments: 85, shares: 120, engagementRate: 5.1, reach: 6400, growth: 5 },
+const PLATFORMS_CONFIG = [
+  { key: "instagram", name: "Instagram" },
+  { key: "facebook", name: "Facebook" },
+  { key: "linkedin", name: "LinkedIn" },
+  { key: "x", name: "X" },
+  { key: "youtube", name: "YouTube" },
 ];
 
 export function AnalyticsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All");
 
+  const { data: metricsData, isLoading } = useQuery({
+    queryKey: ["realMetricsComparison"],
+    queryFn: () => apiGet<{ platforms: Record<string, any> }>("/api/real/metrics/comparison"),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex h-64 w-full max-w-6xl items-center justify-center bg-[#000000] text-white animate-pulse">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-blue-400" />
+      </div>
+    );
+  }
+
+  const platformsMap = metricsData?.platforms || {};
+  const metricsList: PerformanceMetric[] = PLATFORMS_CONFIG.map((p) => {
+    const platData = platformsMap[p.key] || {};
+    return {
+      platform: p.name,
+      likes: platData.total_likes || 0,
+      comments: platData.total_comments || 0,
+      shares: platData.total_shares || 0,
+      engagementRate: platData.average_engagement_rate || 0.0,
+      reach: platData.total_reach || 0,
+      growth: platData.follower_growth || 0,
+    };
+  });
+
   const filteredMetrics = selectedPlatform === "All"
-    ? MOCK_METRICS
-    : MOCK_METRICS.filter(m => m.platform === selectedPlatform);
+    ? metricsList
+    : metricsList.filter((m) => m.platform === selectedPlatform);
 
   const totalReach = filteredMetrics.reduce((acc, curr) => acc + curr.reach, 0);
-  const avgEngagement = Number((filteredMetrics.reduce((acc, curr) => acc + curr.engagementRate, 0) / filteredMetrics.length).toFixed(1));
-  const avgGrowth = Number((filteredMetrics.reduce((acc, curr) => acc + curr.growth, 0) / filteredMetrics.length).toFixed(1));
+  const avgEngagement = filteredMetrics.length > 0
+    ? Number((filteredMetrics.reduce((acc, curr) => acc + curr.engagementRate, 0) / filteredMetrics.length).toFixed(1))
+    : 0;
+  const avgGrowth = filteredMetrics.length > 0
+    ? Number((filteredMetrics.reduce((acc, curr) => acc + curr.growth, 0) / filteredMetrics.length).toFixed(1))
+    : 0;
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
@@ -41,7 +75,7 @@ export function AnalyticsPage() {
         />
         
         <div className="flex gap-2">
-          {["All", "Instagram", "LinkedIn", "Facebook", "X"].map((plat) => (
+          {["All", "Instagram", "LinkedIn", "Facebook", "X", "YouTube"].map((plat) => (
             <button
               key={plat}
               onClick={() => setSelectedPlatform(plat)}
