@@ -223,8 +223,23 @@ def run_tests():
         all_passed = False
 
 
-    # 5. Check DB side-effects (audit logs and post tables)
-    print("\n[5] Verifying DB audit trail and states...")
+    # 5. Test OAuth connect token fallback
+    print("\n[5] Testing OAuth connect token fallback query-param support...")
+    # Make request to /api/auth/linkedin/connect?user_id=token without Auth header, allow redirects=False to check for 307
+    resp = requests.get(
+        f"{API_URL}/api/auth/linkedin/connect?user_id={token}",
+        allow_redirects=False
+    )
+    # Since we don't have client keys configured in dev template, it should redirect (302/307 Redirect) to configuration or oauth target.
+    if resp.status_code in (302, 307):
+        print(f"    ✓ Success: Query token accepted. Redirect target: {resp.headers.get('Location')}")
+    else:
+        print(f"    ✗ Failed: Expected redirect status code (302/307), got {resp.status_code}: {resp.text}")
+        all_passed = False
+
+
+    # 6. Check DB side-effects (audit logs and post tables)
+    print("\n[6] Verifying DB audit trail and states...")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
