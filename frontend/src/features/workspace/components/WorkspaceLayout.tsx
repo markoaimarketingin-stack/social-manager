@@ -155,8 +155,8 @@ export function WorkspaceLayout() {
         pushToast,
       }}
     >
-      <div className="flex h-screen w-screen overflow-hidden text-white" style={{ background: "#0a0a0a" }}>
-        <aside className="hidden h-full shrink-0 lg:flex" style={{ width: sidebarWidth, background: "#0a0a0a", borderRight: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="flex h-screen w-screen overflow-hidden text-white" style={{ background: "#000000" }}>
+        <aside className="hidden h-full shrink-0 lg:flex" style={{ width: sidebarWidth, background: "#050505", borderRight: "1px solid rgba(255,255,255,0.08)" }}>
           <Sidebar
             workspaceId={workspaceId}
             user={user}
@@ -175,67 +175,113 @@ export function WorkspaceLayout() {
           className="group hidden h-full w-2 shrink-0 cursor-col-resize items-stretch justify-center bg-black lg:flex"
           title="Drag to resize sidebar"
         >
-          <div className="h-full w-px bg-[#111827] transition group-hover:w-1 group-hover:bg-[#388bfd]" />
+          <div className="h-full w-px bg-white/5 transition group-hover:w-1 group-hover:bg-[#388bfd]" />
         </div>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: "#0a0a0a" }}>
-          {/* TopBar — matches Performance Marketer style */}
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: "#000000" }}>
+          {/* TopBar — matches Performance Marketer style exactly */}
           <header
-            className="flex h-[4.5rem] shrink-0 items-center justify-between px-5"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#0a0a0a" }}
+            className="flex min-h-[88px] shrink-0 items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] bg-[#000000] pl-[24px] pr-[24px]"
           >
-            {/* Left: page title */}
-            <div className="flex items-center gap-3">
-              <div
-                className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
-                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)" }}
-              >
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                  <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
-                </svg>
+            {/* Left: page title and symbol icon */}
+            <div className="flex min-w-0 items-center gap-[14px]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+                <img
+                  src="/symboll.png"
+                  alt="Supervisor"
+                  className="h-[22px] w-[22px] object-contain opacity-100"
+                />
               </div>
-              <div>
-                <h2 className="text-[0.93rem] font-semibold leading-tight text-white">{page.title}</h2>
-                <p className="text-[9px] font-medium uppercase tracking-[0.3em]" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <div className="flex min-w-0 flex-col leading-tight">
+                <h2
+                  style={{
+                    fontSize: "24px",
+                    lineHeight: "28px",
+                    fontWeight: 800,
+                    color: "#ffffff",
+                    letterSpacing: "-0.035em",
+                  }}
+                >
+                  {page.title}
+                </h2>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    lineHeight: "18px",
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.62)",
+                    marginTop: "3px",
+                  }}
+                >
                   {page.subtitle}
                 </p>
               </div>
             </div>
 
-            {/* Right: pill action buttons */}
-            <div className="hidden items-center gap-1.5 lg:flex">
-              {[
-                { label: "Knowledge Base", icon: "◈", action: () => setKbOpen(true) },
-                { label: "Train Model", icon: "+", action: () => setTrainOpen(true) },
-                { label: "Refresh", icon: "↺", action: () => pushToast("Workspace refreshed.") },
-                { label: "Run Analysis", icon: "▷", action: () => navigate(`/workspaces/${workspaceId}/dashboard`) },
-              ].map((btn) => (
+            {/* Right: pill action buttons matching PM agent-top-bar */}
+            <div className="hidden items-center gap-4 lg:flex">
+              <div className="ml-auto flex items-center justify-end gap-[18px]">
                 <button
-                  key={btn.label}
-                  onClick={btn.action}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all duration-150"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: "rgba(255,255,255,0.65)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)";
-                    (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.9)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
-                    (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
-                  }}
+                  type="button"
+                  className="flex h-[31px] items-center gap-[7px] whitespace-nowrap rounded-full border border-[rgba(255,255,255,0.08)] bg-[#000000] px-[12px] text-[13px] font-semibold leading-[16px] text-white transition hover:bg-[rgba(255,255,255,0.05)] btn-press"
+                  onClick={() => setKbOpen(true)}
                 >
-                  <span style={{ opacity: 0.7 }}>{btn.icon}</span>
-                  {btn.label}
+                  <svg className="h-[15px] w-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Knowledge Base
                 </button>
-              ))}
+
+                <button
+                  type="button"
+                  className="flex h-[31px] items-center gap-[7px] whitespace-nowrap rounded-full border border-[rgba(255,255,255,0.08)] bg-[#000000] px-[12px] text-[13px] font-semibold leading-[16px] text-white transition hover:bg-[rgba(255,255,255,0.05)] btn-press"
+                  onClick={() => setTrainOpen(true)}
+                >
+                  <svg className="h-[15px] w-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Train Model
+                </button>
+
+                <button
+                  type="button"
+                  className="flex h-[31px] items-center gap-[7px] whitespace-nowrap rounded-full border border-[rgba(255,255,255,0.08)] bg-[#000000] px-[12px] text-[13px] font-semibold leading-[16px] text-white transition hover:bg-[rgba(255,255,255,0.05)] btn-press"
+                  onClick={() => pushToast("Workspace refreshed.")}
+                >
+                  <svg
+                    className="h-[14px] w-[14px]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 9a8 8 0 0 0-13.66-3.66L4 7m16 10-2.34 2.34A8 8 0 0 1 4 15" />
+                  </svg>
+                  Refresh
+                </button>
+
+                <button
+                  type="button"
+                  className="flex h-[34px] items-center gap-[8px] rounded-full border border-[rgba(255,255,255,0.08)] bg-[#000000] px-[14px] text-[14px] font-semibold leading-[18px] text-white transition hover:bg-[rgba(255,255,255,0.05)] btn-press"
+                  onClick={() => navigate(`/workspaces/${workspaceId}/dashboard`)}
+                >
+                  <svg
+                    className="h-[15px] w-[15px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path d="M5 3l14 9-14 9V3z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Run Analysis
+                </button>
+              </div>
             </div>
           </header>
 
-          <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ background: "#0a0a0a" }}>
+          <div className="shell-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ background: "#000000" }}>
             <Outlet context={{ workspaceId }} />
           </div>
         </section>
@@ -250,7 +296,7 @@ export function WorkspaceLayout() {
               className="group hidden h-full w-2 shrink-0 cursor-col-resize items-stretch justify-center bg-black xl:flex"
               title="Drag to resize assistant"
             >
-              <div className="h-full w-px bg-[#111827] transition group-hover:w-1 group-hover:bg-[#388bfd]" />
+              <div className="h-full w-px bg-white/5 transition group-hover:w-1 group-hover:bg-[#388bfd]" />
             </div>
             <aside className="hidden h-full shrink-0 bg-black xl:flex" style={{ width: assistantWidth }}>
               <AssistantPanel workspaceId={workspaceId} />
@@ -262,7 +308,7 @@ export function WorkspaceLayout() {
           <div className="fixed bottom-5 right-5 z-40">
             <button
               onClick={() => setAssistantCollapsed(false)}
-              className="rounded-full border border-white/10 bg-white px-4 py-3 text-sm font-black text-black shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
+              className="rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-black text-black shadow-[0_12px_40px_rgba(0,0,0,0.45)] hover:scale-105 active:scale-95 transition-all duration-150"
             >
               Open Assistant
             </button>

@@ -2,396 +2,266 @@
 @config "../../tailwind.config.ts";
 
 /* ============================================================
-   SOCIAL MANAGER — VS Code Dark Design System
+   SOCIAL MANAGER — Performance Marketer Theme Alignment
    ============================================================ */
 
 :root {
-  color: #e2e8f0;
-  background: #000000;
-  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-  color-scheme: dark;
+  /* Legacy tokens (used by tailwind.config.ts) */
+  --page-bg: #000000;
+  --shell-bg: #050505;
+  --card-bg: #0a0a0a;
+  --card-border: rgba(255, 255, 255, 0.04);
+  --muted-text: #71717a;
+  --soft-text: #c8c8c8;
+  --heading-text: #f4f4f4;
+  --accent-aqua: #9fe0d7;
+  --accent-aqua-strong: #c4f5ee;
+  --accent-blue: #bdd8fb;
+  --accent-blue-strong: #d7e9ff;
+  --pill-bg: #1b1b1b;
+  --hover-bg: rgba(255, 255, 255, 0.06);
 
-  /* Core surfaces - Pitch Black & Carbon VS Code Dark Theme */
+  /* Structural backgrounds */
   --bg-base: #000000;
-  --bg-elevated: #09090b;
-  --bg-overlay: #141416;
-  --bg-muted: #1e1e21;
+  --bg-surface: #050505;
+  --bg-elevated: #080808;
 
-  /* Borders - Minimal carbon borders */
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-emphasis: rgba(255, 255, 255, 0.15);
+  /* Foreground / text */
+  --fg: #ffffff;
+  --fg-85: rgba(255, 255, 255, 0.85);
+  --fg-80: rgba(255, 255, 255, 0.80);
+  --fg-75: rgba(255, 255, 255, 0.75);
+  --fg-74: rgba(255, 255, 255, 0.74);
+  --fg-72: rgba(255, 255, 255, 0.72);
+  --fg-70: rgba(255, 255, 255, 0.70);
+  --fg-68: rgba(255, 255, 255, 0.68);
+  --fg-62: rgba(255, 255, 255, 0.62);
+  --fg-60: rgba(255, 255, 255, 0.60);
+  --fg-58: rgba(255, 255, 255, 0.58);
+  --fg-50: rgba(255, 255, 255, 0.50);
+  --fg-48: rgba(255, 255, 255, 0.48);
+  --fg-45: rgba(255, 255, 255, 0.45);
+  --fg-42: rgba(255, 255, 255, 0.42);
+  --fg-40: rgba(255, 255, 255, 0.40);
+  --fg-35: rgba(255, 255, 255, 0.35);
+  --fg-30: rgba(255, 255, 255, 0.30);
+  --fg-28: rgba(255, 255, 255, 0.28);
+  --fg-25: rgba(255, 255, 255, 0.25);
+  --fg-20: rgba(255, 255, 255, 0.20);
+  --fg-12: rgba(255, 255, 255, 0.12);
 
-  /* Text */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-link: #388bfd;
+  /* Borders */
+  --border-6: rgba(255, 255, 255, 0.04);
+  --border-8: rgba(255, 255, 255, 0.05);
+  --border-10: rgba(255, 255, 255, 0.06);
+  --border-14: rgba(255, 255, 255, 0.08);
+  --border-20: rgba(255, 255, 255, 0.20);
+  --border-28: rgba(255, 255, 255, 0.28);
+  --border-30: rgba(255, 255, 255, 0.30);
 
-  /* Accents */
-  --accent-blue: #1f6feb;
-  --accent-blue-emphasis: #388bfd;
-  --accent-green: #238636;
-  --accent-green-emphasis: #2ea043;
-  --accent-orange: #da6820;
-  --accent-red: #da3633;
-  --accent-purple: #6e40c9;
+  /* Overlay / subtle fills */
+  --overlay-2: rgba(255, 255, 255, 0.01);
+  --overlay-3: rgba(255, 255, 255, 0.02);
+  --overlay-4: rgba(255, 255, 255, 0.03);
+  --overlay-5: rgba(255, 255, 255, 0.04);
+  --overlay-6: rgba(255, 255, 255, 0.05);
+  --overlay-8: rgba(255, 255, 255, 0.06);
+  --overlay-10: rgba(255, 255, 255, 0.07);
+  --overlay-12: rgba(255, 255, 255, 0.09);
+  --overlay-20: rgba(255, 255, 255, 0.12);
 
-  /* Platform colors */
-  --platform-linkedin: #0077b5;
-  --platform-instagram: #e1306c;
-  --platform-facebook: #1877f2;
-  --platform-x: #e6edf3;
+  /* Body gradient */
+  --body-gradient:
+    radial-gradient(circle at top center, rgba(255, 255, 255, 0.02), transparent 45%),
+    linear-gradient(180deg, #000000 0%, #050505 100%);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.8);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.9);
-  --shadow-lg: 0 8px 36px rgba(0,0,0,0.95);
+  /* Card surface gradient */
+  --card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0));
+  --card-shine: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 45%);
 
-  /* Shell compat */
-  --shell-bg: #000000;
-  --shell-panel: #09090b;
-  --shell-panel-soft: rgba(255, 255, 255, 0.02);
-  --shell-line: rgba(255, 255, 255, 0.05);
-  --shell-line-strong: rgba(255, 255, 255, 0.12);
-  --shell-muted: rgba(148, 163, 184, 0.8);
-  --shell-radius-xl: 0.75rem;
-  --shell-radius-2xl: 0.5rem;
+  /* Select element */
+  --select-bg: #1b1b1b;
 }
 
 html {
-  background: var(--bg-base);
-  font-size: 14px;
+  scroll-behavior: smooth;
+  font-size: 15px;
+  background: var(--body-gradient);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
-  height: 100vh;
+  min-height: 100vh;
+  background: var(--body-gradient);
+  color: var(--heading-text);
+  letter-spacing: -0.01em;
+  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.45;
   overflow: hidden;
-  background: var(--bg-base);
-  color: var(--text-primary);
 }
-
-* { box-sizing: border-box; }
-
-button, input, textarea, select { font: inherit; }
-
-a { color: var(--text-link); text-decoration: none; }
-a:hover { text-decoration: underline; }
 
 #root {
   height: 100vh;
   overflow: hidden;
 }
 
-::selection { background: rgba(56, 139, 253, 0.25); }
+* {
+  box-sizing: border-box;
+}
 
-/* ── Scrollbars (VS Code style) ─────────────────────────────── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ─── Premium Custom Scrollbars ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(110, 118, 129, 0.4);
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(110, 118, 129, 0.65); border: 2px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-corner { background: transparent; }
 
-/* ── Component Layer ─────────────────────────────────────────── */
-@layer components {
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
 
-  /* Shell surfaces */
-  .shell-surface {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-sm);
-  }
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(0, 0, 0, 0.3);
+}
 
-  .shell-card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-sm);
-    transition: border-color 150ms ease, background 150ms ease;
-  }
-  .shell-card:hover {
-    border-color: var(--border-emphasis);
-    background: var(--bg-overlay);
-  }
+/* ─── Component styles ──────────────────────────────────────────────────────── */
+.card-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--card-gradient) var(--card-bg);
+}
 
-  .shell-pill {
-    border: 1px solid var(--border-default);
-    background: var(--bg-muted);
-  }
+.card-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--card-shine);
+  opacity: 0.55;
+}
 
-  /* Left sidebar (VS Code activity bar style) */
-  .left-sidebar {
-    width: 240px;
-    background: var(--bg-elevated);
-    border-right: 1px solid var(--border-subtle);
-    color: var(--text-primary);
-  }
-  .left-sidebar .brand-title {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-  }
+.grid-dots {
+  background-image:
+    radial-gradient(circle at center, var(--overlay-4) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
 
-  /* Chat / assistant panel */
-  .assistant-panel {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-elevated);
-    border-left: 1px solid var(--border-subtle);
-  }
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-  /* Scrollbar thin */
-  .shell-scroll, .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(110, 118, 129, 0.4) transparent;
-  }
-  .shell-scroll::-webkit-scrollbar,
-  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-  .shell-scroll::-webkit-scrollbar-thumb,
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(110, 118, 129, 0.4);
-    border-radius: 4px;
-  }
-  .shell-scroll::-webkit-scrollbar-thumb:hover,
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(110, 118, 129, 0.65); }
-  .shell-scroll::-webkit-scrollbar-track,
-  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
 
-  /* Chat bubbles */
-  .chat-bubble-user {
-    background: var(--accent-blue);
-    color: #fff;
-    border-radius: 12px 12px 2px 12px;
-    padding: 0.6rem 0.9rem;
-    max-width: 88%;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    word-break: break-word;
-    box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
-  }
+/* Select element theming */
+select {
+  background-color: var(--select-bg);
+  color: var(--fg);
+}
 
-  .chat-bubble-assistant {
-    background: var(--bg-overlay);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px 12px 12px 2px;
-    padding: 0.6rem 0.9rem;
-    max-width: 92%;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    word-break: break-word;
-  }
+select option {
+  background-color: var(--select-bg);
+  color: var(--fg);
+}
 
-  .chat-bubble-system {
-    background: rgba(35, 134, 54, 0.15);
-    border: 1px solid rgba(35, 134, 54, 0.3);
-    color: #3fb950;
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    text-align: center;
-    width: 100%;
-  }
+/* ─── Butter-Smooth Interactions & Micro-Animations ────────────────────────── */
 
-  /* Platform badges */
-  .platform-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.6rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid;
-  }
-  .platform-badge-linkedin { background: rgba(0,119,181,0.15); color: #58a6ff; border-color: rgba(0,119,181,0.35); }
-  .platform-badge-instagram { background: rgba(225,48,108,0.15); color: #f78166; border-color: rgba(225,48,108,0.35); }
-  .platform-badge-facebook { background: rgba(24,119,242,0.15); color: #79c0ff; border-color: rgba(24,119,242,0.35); }
-  .platform-badge-x { background: rgba(255,255,255,0.1); color: #e6edf3; border-color: rgba(255,255,255,0.2); }
+/* Auto-ease all interactive items */
+a, button, input, select, textarea, .card-surface, .group, .tab-item, .transition-all {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  /* Status pills */
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.2rem 0.65rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border: 1px solid;
-  }
-  .status-pill-success { background: rgba(35,134,54,0.15); color: #3fb950; border-color: rgba(35,134,54,0.3); }
-  .status-pill-pending { background: rgba(218,104,32,0.15); color: #f0883e; border-color: rgba(218,104,32,0.3); }
-  .status-pill-failed  { background: rgba(218,54,51,0.15);  color: #f85149; border-color: rgba(218,54,51,0.3);  }
-  .status-pill-neutral { background: rgba(110,118,129,0.15); color: #8b949e; border-color: rgba(110,118,129,0.3); }
+/* Micro-press click animation (physically responsive press effect) */
+button:active:not(:disabled), 
+input[type="submit"]:active, 
+.btn-press:active {
+  transform: scale(0.97) translateY(0.5px);
+}
 
-  /* Input fields */
-  .input-dark {
-    background: var(--bg-base);
-    border: 1px solid var(--border-default);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    width: 100%;
-    font-size: 0.875rem;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-    outline: none;
+/* Smooth fade-in-up animations for elements when they enter */
+@keyframes smoothFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
   }
-  .input-dark:focus {
-    border-color: var(--accent-blue-emphasis);
-    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
-  }
-  .input-dark::placeholder { color: var(--text-muted); }
-
-  /* Buttons */
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--accent-green);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 150ms ease, opacity 150ms ease;
-  }
-  .btn-primary:hover { background: var(--accent-green-emphasis); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-overlay);
-    color: var(--text-primary);
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 150ms ease, border-color 150ms ease;
-  }
-  .btn-secondary:hover { background: var(--bg-muted); border-color: var(--border-emphasis); }
-
-  .btn-danger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(218, 54, 51, 0.15);
-    color: #f85149;
-    border: 1px solid rgba(218, 54, 51, 0.3);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 150ms ease;
-  }
-  .btn-danger:hover { background: rgba(218, 54, 51, 0.25); }
-
-  /* Sidebar nav links */
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background 100ms ease, color 100ms ease;
-    text-decoration: none;
-  }
-  .nav-item:hover { background: var(--bg-overlay); color: var(--text-primary); text-decoration: none; }
-  .nav-item.active { background: rgba(31, 111, 235, 0.15); color: var(--accent-blue-emphasis); }
-
-  /* Stat card */
-  .stat-card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    transition: border-color 150ms ease;
-  }
-  .stat-card:hover { border-color: var(--border-emphasis); }
-
-  /* Section headers */
-  .section-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-
-  /* The assistant dock input area */
-  .assistant-dock {
-    background: var(--bg-base);
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-  }
-  .assistant-dock:focus-within {
-    border-color: var(--accent-blue-emphasis);
-    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-/* ── Animations ───────────────────────────────────────────────── */
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+.animate-fade-up {
+  animation: smoothFadeInUp 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes assistantPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 139, 253, 0); }
-  50%       { box-shadow: 0 0 0 4px rgba(56, 139, 253, 0.12); }
+/* Custom staggered fade entries */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+
+/* Interactive Hover Glow effects */
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Glassmorphism overlay panels */
+.glass-panel {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ─── Scrollbars (thin container support) ────────────────────────────────── */
+.shell-scroll, .scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
+.shell-scroll::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-.assistant-message { animation: fadeSlideIn 250ms ease-out; }
-.assistant-orb     { animation: assistantPulse 3s ease-in-out infinite; }
-.animate-float     { animation: float 3s ease-in-out infinite; }
-.animate-spin      { animation: spin 1s linear infinite; }
-
-/* Loading skeleton */
-.skeleton {
-  background: linear-gradient(90deg, var(--bg-overlay) 25%, var(--bg-muted) 50%, var(--bg-overlay) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.shell-scroll::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 4px;
 }
-
-/* ── Tailwind Canvas/Ink compat ──────────────────────────────── */
-.bg-canvas { background: var(--bg-base); }
-.text-ink   { color: var(--text-primary); }
-.shadow-panel { box-shadow: var(--shadow-md); }
+.shell-scroll::-webkit-scrollbar-thumb:hover,
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+.shell-scroll::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -1,31 +1,31 @@
-import { useState, type FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import { apiBaseUrl } from '../../lib/api/client';
+import { useState, type FormEvent } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "./AuthContext";
+import { apiBaseUrl } from "../../lib/api/client";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/connect';
+  const from = location.state?.from?.pathname || "/workspaces/demo/dashboard";
 
   const authRequest = async (endpoint: string, body: { email: string; password: string; name?: string }) => {
-    const bases = Array.from(new Set([apiBaseUrl, '']));
+    const bases = Array.from(new Set([apiBaseUrl, ""]));
     let lastError: unknown = null;
 
     for (const baseUrl of bases) {
       try {
         const response = await fetch(`${baseUrl}${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
         return response;
@@ -34,29 +34,29 @@ export default function AuthPage() {
       }
     }
 
-    throw lastError instanceof Error ? lastError : new Error('Failed to fetch');
+    throw lastError instanceof Error ? lastError : new Error("Failed to fetch");
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
+      const endpoint = isLogin ? "/api/users/login" : "/api/users/register";
       const body = isLogin
         ? { email, password }
-        : { email, password, name: name || email.split('@')[0] };
+        : { email, password, name: name || email.split("@")[0] };
 
       const response = await authRequest(endpoint, body);
 
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get("content-type") || "";
       const rawBody = await response.text();
       let data: any = null;
 
       if (rawBody) {
         try {
-          data = contentType.includes('application/json')
+          data = contentType.includes("application/json")
             ? JSON.parse(rawBody)
             : JSON.parse(rawBody);
         } catch {
@@ -65,11 +65,11 @@ export default function AuthPage() {
       }
 
       if (!response.ok) {
-        throw new Error(data?.detail || rawBody || 'Authentication failed');
+        throw new Error(data?.detail || rawBody || "Authentication failed");
       }
 
       if (!data?.access_token) {
-        throw new Error('Authentication response missing token');
+        throw new Error("Authentication response missing token");
       }
 
       login(data.access_token, data.user);
@@ -81,235 +81,144 @@ export default function AuthPage() {
     }
   };
 
-  // Guest / demo mode — skips real auth
   const handleGuestMode = () => {
-    const guestToken = 'guest-demo-token';
-    const guestUser = { id: 0, email: 'guest@demo.ai', name: 'Demo User' };
+    const guestToken = "guest-demo-token";
+    const guestUser = { id: 0, email: "guest@demo.ai", name: "Demo User" };
     login(guestToken, guestUser);
-    navigate('/workspaces/demo/dashboard', { replace: true });
+    navigate("/workspaces/demo/dashboard", { replace: true });
   };
 
-  // Initial letter for the logo badge
-  const logoLetter = 'M';
-
   return (
-    <div
-      className="flex min-h-screen w-full items-center justify-center px-4"
-      style={{
-        background: 'radial-gradient(ellipse at bottom, #1a0e00 0%, #0a0a0a 60%, #000000 100%)',
-      }}
-    >
-      {/* Card */}
-      <div
-        className="w-full max-w-[400px] rounded-2xl p-8"
-        style={{
-          background: 'rgba(18,18,18,0.92)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
-        }}
-      >
-        {/* Top row: text + logo badge */}
-        <div className="flex items-start justify-between mb-1">
-          <p
-            className="text-[10px] font-bold uppercase tracking-[0.22em]"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
-          >
-            {isLogin ? 'Welcome back' : 'Get started'}
-          </p>
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black"
-            style={{
-              background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: '#ffffff',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            }}
-          >
-            {logoLetter}
-          </div>
-        </div>
+    <main className="relative min-h-screen overflow-hidden bg-[#050505] text-white flex items-center justify-center">
+      {/* Background gradients aligned with PM */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.14),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(255,196,86,0.16),_transparent_32%)]" />
+      <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)]" />
 
-        <h1 className="mt-1 mb-6 text-[1.55rem] font-semibold leading-tight text-white">
-          {isLogin ? 'Continue with email.' : 'Create your account.'}
-        </h1>
-
-        {/* Error banner */}
-        {error && (
-          <div
-            className="mb-4 rounded-xl px-4 py-3 text-sm"
-            style={{
-              background: 'rgba(248,81,73,0.1)',
-              border: '1px solid rgba(248,81,73,0.25)',
-              color: '#f85149',
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        <form className="space-y-3" onSubmit={handleSubmit}>
-          {/* Name field — register only */}
-          {!isLogin && (
+      <div className="relative mx-auto flex w-full max-w-md flex-col justify-center px-4 py-10">
+        <section className="rounded-[2rem] border border-white/10 bg-[#0d0d0d]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.42)] backdrop-blur sm:p-8 animate-fade-up">
+          
+          {/* Header Row */}
+          <div className="mb-6 flex items-center justify-between gap-4">
             <div>
-              <label
-                className="mb-1.5 block text-xs font-medium"
-                style={{ color: 'rgba(255,255,255,0.6)' }}
-              >
-                Full name
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/42">
+                {isLogin ? "Welcome back" : "Get started"}
+              </p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white leading-tight">
+                {isLogin ? "Continue with email." : "Create your account."}
+              </h2>
+            </div>
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[1.2rem] border border-white/12 bg-white text-black shadow-[0_16px_32px_rgba(255,255,255,0.12)] select-none">
+              <span className="text-xl font-bold">M</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {/* Full Name (Sign Up only) */}
+            {!isLogin && (
+              <div>
+                <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-white/78">
+                  Full name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                />
+              </div>
+            )}
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-white/78">
+                Work email
               </label>
               <input
+                id="email"
+                type="email"
                 required
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-                onFocus={(e) => {
-                  e.target.style.border = '1px solid rgba(255,255,255,0.25)';
-                  e.target.style.background = 'rgba(255,255,255,0.07)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.border = '1px solid rgba(255,255,255,0.1)';
-                  e.target.style.background = 'rgba(255,255,255,0.05)';
-                }}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
               />
             </div>
-          )}
 
-          {/* Email */}
-          <div>
-            <label
-              className="mb-1.5 block text-xs font-medium"
-              style={{ color: 'rgba(255,255,255,0.6)' }}
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-white/78">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/28 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+              />
+            </div>
+
+            {/* Info Box */}
+            <div className="rounded-[1rem] border border-[#f5c35f]/15 bg-[#f5c35f]/[0.06] px-4 py-3 text-sm leading-6 text-white/70">
+              {isLogin
+                ? "Your workspace, platform connections, and assistant settings resolve automatically after email login."
+                : "After registration you will be redirected to connect your social media platforms."}
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <div className="rounded-[1rem] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                {error}
+              </div>
+            )}
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-[1rem] bg-white py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(255,255,255,0.18)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 btn-press"
             >
-              Work email
-            </label>
-            <input
-              required
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-              onFocus={(e) => {
-                e.target.style.border = '1px solid rgba(255,255,255,0.25)';
-                e.target.style.background = 'rgba(255,255,255,0.07)';
-              }}
-              onBlur={(e) => {
-                e.target.style.border = '1px solid rgba(255,255,255,0.1)';
-                e.target.style.background = 'rgba(255,255,255,0.05)';
-              }}
-            />
+              {loading ? "Processing…" : (isLogin ? "Log in" : "Create account")}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[0.7rem] font-medium uppercase tracking-[0.26em] text-white/30">or</span>
+            <div className="h-px flex-1 bg-white/10" />
           </div>
 
-          {/* Password */}
-          <div>
-            <label
-              className="mb-1.5 block text-xs font-medium"
-              style={{ color: 'rgba(255,255,255,0.6)' }}
-            >
-              Password
-            </label>
-            <input
-              required
-              type="password"
-              autoComplete={isLogin ? 'current-password' : 'new-password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-              onFocus={(e) => {
-                e.target.style.border = '1px solid rgba(255,255,255,0.25)';
-                e.target.style.background = 'rgba(255,255,255,0.07)';
-              }}
-              onBlur={(e) => {
-                e.target.style.border = '1px solid rgba(255,255,255,0.1)';
-                e.target.style.background = 'rgba(255,255,255,0.05)';
-              }}
-            />
-          </div>
-
-          {/* Info text */}
-          <p
-            className="rounded-xl px-3.5 py-3 text-[11px] leading-relaxed"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.4)',
-            }}
+          {/* Guest / Demo button */}
+          <button
+            type="button"
+            onClick={handleGuestMode}
+            className="w-full rounded-[1rem] border border-white/10 bg-transparent py-3 text-sm font-medium text-white transition hover:bg-white/[0.05] btn-press"
           >
-            {isLogin
-              ? 'Your workspace, platform connections, and assistant settings resolve automatically after email login.'
-              : 'After registration you will be redirected to connect your social media platforms.'}
+            Continue as guest
+            <span className="ml-2 text-xs text-white/42">(mock workspace)</span>
+          </button>
+
+          {/* Toggle link */}
+          <p className="mt-5 text-center text-xs text-white/35">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={() => { setIsLogin(!isLogin); setError(""); }}
+              className="font-semibold transition-colors hover:text-white underline cursor-pointer text-white/60"
+            >
+              {isLogin ? "Sign up" : "Sign in"}
+            </button>
           </p>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 w-full rounded-xl py-2.5 text-sm font-semibold text-black transition-all duration-150 disabled:opacity-50"
-            style={{ background: '#ffffff' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f0f0f0'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
-          >
-            {loading ? 'Processing…' : (isLogin ? 'Log in' : 'Create account')}
-          </button>
-        </form>
-
-        {/* OR divider */}
-        <div className="my-4 flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-          <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>OR</span>
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-        </div>
-
-        {/* Guest / demo button */}
-        <button
-          type="button"
-          onClick={handleGuestMode}
-          className="w-full rounded-xl py-2.5 text-xs font-medium transition-all duration-150"
-          style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.5)',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)';
-          }}
-        >
-          Continue as guest <span style={{ color: 'rgba(255,255,255,0.3)' }}>(mock workspace)</span>
-        </button>
-
-        {/* Toggle login / register */}
-        <p className="mt-5 text-center text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          {isLogin ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            onClick={() => { setIsLogin(!isLogin); setError(''); }}
-            className="font-semibold transition-colors hover:text-white"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            {isLogin ? 'Sign up' : 'Sign in'}
-          </button>
-        </p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

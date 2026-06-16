@@ -65,7 +65,6 @@ export function AssistantPanel({ workspaceId }: Props) {
 
   // Fetch connections
   useEffect(() => {
-    console.log("Loading assistant panel for workspace:", workspaceId);
     const token = localStorage.getItem("auth_token");
     if (!token) return;
     fetch(`${apiBaseUrl}/api/auth/connections`, {
@@ -107,7 +106,7 @@ export function AssistantPanel({ workspaceId }: Props) {
     const prompt = (text ?? input).trim();
     if (!prompt) return;
     setInput("");
-    setActiveTab("chatbot"); // Auto switch to chatbot if suggestion clicked
+    setActiveTab("chatbot");
 
     addMessage("user", prompt);
     setLoading(true);
@@ -124,7 +123,6 @@ export function AssistantPanel({ workspaceId }: Props) {
         body.platforms = selectedPlatforms;
       }
 
-      // Add custom api keys to headers if configured locally
       const groqKey = localStorage.getItem("groq_api_key");
       const openaiKey = localStorage.getItem("openai_api_key");
 
@@ -150,7 +148,6 @@ export function AssistantPanel({ workspaceId }: Props) {
         published: data.published ?? [],
       });
 
-      // If posted, add a system confirmation for each platform
       if (data.published && data.published.length > 0) {
         for (const p of data.published) {
           addMessage("system", `✓ Posted to ${p.platform.charAt(0).toUpperCase() + p.platform.slice(1)}`);
@@ -169,7 +166,6 @@ export function AssistantPanel({ workspaceId }: Props) {
       sendMessage();
     }
   };
-
 
   const switchMode = (newMode: Mode) => {
     setMode(newMode);
@@ -193,95 +189,114 @@ export function AssistantPanel({ workspaceId }: Props) {
   const quickPrompts = mode === "ask" ? QUICK_ASKS : QUICK_AGENT_PROMPTS;
 
   return (
-    <div
-      className="flex h-full w-full flex-col"
-      style={{ background: "#080808", color: "#e6edf3", borderLeft: "1px solid rgba(255,255,255,0.04)" }}
-    >
-      {/* Header */}
-      <div
-        className="shrink-0 px-4 py-3.5 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #111111" }}
-      >
-        <div className="flex items-center gap-2">
-          <div
-            className="flex h-6 w-6 items-center justify-center rounded-lg text-white"
-            style={{ background: "linear-gradient(135deg, #1f6feb, #388bfd)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-              <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.134Z"/>
-            </svg>
+    <aside className="relative flex h-full w-full shrink-0 flex-col border-l border-[rgba(255,255,255,0.08)] bg-[#000000]">
+      {/* Header matches PM exactly */}
+      <div className="flex h-[88px] shrink-0 items-center border-b border-[rgba(255,255,255,0.08)] bg-[#000000] px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[rgba(255,255,255,0.04)] bg-[#0b0b0b]">
+            <img src="/marko%20ai.png" alt="MarkoAI" className="h-5 w-5 object-contain" />
           </div>
           <div>
-            <h4 className="font-bold text-xs" style={{ color: "#ffffff", lineHeight: 1.1 }}>Assistant</h4>
-            <span
-              className="text-[9px] font-bold tracking-wider"
-              style={{ color: mode === "agent" ? "#388bfd" : "#8b949e" }}
-            >
-              {mode === "agent" ? "AGENT MODE" : "READ-ONLY MODE"}
-            </span>
+            <div className="text-[1.02rem] font-semibold text-white leading-tight">Assistant</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40 mt-0.5">
+              {mode === "ask" ? "Read-only mode" : "Agent mode"}
+            </div>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="ml-auto flex items-center gap-3">
+          {/* New Chat / Clear Chat */}
           <button
+            type="button"
             onClick={() => setMessages([])}
-            className="p-1 rounded hover:bg-white/5 text-white/50 hover:text-white transition-colors"
+            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            aria-label="New conversation"
             title="Clear Chat"
           >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
             </svg>
           </button>
+
+          {/* Saved Prompts */}
           <button
-            onClick={() => toggleAssistant()}
-            className="p-1 rounded hover:bg-white/5 text-white/50 hover:text-white transition-colors"
-            title="Collapse Panel"
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new Event("open-settings-modal"));
+            }}
+            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            aria-label="Saved prompts"
+            title="Saved Prompts"
           >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-              <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+
+          {/* History */}
+          <button
+            type="button"
+            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            aria-label="History"
+            title="History"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v5l3 2" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.05 11A9 9 0 1 1 6 17.3" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4v7h7" />
+            </svg>
+          </button>
+
+          {/* Close Panel */}
+          <button
+            type="button"
+            className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-white/5"
+            aria-label="Close panel"
+            onClick={() => toggleAssistant()}
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Internal Tabs Switcher */}
-      <div className="shrink-0 px-4 py-2 border-b border-[#161b22] flex gap-4 text-xs font-semibold">
-        <button
-          onClick={() => setActiveTab("chatbot")}
-          className="flex items-center gap-1.5 pb-2 transition-all border-b-2 relative -bottom-[9px]"
-          style={{
-            color: activeTab === "chatbot" ? "#388bfd" : "#6e7681",
-            borderColor: activeTab === "chatbot" ? "#388bfd" : "transparent",
-          }}
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-            <path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-            <path d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9.06 9.06 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.437 10.437 0 0 1-1.805 3.195.5.5 0 0 0 .425.808a10.43 10.43 0 0 0 1.575-.105zM1.01 8c0-3.31 3.13-6 7-6s7 2.69 7 6-3.13 6-7 6a8.032 8.032 0 0 1-2.31-.34A.5.5 0 0 0 5 13.7c-.42.27-1.42.75-2.77 1.07a8.497 8.497 0 0 0 1.01-1.92.5.5 0 0 0-.17-.552C2.07 11.23 1.01 9.7 1.01 8z"/>
-          </svg>
-          Chatbot
-        </button>
-        <button
-          onClick={() => setActiveTab("suggestions")}
-          className="flex items-center gap-1.5 pb-2 transition-all border-b-2 relative -bottom-[9px]"
-          style={{
-            color: activeTab === "suggestions" ? "#388bfd" : "#6e7681",
-            borderColor: activeTab === "suggestions" ? "#388bfd" : "transparent",
-          }}
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-            <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 8.5 13h-1a.5.5 0 0 1-.46-.31l-.762-1.77a2.235 2.235 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.34l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/>
-          </svg>
-          Suggestions
-        </button>
+      {/* Tabs segment matching PM */}
+      <div className="px-4 py-3 shrink-0">
+        <div className="rounded-[0.9rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
+          <div className="grid grid-cols-2 gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("chatbot")}
+              className={`flex items-center justify-center gap-1.5 rounded-[0.72rem] px-3 py-2.5 text-[0.84rem] font-semibold transition ${
+                activeTab === "chatbot" ? "bg-black text-white" : "text-white/72 hover:bg-white/5"
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.85}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5m-8 6 3.6-3H19a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2v3Z" />
+              </svg>
+              Chatbot
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("suggestions")}
+              className={`flex items-center justify-center gap-1.5 rounded-[0.72rem] px-3 py-2.5 text-[0.84rem] font-semibold transition ${
+                activeTab === "suggestions" ? "bg-black text-white" : "text-white/72 hover:bg-white/5"
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.85}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.75c.86.6 1.5 1.49 1.75 2.49h4.5c.25-1 .89-1.89 1.75-2.49A7 7 0 0 0 12 2Z" />
+              </svg>
+              Suggestions
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin space-y-4">
+      {/* Main chat list */}
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {activeTab === "suggestions" ? (
-          /* Suggestions Panel View */
-          <div className="space-y-4 animate-fadeIn">
+          <div className="space-y-4 animate-fade-up">
             <div className="p-3.5 rounded-xl border border-[#21262d] bg-[#0d1117]/60">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Prompt Library</h5>
               <p className="text-[10px] text-white/40">Select a focused strategic action to run instantly.</p>
@@ -291,7 +306,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#0d1117]/80 hover:bg-[#161b22] border border-[#21262d] text-white/70 hover:text-white hover:border-[#388bfd]/50"
+                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#0d1117]/80 hover:bg-[#161b22] border border-[#21262d] text-white/70 hover:text-white hover:border-[#388bfd]/50 btn-press"
                 >
                   {q}
                 </button>
@@ -299,22 +314,11 @@ export function AssistantPanel({ workspaceId }: Props) {
             </div>
           </div>
         ) : (
-          /* Chatbot Panel View */
-          <div className="space-y-4 animate-fadeIn">
+          <div className="space-y-4 animate-fade-up">
             {!hasMessages && (
-              <div className="text-center py-10 space-y-3">
-                <div className="h-10 w-10 mx-auto flex items-center justify-center rounded-full bg-white/[0.02] border border-[#21262d] text-white/50">
-                  💬
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white/80">
-                    {mode === "ask" ? "Ask me anything" : "I'm ready to post"}
-                  </p>
-                  <p className="text-[10px] text-white/40 mt-1 max-w-[200px] mx-auto leading-relaxed">
-                    {mode === "ask"
-                      ? "Ask about strategy, draft content, or retrieve information."
-                      : "Provide a description of your post, and I will publish it to your connected platforms."}
-                  </p>
+              <div className="flex h-full items-center justify-center py-20">
+                <div className="max-w-[19rem] text-center text-sm leading-6 text-white/55">
+                  Ask mode is for Q&amp;A and fetching context. Agent mode can prepare optimizations or Meta budget changes, always behind confirmation.
                 </div>
               </div>
             )}
@@ -325,29 +329,25 @@ export function AssistantPanel({ workspaceId }: Props) {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} ${msg.role === "system" ? "justify-center" : ""}`}
               >
                 {msg.role === "system" ? (
-                  <div
-                    className="px-3 py-1 rounded-full text-[10px] font-bold border"
-                    style={{ background: "rgba(35,134,54,0.06)", color: "#3fb950", borderColor: "rgba(35,134,54,0.2)" }}
-                  >
+                  <div className="px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">
                     {msg.content}
                   </div>
                 ) : msg.role === "user" ? (
-                  <div className="flex flex-col items-end gap-1 max-w-[85%]">
-                    <div className="rounded-xl px-3 py-2 text-xs bg-[#1f6feb] text-white shadow-md leading-relaxed">
+                  <div className="flex flex-col items-end gap-1 max-w-[88%]">
+                    <div className="rounded-2xl bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[0.85rem] leading-relaxed text-white/90">
                       {msg.content}
                     </div>
                     <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-start gap-1 max-w-[90%]">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold bg-[#161b22] text-white/70 border border-[#30363d]">
-                        AI
+                  <div className="flex flex-col items-start gap-1 max-w-[90%] w-full">
+                    <div className="w-full rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-3 py-3">
+                      <div className="text-[0.85rem] leading-relaxed text-white/80 whitespace-pre-wrap">
+                        {msg.content}
                       </div>
-                      <span className="text-[10px] font-bold text-white/40">AI Assistant</span>
-                    </div>
-                    <div className="rounded-xl px-3.5 py-2.5 text-xs bg-[#161b22] border border-[#21262d] text-white/90 leading-relaxed shadow-sm whitespace-pre-wrap">
-                      {msg.content}
+                      <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-white/40">
+                        {selectedModel}
+                      </div>
                     </div>
                     {msg.published && msg.published.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -371,19 +371,14 @@ export function AssistantPanel({ workspaceId }: Props) {
               </div>
             ))}
 
-            {/* Loading indicator */}
             {loading && (
               <div className="flex justify-start">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold bg-[#161b22] text-white/70 border border-[#30363d]">
-                      AI
-                    </div>
-                    <span className="text-[10px] font-bold text-white/40">AI Assistant</span>
-                  </div>
-                  <div className="rounded-xl px-3 py-2 text-xs bg-[#161b22] border border-[#21262d] text-white/40 flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full border border-t-transparent animate-spin border-[#388bfd]" />
-                    <span>{mode === "agent" ? "Posting to platforms..." : "Thinking..."}</span>
+                <div className="flex flex-col items-start gap-1 max-w-[90%] w-full">
+                  <div className="w-full rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-3 py-3 flex items-center gap-2.5">
+                    <div className="h-3.5 w-3.5 rounded-full border border-t-transparent animate-spin border-white/60" />
+                    <span className="text-xs text-white/50">
+                      {mode === "agent" ? "Publishing content..." : "Assistant is thinking..."}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -393,19 +388,15 @@ export function AssistantPanel({ workspaceId }: Props) {
         )}
       </div>
 
-      {/* Input Dock at Bottom */}
-      <div className="shrink-0 p-3 bg-[#000000]" style={{ borderTop: "1px solid #111111" }}>
-        <div
-          className="flex flex-col gap-2 p-2 rounded-xl bg-[#080808] border border-[#161616]"
-        >
-          {/* Helper details line */}
+      {/* Input composer matches PM */}
+      <div className="shrink-0 p-3 bg-[#000000]" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex flex-col gap-2 p-2 rounded-xl bg-[#080808] border border-[#161616]">
           <span className="text-[9px] text-white/25 px-1 font-semibold">
             Add context (#), extensions (@), commands (/)
           </span>
 
-          {/* Connected Platforms Selector Pills (Only in Agent mode) */}
           {mode === "agent" && (
-            <div className="flex items-center gap-2 px-1 py-1.5 border-b border-[#161b22] select-none animate-fadeIn">
+            <div className="flex items-center gap-2 px-1 py-1.5 border-b border-white/5 select-none animate-fade-up">
               <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Post To:</span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {["facebook", "instagram", "linkedin", "x"].map((platform) => {
@@ -456,10 +447,8 @@ export function AssistantPanel({ workspaceId }: Props) {
             }}
           />
 
-          {/* Bottom Dock Controls Bar */}
-          <div className="flex items-center justify-between pt-1.5 border-t border-[#161b22] px-1">
+          <div className="flex items-center justify-between pt-1.5 border-t border-white/5 px-1">
             <div className="flex items-center gap-1.5">
-              {/* Mode Selector Dropdown */}
               <select
                 value={mode}
                 onChange={(e) => switchMode(e.target.value as Mode)}
@@ -476,7 +465,6 @@ export function AssistantPanel({ workspaceId }: Props) {
                 <option value="agent">Agent</option>
               </select>
 
-              {/* Model Selector Dropdown */}
               <select
                 value={selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
@@ -496,11 +484,10 @@ export function AssistantPanel({ workspaceId }: Props) {
               </select>
             </div>
 
-            {/* Send Button */}
             <button
               onClick={() => sendMessage()}
               disabled={loading || !input.trim()}
-              className="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed text-white shadow-sm"
+              className="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed text-white shadow-sm btn-press"
               style={{ background: mode === "agent" ? "#1f6feb" : "#238636" }}
             >
               {loading ? (
@@ -514,6 +501,6 @@ export function AssistantPanel({ workspaceId }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
