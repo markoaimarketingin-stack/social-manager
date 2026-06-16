@@ -61,12 +61,12 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
         className="w-full max-w-2xl rounded-2xl p-6 text-white shadow-2xl animate-scaleIn flex flex-col max-h-[85vh]"
         style={{
           background: "#161b22",
-          border: "1px solid #30363d",
+          border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#21262d] shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-[rgba(255,255,255,0.04)] shrink-0">
           <div>
             <h3 className="text-lg font-bold tracking-wide">Knowledge Base</h3>
             <p className="text-xs text-white/40">View and manage uploaded materials that inform the model strategy.</p>
@@ -94,7 +94,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
             </div>
           ) : documents.length === 0 ? (
             <div className="text-center py-12 space-y-3">
-              <svg viewBox="0 0 16 16" className="mx-auto h-12 w-12 text-[#30363d] fill-current">
+              <svg viewBox="0 0 16 16" className="mx-auto h-12 w-12 text-[rgba(255,255,255,0.08)] fill-current">
                 <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
               </svg>
               <div>
@@ -103,10 +103,10 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
               </div>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-[#30363d] bg-[#0d1117]/40">
+            <div className="overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#000000]/40">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-[#161b22] border-b border-[#30363d] text-white/60">
+                  <tr className="bg-[#0a0a0a] border-b border-[rgba(255,255,255,0.08)] text-white/60">
                     <th className="p-3 font-semibold uppercase tracking-wider">Document</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Category</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Type</th>
@@ -114,7 +114,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#21262d]">
+                <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
                   {documents.map((doc) => (
                     <tr key={doc.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="p-3 font-semibold truncate max-w-[180px]">{doc.filename}</td>
@@ -152,7 +152,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-[#21262d] flex items-center justify-end shrink-0">
+        <div className="pt-4 border-t border-[rgba(255,255,255,0.04)] flex items-center justify-end shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 transition-colors text-white/60 hover:text-white"

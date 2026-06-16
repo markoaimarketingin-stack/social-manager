@@ -69,7 +69,7 @@ export function IntelligencePage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <div className="flex items-center justify-between flex-wrap gap-4 shrink-0 pb-4 border-b border-[#161b22] mb-6">
         <SectionHeading
           eyebrow="Intelligence Hub"
@@ -100,7 +100,7 @@ export function IntelligencePage() {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Signal Stack</h4>
@@ -109,8 +109,8 @@ export function IntelligencePage() {
               {trends.map((card) => (
                 <div
                   key={card.id}
-                  className="rounded-xl border p-4 bg-[#0d1117]/60 flex flex-col justify-between space-y-3 hover:border-[#388bfd]/30 transition-all duration-200"
-                  style={{ borderColor: "#21262d" }}
+                  className="rounded-xl border p-4 bg-[#000000]/60 flex flex-col justify-between space-y-3 hover:border-[#388bfd]/30 transition-all duration-200"
+                  style={{ borderColor: "rgba(255,255,255,0.04)" }}
                 >
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold">{card.source}</span>
@@ -127,13 +127,13 @@ export function IntelligencePage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Strategic Anchor</h4>
             <p className="text-[10px] text-white/40 mb-4">Operator strategic context and guidance summary.</p>
             <div className="space-y-4 text-xs">
-              <div className="rounded-xl border p-4 bg-[#0d1117]/40 space-y-1.5" style={{ borderColor: "#21262d" }}>
+              <div className="rounded-xl border p-4 bg-[#000000]/40 space-y-1.5" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
                 <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold">Active Strategy</span>
                 <p className="font-bold">{strategy?.title ?? "Standard Social Media Strategy"}</p>
                 <p className="text-white/50 leading-relaxed">
@@ -153,7 +153,7 @@ export function IntelligencePage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">Competitor Signals</h4>
           <p className="text-[10px] text-white/40 mb-4">Positioning vulnerabilities identified in direct competitors.</p>
@@ -161,8 +161,8 @@ export function IntelligencePage() {
             {competitors.map((card) => (
               <div
                 key={card.id}
-                className="rounded-xl border p-4 bg-[#0d1117]/60 space-y-2 hover:border-[#388bfd]/30 transition-all duration-200"
-                style={{ borderColor: "#21262d" }}
+                className="rounded-xl border p-4 bg-[#000000]/60 space-y-2 hover:border-[#388bfd]/30 transition-all duration-200"
+                style={{ borderColor: "rgba(255,255,255,0.04)" }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-xs font-bold text-white/90">{card.name}</h3>
@@ -176,7 +176,7 @@ export function IntelligencePage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">AI Writing Cues</h4>
@@ -189,8 +189,8 @@ export function IntelligencePage() {
               ].map((item) => (
                 <div
                   key={item}
-                  className="rounded-xl border p-3.5 text-xs text-white/70 leading-relaxed bg-[#0d1117]/40"
-                  style={{ borderColor: "#21262d" }}
+                  className="rounded-xl border p-3.5 text-xs text-white/70 leading-relaxed bg-[#000000]/40"
+                  style={{ borderColor: "rgba(255,255,255,0.04)" }}
                 >
                   💡 {item}
                 </div>

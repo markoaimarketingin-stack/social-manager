@@ -151,11 +151,11 @@ export default function ConnectPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#0d1117", color: "#e6edf3", fontFamily: '"Inter", system-ui, sans-serif' }}
+      style={{ background: "#000000", color: "#e6edf3", fontFamily: '"Inter", system-ui, sans-serif' }}
     >
       <header
         className="px-6 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #21262d", background: "#161b22" }}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: "#161b22" }}
       >
         <div className="flex items-center gap-3">
           <div
@@ -173,7 +173,7 @@ export default function ConnectPage() {
           <button
             onClick={logout}
             className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors hover:text-white"
-            style={{ background: "#21262d", color: "#8b949e", border: "1px solid #30363d" }}
+            style={{ background: "rgba(255,255,255,0.04)", color: "#8b949e", border: "1px solid rgba(255,255,255,0.08)" }}
           >
             Sign out
           </button>
@@ -245,7 +245,7 @@ export default function ConnectPage() {
                     border: connected
                       ? "1px solid rgba(35,134,54,0.35)"
                       : configured
-                        ? "1px solid #21262d"
+                        ? "1px solid rgba(255,255,255,0.04)"
                         : "1px solid rgba(210,153,34,0.35)",
                   }}
                 >
@@ -308,7 +308,7 @@ export default function ConnectPage() {
                         disabled={!configured}
                         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-70"
                         style={{
-                          background: configured ? "#238636" : "#30363d",
+                          background: configured ? "#238636" : "rgba(255,255,255,0.08)",
                           color: configured ? "#fff" : "#8b949e",
                           border: configured ? "1px solid rgba(35,134,54,0.4)" : "1px solid #484f58",
                           cursor: configured ? "pointer" : "not-allowed",

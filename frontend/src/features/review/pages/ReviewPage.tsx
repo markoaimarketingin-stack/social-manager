@@ -156,7 +156,7 @@ export function ReviewPage() {
   // ==========================================
   if (isABTester) {
     return (
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
+      <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
         <SectionHeading
           eyebrow="Specialist Agent"
           title="A/B Variant Copy Tester"
@@ -167,7 +167,7 @@ export function ReviewPage() {
           {/* Form input */}
           <section
             className="rounded-2xl border p-6 text-white space-y-4"
-            style={{ background: "#161b22", borderColor: "#30363d" }}
+            style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
           >
             <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">Generate A/B Copy Variants</h2>
             <p className="text-[11px] text-white/40">Provide a topic or draft message, and the AI copywriter will generate two contrasting variant pitches.</p>
@@ -179,7 +179,7 @@ export function ReviewPage() {
                   value={abPrompt}
                   onChange={(e) => setAbPrompt(e.target.value)}
                   placeholder="E.g., Share a productive tip about engineering remote work stations."
-                  className="w-full min-h-24 rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                  className="w-full min-h-24 rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                 />
               </label>
 
@@ -201,15 +201,15 @@ export function ReviewPage() {
           {/* Guidelines */}
           <div
             className="rounded-2xl border p-5 text-white space-y-4"
-            style={{ background: "#161b22", borderColor: "#30363d" }}
+            style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-wider text-white/60">A/B Strategy Guidelines</h3>
             <div className="space-y-4 text-xs leading-relaxed text-white/60">
-              <div className="p-3.5 rounded-lg bg-[#0d1117]/60 border border-[#21262d] space-y-1">
+              <div className="p-3.5 rounded-lg bg-[#000000]/60 border border-[rgba(255,255,255,0.04)] space-y-1">
                 <p className="font-bold text-white">Variant A (Value-First)</p>
                 <p className="text-[11px] text-white/50">Focuses on educational lists, structured frameworks, and professional CTAs.</p>
               </div>
-              <div className="p-3.5 rounded-lg bg-[#0d1117]/60 border border-[#21262d] space-y-1">
+              <div className="p-3.5 rounded-lg bg-[#000000]/60 border border-[rgba(255,255,255,0.04)] space-y-1">
                 <p className="font-bold text-white">Variant B (Curiosity-First)</p>
                 <p className="text-[11px] text-white/50">Utilizes punchy controversy hooks, conversational formatting, and conversational questions.</p>
               </div>
@@ -225,24 +225,24 @@ export function ReviewPage() {
               className="rounded-2xl border p-5 text-white flex flex-col justify-between"
               style={{
                 background: "#161b22",
-                borderColor: abSelected === "A" ? "#238636" : "#30363d",
+                borderColor: abSelected === "A" ? "#238636" : "rgba(255,255,255,0.08)",
                 boxShadow: abSelected === "A" ? "0 0 15px rgba(56,139,253,0.1)" : "none",
               }}
             >
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#21262d] pb-2">
+                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.04)] pb-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Variant A (Value)</h4>
                   <span className="text-[10px] text-white/40 font-mono">Readability: Easy</span>
                 </div>
                 <textarea
                   value={variantA}
                   onChange={(e) => setVariantA(e.target.value)}
-                  className="w-full min-h-48 rounded-lg bg-[#0d1117] border border-[#21262d] px-3.5 py-2.5 text-xs text-white focus:outline-none resize-none leading-relaxed"
+                  className="w-full min-h-48 rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.04)] px-3.5 py-2.5 text-xs text-white focus:outline-none resize-none leading-relaxed"
                 />
               </div>
               <button
                 onClick={() => handleStageVariant("A")}
-                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5"
+                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5"
                 style={{
                   background: abSelected === "A" ? "#238636" : "transparent",
                   color: "#fff",
@@ -257,24 +257,24 @@ export function ReviewPage() {
               className="rounded-2xl border p-5 text-white flex flex-col justify-between"
               style={{
                 background: "#161b22",
-                borderColor: abSelected === "B" ? "#238636" : "#30363d",
+                borderColor: abSelected === "B" ? "#238636" : "rgba(255,255,255,0.08)",
                 boxShadow: abSelected === "B" ? "0 0 15px rgba(56,139,253,0.1)" : "none",
               }}
             >
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#21262d] pb-2">
+                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.04)] pb-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Variant B (Punchy)</h4>
                   <span className="text-[10px] text-white/40 font-mono">Readability: High Engagement</span>
                 </div>
                 <textarea
                   value={variantB}
                   onChange={(e) => setVariantB(e.target.value)}
-                  className="w-full min-h-48 rounded-lg bg-[#0d1117] border border-[#21262d] px-3.5 py-2.5 text-xs text-white focus:outline-none resize-none leading-relaxed"
+                  className="w-full min-h-48 rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.04)] px-3.5 py-2.5 text-xs text-white focus:outline-none resize-none leading-relaxed"
                 />
               </div>
               <button
                 onClick={() => handleStageVariant("B")}
-                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5"
+                className="mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5"
                 style={{
                   background: abSelected === "B" ? "#238636" : "transparent",
                   color: "#fff",
@@ -297,7 +297,7 @@ export function ReviewPage() {
   // RENDER PATH B: ORIGINAL REVIEW QUEUE PAGE
   // ==========================================
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
+    <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <SectionHeading
         eyebrow="Review queue"
         title="Move drafts through approval"
@@ -307,10 +307,10 @@ export function ReviewPage() {
       <div className="mt-6 grid min-h-0 flex-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div>
-            <div className="flex items-center justify-between border-b border-[#21262d] pb-2">
+            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.04)] pb-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Queue Overview</h4>
               <span className="text-[10px] text-white/40">{compactDrafts.length} drafts pending</span>
             </div>
@@ -331,8 +331,8 @@ export function ReviewPage() {
                   onClick={() => setSelectedDraftId(draft.id)}
                   className={`w-full rounded-xl border p-4 text-left transition ${
                     selectedDraft?.id === draft.id
-                      ? "border-[#388bfd] bg-[#0d1117]"
-                      : "border-[#21262d] bg-[#0d1117]/40 hover:bg-[#0d1117]/70"
+                      ? "border-[#388bfd] bg-[#000000]"
+                      : "border-[rgba(255,255,255,0.04)] bg-[#000000]/40 hover:bg-[#000000]/70"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -343,7 +343,7 @@ export function ReviewPage() {
                 </button>
               ))}
               {!compactDrafts.length ? (
-                <div className="rounded-xl border border-dashed border-[#30363d] p-5 text-center text-xs text-white/40 leading-relaxed">
+                <div className="rounded-xl border border-dashed border-[rgba(255,255,255,0.08)] p-5 text-center text-xs text-white/40 leading-relaxed">
                   No drafts yet. Generate a content plan first.
                 </div>
               ) : null}
@@ -353,19 +353,19 @@ export function ReviewPage() {
 
         <div
           className="rounded-2xl border p-5 text-white flex flex-col justify-between"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           {selectedDraft ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#21262d] pb-2">
+              <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.04)] pb-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Selected Draft brief</h4>
                 <span className="text-[10px] text-white/40">ID: {selectedDraft.id.slice(0, 8)}</span>
               </div>
               
-              <div className="rounded-xl border border-[#21262d] bg-[#0d1117]/60 p-4 space-y-2">
+              <div className="rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000]/60 p-4 space-y-2">
                 <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold">Source Plan</span>
                 <p className="text-xs font-bold text-white">{latestContentPlanQuery.data?.title ?? "Standard workspace plan"}</p>
-                <p className="text-xs leading-relaxed text-white/70 border-t border-[#21262d] pt-2 whitespace-pre-wrap">{selectedDraft.caption}</p>
+                <p className="text-xs leading-relaxed text-white/70 border-t border-[rgba(255,255,255,0.04)] pt-2 whitespace-pre-wrap">{selectedDraft.caption}</p>
               </div>
 
               <label className="block">
@@ -375,7 +375,7 @@ export function ReviewPage() {
                   onChange={(event) =>
                     setReviewStatus(event.target.value as UpdateDraftRequest["review_status"])
                   }
-                  className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none cursor-pointer"
+                  className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none cursor-pointer"
                 >
                   {["draft", "in_review", "approved", "publish_ready", "published", "rejected", "changes_requested"].map(
                     (option) => (
@@ -406,7 +406,7 @@ export function ReviewPage() {
                       },
                     })
                   }
-                  className="px-4 py-2.5 rounded-lg text-xs font-bold border border-[#30363d] hover:bg-white/5 text-white/80"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
                 >
                   {updateDraftMutation.isPending ? "Saving..." : "Save Status"}
                 </button>

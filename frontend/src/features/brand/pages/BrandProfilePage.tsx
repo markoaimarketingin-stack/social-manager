@@ -98,7 +98,7 @@ export function BrandProfilePage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <SectionHeading
         eyebrow="Workspace foundation"
         title="Brand profile"
@@ -108,7 +108,7 @@ export function BrandProfilePage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <section
           className="rounded-2xl border p-6 text-white space-y-6"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
             {workspaceQuery.data?.name ?? "Workspace"} Profile Details
@@ -130,7 +130,7 @@ export function BrandProfilePage() {
                         [field.key]: event.target.value,
                       }))
                     }
-                    className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+                    className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
                   />
                 </label>
               ))}
@@ -146,7 +146,7 @@ export function BrandProfilePage() {
                     website_url: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+                className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
               />
             </label>
 
@@ -165,7 +165,7 @@ export function BrandProfilePage() {
                       [field.key]: event.target.value,
                     }))
                   }
-                  className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                  className="min-h-24 w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                 />
               </label>
             ))}
@@ -200,7 +200,7 @@ export function BrandProfilePage() {
                     goal: "Generate a first strategy snapshot from Sprint 1 inputs",
                   })
                 }
-                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5 disabled:opacity-55 text-white/80"
+                className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 disabled:opacity-55 text-white/80"
               >
                 {strategyRunMutation.isPending ? "Running..." : "Run Strategy Workflow"}
               </button>
@@ -211,12 +211,12 @@ export function BrandProfilePage() {
         {/* Strategic context */}
         <div
           className="rounded-2xl border p-5 text-white space-y-4"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-wider text-white/60">What this powers</h3>
           <div className="space-y-4 text-xs leading-relaxed text-white/60">
             <p>Brand inputs will become typed workflow inputs instead of mutable shared app state.</p>
-            <div className="flex items-center gap-4 py-2 border-y border-[#21262d]">
+            <div className="flex items-center gap-4 py-2 border-y border-[rgba(255,255,255,0.04)]">
               <p>
                 Workspace Members:{" "}
                 <span className="font-bold text-white">{workspaceQuery.data?.member_count ?? 0}</span>

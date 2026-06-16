@@ -297,7 +297,7 @@ export function AssistantPanel({ workspaceId }: Props) {
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {activeTab === "suggestions" ? (
           <div className="space-y-4 animate-fade-up">
-            <div className="p-3.5 rounded-xl border border-[#21262d] bg-[#0d1117]/60">
+            <div className="p-3.5 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000]/60">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Prompt Library</h5>
               <p className="text-[10px] text-white/40">Select a focused strategic action to run instantly.</p>
             </div>
@@ -306,7 +306,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#0d1117]/80 hover:bg-[#161b22] border border-[#21262d] text-white/70 hover:text-white hover:border-[#388bfd]/50 btn-press"
+                  className="w-full text-left rounded-xl px-4 py-3 text-xs transition-all duration-200 bg-[#000000]/80 hover:bg-[#0a0a0a] border border-[rgba(255,255,255,0.04)] text-white/70 hover:text-white hover:border-[#388bfd]/50 btn-press"
                 >
                   {q}
                 </button>
@@ -419,7 +419,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                       style={{
                         background: isSelected ? s.bg : "transparent",
                         color: isSelected ? s.text : "#8b949e",
-                        borderColor: isSelected ? s.border : "#30363d",
+                        borderColor: isSelected ? s.border : "rgba(255,255,255,0.08)",
                       }}
                     >
                       {isSelected ? "✓" : "+"} {platform}
@@ -453,7 +453,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 value={mode}
                 onChange={(e) => switchMode(e.target.value as Mode)}
                 disabled={loading}
-                className="bg-[#161b22] hover:bg-white/5 border border-[#30363d] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                className="bg-[#0a0a0a] hover:bg-white/5 border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
                 style={{
                   backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
                   backgroundRepeat: "no-repeat",
@@ -469,7 +469,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                 value={selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
                 disabled={loading}
-                className="bg-[#161b22] hover:bg-white/5 border border-[#30363d] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
+                className="bg-[#0a0a0a] hover:bg-white/5 border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1 text-[10px] font-bold text-white/70 outline-none transition-colors appearance-none cursor-pointer pr-5"
                 style={{
                   backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238b949e%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')",
                   backgroundRepeat: "no-repeat",

@@ -297,7 +297,7 @@ export function WorkspaceOverviewPage() {
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {analysis.recommendations.map((item) => (
-                <div key={item} className="rounded-xl border border-[#21262d] bg-[#0d1117] p-3 text-xs leading-6 text-white/65">
+                <div key={item} className="rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000] p-3 text-xs leading-6 text-white/65">
                   {item}
                 </div>
               ))}
@@ -320,7 +320,7 @@ export function WorkspaceOverviewPage() {
                 onChange={(event) => setComposeText(event.target.value)}
                 disabled={posting}
                 placeholder="What would you like to post?"
-                className="w-full min-h-24 rounded-xl px-4 py-3 text-xs bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                className="w-full min-h-24 rounded-xl px-4 py-3 text-xs bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
               />
               <div className="space-y-2">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">Target Platforms</span>
@@ -335,7 +335,7 @@ export function WorkspaceOverviewPage() {
                         style={{
                           background: selected ? "rgba(56,139,253,0.08)" : "transparent",
                           color: selected ? "#388bfd" : "#8b949e",
-                          borderColor: selected ? "rgba(56,139,253,0.25)" : "#30363d",
+                          borderColor: selected ? "rgba(56,139,253,0.25)" : "rgba(255,255,255,0.08)",
                         }}
                       >
                         {selected ? "✓ " : "+ "}{formatPlatform(connection.platform)}
@@ -348,7 +348,7 @@ export function WorkspaceOverviewPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-[#21262d] mt-4">
+            <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.04)] mt-4">
               <span className="text-xs" style={{ color: postResult?.startsWith("✓") ? "#3fb950" : "#f85149" }}>{postResult}</span>
               <button
                 onClick={handleQuickPost}
@@ -372,7 +372,7 @@ export function WorkspaceOverviewPage() {
               </div>
               <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
                 {recentPosts.map((post) => (
-                  <div key={post.id} className="p-3 rounded-xl bg-[#0d1117] border border-[#21262d] space-y-2.5 hover:border-[#388bfd]/30 transition-all duration-200">
+                  <div key={post.id} className="p-3 rounded-xl bg-[#000000] border border-[rgba(255,255,255,0.04)] space-y-2.5 hover:border-[#388bfd]/30 transition-all duration-200">
                     <p className="text-xs leading-relaxed text-white/80 line-clamp-2">{post.content || "Untitled post"}</p>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex flex-wrap gap-1">

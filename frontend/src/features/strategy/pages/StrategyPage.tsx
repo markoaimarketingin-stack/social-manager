@@ -241,7 +241,7 @@ export function StrategyPage() {
                     onChange={(event) =>
                       setReviewStatus(event.target.value as ReviewStrategyRequest["status"])
                     }
-                    className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none cursor-pointer"
+                    className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none cursor-pointer"
                   >
                     {reviewOptions.map((option) => (
                       <option key={option} value={option}>
@@ -256,7 +256,7 @@ export function StrategyPage() {
                   <textarea
                     value={reviewNotes}
                     onChange={(event) => setReviewNotes(event.target.value)}
-                    className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                    className="min-h-24 w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                   />
                 </label>
 

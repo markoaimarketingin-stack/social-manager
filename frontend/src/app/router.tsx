@@ -19,7 +19,7 @@ function HomeRedirect() {
   const { isAuthenticated, loading, user } = useAuth();
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center" style={{ background: "#0d1117" }}>
+      <div className="flex h-screen w-full items-center justify-center" style={{ background: "#000000" }}>
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-blue-400" />
       </div>
     );

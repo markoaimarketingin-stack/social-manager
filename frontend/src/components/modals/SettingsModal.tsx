@@ -40,12 +40,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         className="w-full max-w-md rounded-2xl p-6 text-white shadow-2xl animate-scaleIn"
         style={{
           background: "#161b22",
-          border: "1px solid #30363d",
+          border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#21262d]">
+        <div className="flex items-center justify-between pb-4 border-b border-[rgba(255,255,255,0.04)]">
           <div>
             <h3 className="text-lg font-bold tracking-wide">Manage Models & API Keys</h3>
             <p className="text-xs text-white/40">Configure API keys and backend routing.</p>
@@ -72,7 +72,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               placeholder="gsk_..."
               value={groqKey}
               onChange={(e) => setGroqKey(e.target.value)}
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors"
             />
             <span className="text-[10px] text-white/35 mt-1 block">
               Used for Groq Llama models in real chat interactions.
@@ -89,7 +89,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               placeholder="sk-proj-..."
               value={openaiKey}
               onChange={(e) => setOpenaiKey(e.target.value)}
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors"
             />
             <span className="text-[10px] text-white/35 mt-1 block">
               Used for custom OpenAI model generations and actions.
@@ -106,7 +106,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               placeholder="https://your-backend-api.onrender.com"
               value={customBackendUrl}
               onChange={(e) => setCustomBackendUrl(e.target.value)}
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#0d1117] border border-[#30363d] focus:border-[#388bfd] focus:outline-none transition-colors text-white"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors text-white"
             />
             <span className="text-[10px] text-white/35 mt-1 block">
               Enter your deployed FastAPI server URL (leave empty to use local port 8088).
@@ -116,7 +116,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-[#21262d] flex items-center justify-end gap-2.5">
+        <div className="pt-4 border-t border-[rgba(255,255,255,0.04)] flex items-center justify-end gap-2.5">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 transition-colors text-white/60 hover:text-white"

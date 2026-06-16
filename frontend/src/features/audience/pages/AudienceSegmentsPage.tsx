@@ -75,7 +75,7 @@ export function AudienceSegmentsPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#0d1117] text-white">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <SectionHeading
         eyebrow="Audience foundation"
         title="Audience segments"
@@ -85,7 +85,7 @@ export function AudienceSegmentsPage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section
           className="rounded-2xl border p-6 text-white space-y-6"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
             {editingSegmentId ? "Edit Audience Segment" : "Add Audience Segment"}
@@ -104,7 +104,7 @@ export function AudienceSegmentsPage() {
                   onChange={(event) =>
                     setFormState((current) => ({ ...current, [field.key]: event.target.value }))
                   }
-                  className="w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+                  className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
                 />
               </label>
             ))}
@@ -120,7 +120,7 @@ export function AudienceSegmentsPage() {
                   onChange={(event) =>
                     setFormState((current) => ({ ...current, [field.key]: event.target.value }))
                   }
-                  className="min-h-24 w-full rounded-lg bg-[#0d1117] border border-[#30363d] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                  className="min-h-24 w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
                 />
               </label>
             ))}
@@ -149,7 +149,7 @@ export function AudienceSegmentsPage() {
                     setEditingSegmentId(null);
                     setFormState(initialFormState);
                   }}
-                  className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[#30363d] hover:bg-white/5 text-white/80"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
                 >
                   Cancel Edit
                 </button>
@@ -161,15 +161,15 @@ export function AudienceSegmentsPage() {
         {/* Saved segments list */}
         <div
           className="rounded-2xl border p-5 text-white flex flex-col"
-          style={{ background: "#161b22", borderColor: "#30363d" }}
+          style={{ background: "#161b22", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-4">Segment Library</h3>
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
             {(audienceSegmentsQuery.data ?? []).map((segment) => (
               <article
                 key={segment.id}
-                className="rounded-xl border p-4 bg-[#0d1117]/60 space-y-3.5 hover:border-[#388bfd]/30 transition-all duration-200"
-                style={{ borderColor: "#21262d" }}
+                className="rounded-xl border p-4 bg-[#000000]/60 space-y-3.5 hover:border-[#388bfd]/30 transition-all duration-200"
+                style={{ borderColor: "rgba(255,255,255,0.04)" }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -190,7 +190,7 @@ export function AudienceSegmentsPage() {
                   </span>
                 </div>
 
-                <div className="text-[10px] space-y-1 text-white/40 pt-2 border-t border-[#21262d]">
+                <div className="text-[10px] space-y-1 text-white/40 pt-2 border-t border-[rgba(255,255,255,0.04)]">
                   <p>
                     <span className="font-semibold text-white/60">Interests:</span>{" "}
                     {segment.interests.length ? segment.interests.join(", ") : "None listed"}
@@ -215,7 +215,7 @@ export function AudienceSegmentsPage() {
                         messaging_angle: segment.messaging_angle ?? "",
                       });
                     }}
-                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-[#30363d] hover:bg-white/5 text-white/80"
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border border-[rgba(255,255,255,0.08)] hover:bg-white/5 text-white/80"
                   >
                     Edit
                   </button>
@@ -231,7 +231,7 @@ export function AudienceSegmentsPage() {
             ))}
 
             {audienceSegmentsQuery.data?.length ? null : (
-              <div className="rounded-xl border border-dashed border-[#30363d] p-6 text-center text-xs text-white/40 leading-relaxed">
+              <div className="rounded-xl border border-dashed border-[rgba(255,255,255,0.08)] p-6 text-center text-xs text-white/40 leading-relaxed">
                 No audience segments yet. Add the first one to give future workflows structured input.
               </div>
             )}

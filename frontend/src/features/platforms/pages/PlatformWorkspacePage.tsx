@@ -55,7 +55,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-white/10 bg-[#161b22] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${className}`}>
+    <section className={`rounded-2xl border border-white/10 bg-[#0a0a0a] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${className}`}>
       {eyebrow && <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">{eyebrow}</p>}
       <h2 className="mt-1 text-base font-bold text-white">{title}</h2>
       <div className="mt-4">{children}</div>
@@ -152,7 +152,7 @@ export function PlatformWorkspacePage() {
     <div className="min-h-full bg-black p-6 text-white">
       <div className="mx-auto max-w-7xl space-y-6">
         <header
-          className="overflow-hidden rounded-3xl border border-white/10 bg-[#0d1117] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+          className="overflow-hidden rounded-3xl border border-white/10 bg-[#000000] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
           style={{ boxShadow: `0 0 0 1px ${platform.accent}22, 0 24px 80px rgba(0,0,0,0.35)` }}
         >
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
