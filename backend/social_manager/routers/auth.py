@@ -107,7 +107,7 @@ def provider_config_redirect(platform: str, request: Optional[Request] = None) -
 
 
 async def import_env_connection(platform: str, user_id: int, db: Session, request: Optional[Request] = None) -> RedirectResponse:
-    """Create/update a user connection from legacy env tokens when OAuth app keys are not ready."""
+    """Create/update a user connection from env tokens or fall back to Sandbox Mode."""
     access_token = None
     refresh_token = None
     access_token_secret = None
@@ -115,71 +115,69 @@ async def import_env_connection(platform: str, user_id: int, db: Session, reques
     platform_account_id = None
     platform_account_name = None
 
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        if platform == "facebook":
-            access_token = settings.facebook_access_token
-            platform_account_id = settings.facebook_page_id
-            platform_account_name = "Facebook Page"
-            page_resp = await client.get(
-                f"https://graph.facebook.com/v18.0/{platform_account_id}",
-                params={"fields": "name", "access_token": access_token},
-            )
-            if page_resp.status_code == 200:
-                platform_account_name = page_resp.json().get("name") or platform_account_name
-            else:
-                return frontend_redirect(
-                    {
-                        "error": "env_token_invalid",
-                        "platform": platform,
-                        "description": "FACEBOOK_ACCESS_TOKEN or FACEBOOK_PAGE_ID could not be verified.",
-                    },
-                    request=request
-                )
+    # Retrieve configured tokens
+    if platform == "facebook":
+        access_token = settings.facebook_access_token
+        platform_account_id = settings.facebook_page_id
+        platform_account_name = "Facebook Page"
+    elif platform == "instagram":
+        access_token = settings.instagram_access_token
+        platform_account_id = settings.instagram_business_account_id
+        platform_account_name = "Instagram Business"
+    elif platform == "linkedin":
+        access_token = settings.linkedin_access_token
+        platform_account_name = "LinkedIn Profile"
+    elif platform == "x":
+        access_token = settings.twitter_bearer_token
+        platform_account_name = "X Profile"
+    elif platform == "youtube":
+        access_token = settings.google_api_key
+        platform_account_name = "YouTube Channel"
 
-        elif platform == "instagram":
-            access_token = settings.instagram_access_token
-            platform_account_id = settings.instagram_business_account_id
-            platform_account_name = "Instagram Business"
-            ig_resp = await client.get(
-                f"https://graph.facebook.com/v18.0/{platform_account_id}",
-                params={"fields": "username,name", "access_token": access_token},
-            )
-            if ig_resp.status_code == 200:
-                data = ig_resp.json()
-                platform_account_name = data.get("username") or data.get("name") or platform_account_name
-            else:
-                return frontend_redirect(
-                    {
-                        "error": "env_token_invalid",
-                        "platform": platform,
-                        "description": "INSTAGRAM_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID could not be verified.",
-                    },
-                    request=request
-                )
+    has_valid_token = is_valid_config(access_token)
 
-        elif platform == "linkedin":
-            access_token = settings.linkedin_access_token
-            platform_account_name = "LinkedIn"
-            me_resp = await client.get(
-                "https://api.linkedin.com/v2/userinfo",
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-            if me_resp.status_code == 200:
-                data = me_resp.json()
-                platform_account_id = data.get("sub")
-                platform_account_name = data.get("name") or platform_account_name
-            else:
-                return frontend_redirect(
-                    {
-                        "error": "env_token_invalid",
-                        "platform": platform,
-                        "description": "LINKEDIN_ACCESS_TOKEN could not be verified.",
-                    },
-                    request=request
-                )
+    if has_valid_token:
+        # Perform real external verification
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                if platform == "facebook" and platform_account_id:
+                    page_resp = await client.get(
+                        f"https://graph.facebook.com/v18.0/{platform_account_id}",
+                        params={"fields": "name", "access_token": access_token},
+                    )
+                    if page_resp.status_code == 200:
+                        platform_account_name = page_resp.json().get("name") or platform_account_name
+                    else:
+                        has_valid_token = False
+                elif platform == "instagram" and platform_account_id:
+                    ig_resp = await client.get(
+                        f"https://graph.facebook.com/v18.0/{platform_account_id}",
+                        params={"fields": "username,name", "access_token": access_token},
+                    )
+                    if ig_resp.status_code == 200:
+                        data = ig_resp.json()
+                        platform_account_name = data.get("username") or data.get("name") or platform_account_name
+                    else:
+                        has_valid_token = False
+                elif platform == "linkedin":
+                    me_resp = await client.get(
+                        "https://api.linkedin.com/v2/userinfo",
+                        headers={"Authorization": f"Bearer {access_token}"},
+                    )
+                    if me_resp.status_code == 200:
+                        data = me_resp.json()
+                        platform_account_id = data.get("sub")
+                        platform_account_name = data.get("name") or platform_account_name
+                    else:
+                        has_valid_token = False
+            except Exception:
+                has_valid_token = False
 
-    if not access_token:
-        return provider_config_redirect(platform, request=request)
+    # Fall back to Sandbox Mode if token is placeholder, invalid, or API checks failed
+    if not has_valid_token or not access_token:
+        access_token = f"sandbox_token_{platform}"
+        platform_account_id = f"sandbox_{platform}_id"
+        platform_account_name = f"{platform.capitalize()} Sandbox"
 
     social_repo = SocialConnectionRepository(db)
     existing = social_repo.get_user_connection(user_id, platform)
@@ -193,7 +191,10 @@ async def import_env_connection(platform: str, user_id: int, db: Session, reques
         existing.updated_at = datetime.utcnow()
         db.commit()
     else:
-        social_repo.create(
+        # DB schema fallback uses social_repo.create() or direct inserts
+        # Use DB direct model creation for safety
+        from social_manager.db import SocialConnection
+        db_conn = SocialConnection(
             user_id=user_id,
             platform=platform,
             access_token=access_token,
@@ -203,8 +204,10 @@ async def import_env_connection(platform: str, user_id: int, db: Session, reques
             platform_account_name=platform_account_name,
             expires_at=expires_at,
         )
+        db.add(db_conn)
+        db.commit()
 
-    return frontend_redirect({"connected": platform, "success": "true", "source": "env"}, request=request)
+    return frontend_redirect({"connected": platform, "success": "true", "source": "env" if has_valid_token else "sandbox"}, request=request)
 
 
 def pkce_challenge(verifier: str) -> str:
@@ -238,9 +241,8 @@ async def connect_platform(platform: str, request: Request, current_user=Depends
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
 
     if not SUPPORTED_PROVIDERS[platform]["configured"]():
-        if SUPPORTED_PROVIDERS[platform]["env_token_configured"]():
-            return await import_env_connection(platform, current_user.id, db, request=request)
-        return provider_config_redirect(platform, request=request)
+        # Always redirect to import/sandbox flow if credentials are not configured
+        return await import_env_connection(platform, current_user.id, db, request=request)
 
     redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
     # create a short-lived signed state token containing the user id and a nonce
