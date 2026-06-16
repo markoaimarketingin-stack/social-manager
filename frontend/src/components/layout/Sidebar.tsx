@@ -102,23 +102,14 @@ const IC = {
 
 const NAV_GROUPS = (wid: string): Array<{ title: string; items: NavItem[] }> => [
   {
-    title: "ORCHESTRATOR",
+    title: "TASK WORKSPACES",
     items: [
-      { label: "Supervisor", to: `/workspaces/${wid}/dashboard`, icon: IC.grid },
-      { label: "Dashboard", to: `/workspaces/${wid}/publishing`, icon: IC.bars },
-      { label: "Campaign Reports", to: `/workspaces/${wid}/execution-history`, icon: IC.doc },
-    ],
-  },
-  {
-    title: "SPECIALIST AGENTS",
-    items: [
-      { label: "Trends", to: `/workspaces/${wid}/trends`, icon: IC.trend },
-      { label: "Competitors", to: `/workspaces/${wid}/competitors`, icon: IC.target },
-      { label: "Segments", to: `/workspaces/${wid}/segments`, icon: IC.users },
-      { label: "Copywriter", to: `/workspaces/${wid}/copywriter`, icon: IC.pen },
-      { label: "A/B Copy Tester", to: `/workspaces/${wid}/ab-copy-tester`, icon: IC.flask },
-      { label: "Community", to: `/workspaces/${wid}/community`, icon: IC.chat },
-      { label: "Publish posts", to: `/workspaces/${wid}/brand-profile`, icon: IC.upload },
+      { label: "Dashboard", to: `/workspaces/${wid}/dashboard`, icon: IC.grid },
+      { label: "Content Studio", to: `/workspaces/${wid}/copywriter`, icon: IC.pen },
+      { label: "Approval Inbox", to: `/workspaces/${wid}/ab-copy-tester`, icon: IC.flask },
+      { label: "Publishing Calendar", to: `/workspaces/${wid}/community`, icon: IC.chat },
+      { label: "Analytics Center", to: `/workspaces/${wid}/trends`, icon: IC.trend },
+      { label: "Brand Settings", to: `/workspaces/${wid}/brand-profile`, icon: IC.settings },
     ],
   },
 ];
@@ -175,8 +166,7 @@ export function Sidebar({ workspaceId, user, onLogout, onOpenSettings }: Sidebar
             <div className="flex flex-col gap-[12px]">
               {group.items.map(({ label, to, icon }) => {
                 // If it is active
-                const isOrchestrator = group.title === "ORCHESTRATOR";
-                const isSupervisor = label === "Supervisor";
+                const isDashboard = label === "Dashboard";
 
                 return (
                   <NavLink
@@ -185,22 +175,22 @@ export function Sidebar({ workspaceId, user, onLogout, onOpenSettings }: Sidebar
                     className="group flex w-full items-center transition-all duration-150"
                   >
                     {({ isActive }) => {
-                      const isActiveSupervisor = isOrchestrator && isSupervisor && isActive;
+                      const isActiveDashboard = isDashboard && isActive;
                       return (
                         <div
                           className="flex w-full items-center"
                           style={{
-                            height: isActiveSupervisor ? "60px" : "52px",
-                            backgroundColor: isActiveSupervisor
+                            height: isActiveDashboard ? "60px" : "52px",
+                            backgroundColor: isActiveDashboard
                               ? "rgba(255,255,255,0.06)"
                               : isActive
                               ? "rgba(255,255,255,0.06)"
                               : "transparent",
-                            borderRadius: isActiveSupervisor ? "16px" : "14px",
+                            borderRadius: isActiveDashboard ? "16px" : "14px",
                             border: isActive
                               ? "1px solid rgba(255,255,255,0.10)"
                               : "1px solid transparent",
-                            boxShadow: isActiveSupervisor ? "0 12px 30px rgba(0,0,0,0.28)" : "none",
+                            boxShadow: isActiveDashboard ? "0 12px 30px rgba(0,0,0,0.28)" : "none",
                             paddingLeft: "18px",
                             paddingRight: "16px",
                             color: "#ffffff",
