@@ -10,15 +10,15 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const from = location.state?.from?.pathname || '/connect';
 
   const authRequest = async (endpoint: string, body: { email: string; password: string; name?: string }) => {
-    const bases = Array.from(new Set([apiBaseUrl, ""]));
+    const bases = Array.from(new Set([apiBaseUrl, '']));
     let lastError: unknown = null;
 
     for (const baseUrl of bases) {
@@ -44,9 +44,9 @@ export default function AuthPage() {
 
     try {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
-      const body = isLogin 
+      const body = isLogin
         ? { email, password }
-        : { email, password, name };
+        : { email, password, name: name || email.split('@')[0] };
 
       const response = await authRequest(endpoint, body);
 
@@ -81,128 +81,234 @@ export default function AuthPage() {
     }
   };
 
+  // Guest / demo mode — skips real auth
+  const handleGuestMode = () => {
+    const guestToken = 'guest-demo-token';
+    const guestUser = { id: 0, email: 'guest@demo.ai', name: 'Demo User' };
+    login(guestToken, guestUser);
+    navigate('/workspaces/demo/dashboard', { replace: true });
+  };
+
+  // Initial letter for the logo badge
+  const logoLetter = 'M';
+
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-5 py-12 lg:px-8">
-      <div className="grid w-full gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-
-        {/* Left: Hero panel */}
-        <section className="shell-surface rounded-[2rem] p-8 shadow-panel">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-white/35">
-            Social Manager
+    <div
+      className="flex min-h-screen w-full items-center justify-center px-4"
+      style={{
+        background: 'radial-gradient(ellipse at bottom, #1a0e00 0%, #0a0a0a 60%, #000000 100%)',
+      }}
+    >
+      {/* Card */}
+      <div
+        className="w-full max-w-[400px] rounded-2xl p-8"
+        style={{
+          background: 'rgba(18,18,18,0.92)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+        }}
+      >
+        {/* Top row: text + logo badge */}
+        <div className="flex items-start justify-between mb-1">
+          <p
+            className="text-[10px] font-bold uppercase tracking-[0.22em]"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+          >
+            {isLogin ? 'Welcome back' : 'Get started'}
           </p>
-          <h1 className="mt-4 text-4xl font-black tracking-tight text-ink md:text-6xl">
-            Manage all your social media from one place
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-white/58">
-            Connect your Facebook, Instagram, and LinkedIn accounts. 
-            Publish content across all platforms simultaneously. 
-            Track engagement and grow your audience.
-          </p>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                title: "Multi-platform",
-                detail: "Connect Facebook Pages, Instagram Business, and LinkedIn — all in one dashboard.",
-              },
-              {
-                title: "One-click publish",
-                detail: "Write once, select your platforms, and post everywhere simultaneously.",
-              },
-              {
-                title: "Per-user accounts",
-                detail: "Each client connects their own accounts. Your data stays yours.",
-              },
-            ].map((card) => (
-              <div
-                key={card.title}
-                className="rounded-3xl border border-white/8 bg-white/[0.04] p-5"
-              >
-                <p className="text-sm font-semibold">{card.title}</p>
-                <p className="mt-3 text-sm leading-6 text-white/58">{card.detail}</p>
-              </div>
-            ))}
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black"
+            style={{
+              background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}
+          >
+            {logoLetter}
           </div>
-        </section>
+        </div>
 
-        {/* Right: Form panel */}
-        <section className="rounded-[2rem] border border-black/10 bg-white p-8 text-black shadow-panel">
-          <h2 className="text-2xl font-semibold">
-            {isLogin ? 'Sign in' : 'Create account'}
-          </h2>
-          <p className="mt-2 text-sm leading-7 text-black/65">
-            {isLogin 
-              ? 'Enter your credentials to access your dashboard.' 
-              : 'Set up your account to start managing your social media.'}
-          </p>
+        <h1 className="mt-1 mb-6 text-[1.55rem] font-semibold leading-tight text-white">
+          {isLogin ? 'Continue with email.' : 'Create your account.'}
+        </h1>
 
-          {error && (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4">
-              <p className="text-sm text-red-700">{error}</p>
+        {/* Error banner */}
+        {error && (
+          <div
+            className="mb-4 rounded-xl px-4 py-3 text-sm"
+            style={{
+              background: 'rgba(248,81,73,0.1)',
+              border: '1px solid rgba(248,81,73,0.25)',
+              color: '#f85149',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-3" onSubmit={handleSubmit}>
+          {/* Name field — register only */}
+          {!isLogin && (
+            <div>
+              <label
+                className="mb-1.5 block text-xs font-medium"
+                style={{ color: 'rgba(255,255,255,0.6)' }}
+              >
+                Full name
+              </label>
+              <input
+                required
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '1px solid rgba(255,255,255,0.25)';
+                  e.target.style.background = 'rgba(255,255,255,0.07)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '1px solid rgba(255,255,255,0.1)';
+                  e.target.style.background = 'rgba(255,255,255,0.05)';
+                }}
+              />
             </div>
           )}
 
-          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-            {!isLogin && (
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium">Full name</span>
-                <input
-                  required
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                  placeholder="Jordan Rivera"
-                />
-              </label>
-            )}
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium">Email address</span>
-              <input
-                required
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                placeholder="jordan@acme.co"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium">Password</span>
-              <input
-                required
-                type="password"
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                placeholder="••••••••"
-              />
-            </label>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] disabled:opacity-60"
+          {/* Email */}
+          <div>
+            <label
+              className="mb-1.5 block text-xs font-medium"
+              style={{ color: 'rgba(255,255,255,0.6)' }}
             >
-              {loading ? 'Processing...' : (isLogin ? 'Sign in' : 'Create account')}
-            </button>
-          </form>
+              Work email
+            </label>
+            <input
+              required
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              onFocus={(e) => {
+                e.target.style.border = '1px solid rgba(255,255,255,0.25)';
+                e.target.style.background = 'rgba(255,255,255,0.07)';
+              }}
+              onBlur={(e) => {
+                e.target.style.border = '1px solid rgba(255,255,255,0.1)';
+                e.target.style.background = 'rgba(255,255,255,0.05)';
+              }}
+            />
+          </div>
 
-          <p className="mt-6 text-center text-sm text-black/50">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-            <button
-              onClick={() => { setIsLogin(!isLogin); setError(''); }}
-              className="font-semibold text-black hover:underline"
+          {/* Password */}
+          <div>
+            <label
+              className="mb-1.5 block text-xs font-medium"
+              style={{ color: 'rgba(255,255,255,0.6)' }}
             >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
+              Password
+            </label>
+            <input
+              required
+              type="password"
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all duration-150"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              onFocus={(e) => {
+                e.target.style.border = '1px solid rgba(255,255,255,0.25)';
+                e.target.style.background = 'rgba(255,255,255,0.07)';
+              }}
+              onBlur={(e) => {
+                e.target.style.border = '1px solid rgba(255,255,255,0.1)';
+                e.target.style.background = 'rgba(255,255,255,0.05)';
+              }}
+            />
+          </div>
+
+          {/* Info text */}
+          <p
+            className="rounded-xl px-3.5 py-3 text-[11px] leading-relaxed"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.4)',
+            }}
+          >
+            {isLogin
+              ? 'Your workspace, platform connections, and assistant settings resolve automatically after email login.'
+              : 'After registration you will be redirected to connect your social media platforms.'}
           </p>
-        </section>
 
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-1 w-full rounded-xl py-2.5 text-sm font-semibold text-black transition-all duration-150 disabled:opacity-50"
+            style={{ background: '#ffffff' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f0f0f0'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
+          >
+            {loading ? 'Processing…' : (isLogin ? 'Log in' : 'Create account')}
+          </button>
+        </form>
+
+        {/* OR divider */}
+        <div className="my-4 flex items-center gap-3">
+          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+          <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>OR</span>
+          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+        </div>
+
+        {/* Guest / demo button */}
+        <button
+          type="button"
+          onClick={handleGuestMode}
+          className="w-full rounded-xl py-2.5 text-xs font-medium transition-all duration-150"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.5)',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)';
+          }}
+        >
+          Continue as guest <span style={{ color: 'rgba(255,255,255,0.3)' }}>(mock workspace)</span>
+        </button>
+
+        {/* Toggle login / register */}
+        <p className="mt-5 text-center text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {isLogin ? "Don't have an account? " : 'Already have an account? '}
+          <button
+            onClick={() => { setIsLogin(!isLogin); setError(''); }}
+            className="font-semibold transition-colors hover:text-white"
+            style={{ color: 'rgba(255,255,255,0.6)' }}
+          >
+            {isLogin ? 'Sign up' : 'Sign in'}
+          </button>
+        </p>
       </div>
     </div>
   );
