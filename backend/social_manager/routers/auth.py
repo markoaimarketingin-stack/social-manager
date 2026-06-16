@@ -240,6 +240,7 @@ async def connect_platform(platform: str, request: Request, current_user=Depends
     if platform not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
 
+    # Check if the app-level OAuth credentials (client ID and secret) are configured
     is_configured = SUPPORTED_PROVIDERS[platform]["configured"]()
     logger.info(
         "connect_platform: Checking configured status for platform '%s'. Configured: %s. "
