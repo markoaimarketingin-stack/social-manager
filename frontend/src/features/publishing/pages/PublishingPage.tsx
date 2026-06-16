@@ -42,9 +42,9 @@ export function PublishingPage() {
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden px-5 py-6 lg:px-8">
       <SectionHeading
-        eyebrow="Publishing queue"
-        title="Stage publish-ready work"
-        description="A compact, single-screen publishing surface with queue state and platform posture."
+        eyebrow="Publisher Agent Workspace"
+        title="Publishing Calendar & Scheduling"
+        description="Schedule and inspect upcoming platform posts. Control calendars, reschedule, and trigger direct execution."
       />
 
       <div className="mt-5 grid gap-4 md:grid-cols-4">

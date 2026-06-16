@@ -19,6 +19,7 @@ const emptyForm = {
   website_url: "",
   voice_summary: "",
   mission: "",
+  banned_phrases: "",
 };
 
 export function BrandProfilePage() {
@@ -42,13 +43,19 @@ export function BrandProfilePage() {
 
   useEffect(() => {
     if (brandProfileQuery.data) {
+      const voice = brandProfileQuery.data.voice_summary ?? "";
+      const splitIdx = voice.indexOf("\n[BANNED_PHRASES]:");
+      const cleanVoice = splitIdx !== -1 ? voice.slice(0, splitIdx) : voice;
+      const banned = splitIdx !== -1 ? voice.slice(splitIdx + "\n[BANNED_PHRASES]:".length).trim() : "";
+
       setFormState({
         brand_name: brandProfileQuery.data.brand_name,
         industry: brandProfileQuery.data.industry,
         description: brandProfileQuery.data.description ?? "",
         website_url: brandProfileQuery.data.website_url ?? "",
-        voice_summary: brandProfileQuery.data.voice_summary ?? "",
+        voice_summary: cleanVoice,
         mission: brandProfileQuery.data.mission ?? "",
+        banned_phrases: banned,
       });
     }
   }, [brandProfileQuery.data]);
@@ -60,7 +67,7 @@ export function BrandProfilePage() {
         payload,
       ),
     onSuccess: async () => {
-      setFeedback("✓ Brand profile saved successfully");
+      setFeedback("✓ Brand settings saved successfully");
       await queryClient.invalidateQueries({ queryKey: queryKeys.brandProfile(workspaceId) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.workspace(workspaceId) });
     },
@@ -93,6 +100,7 @@ export function BrandProfilePage() {
     setFeedback(null);
     saveBrandProfileMutation.mutate({
       ...formState,
+      voice_summary: `${formState.voice_summary}\n[BANNED_PHRASES]: ${formState.banned_phrases}`,
       website_url: formState.website_url.trim() ? formState.website_url.trim() : null,
     });
   };
@@ -100,9 +108,9 @@ export function BrandProfilePage() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <SectionHeading
-        eyebrow="Workspace foundation"
-        title="Brand profile"
-        description="Capture the brand inputs that feed strategy, copywriting, and modeling workflows."
+        eyebrow="Memory Agent Settings"
+        title="Brand Settings & Memory Profile"
+        description="Manage tone guidelines, voice constraints, banned phrases, and audience settings governing memory retrieval."
       />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -147,6 +155,21 @@ export function BrandProfilePage() {
                   }))
                 }
                 className="w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold text-white/60 uppercase tracking-wider">Banned Phrases</span>
+              <textarea
+                value={formState.banned_phrases}
+                onChange={(event) =>
+                  setFormState((current) => ({
+                    ...current,
+                    banned_phrases: event.target.value,
+                  }))
+                }
+                placeholder="E.g., guarantee, risk-free, cash-back, absolute profit (separated by commas)"
+                className="min-h-16 w-full rounded-lg bg-[#000000] border border-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-xs text-white focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
               />
             </label>
 

@@ -14,6 +14,7 @@ import { ReviewPage } from "../features/review/pages/ReviewPage";
 import { StrategyPage } from "../features/strategy/pages/StrategyPage";
 import { useAuth } from "../features/auth/AuthContext";
 import { PlatformWorkspacePage } from "../features/platforms/pages/PlatformWorkspacePage";
+import { AnalyticsPage } from "../features/intelligence/pages/AnalyticsPage";
 
 function HomeRedirect() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -58,6 +59,14 @@ export function AppRouter() {
           <Route path="community" element={<PublishingPage />} />
           <Route path="execution-history" element={<ReviewPage />} />
           <Route path="brand-profile" element={<BrandProfilePage />} />
+          
+          {/* Core Task Workspace Routes */}
+          <Route path="content-studio" element={<PlanningPage />} />
+          <Route path="approval-inbox" element={<ReviewPage />} />
+          <Route path="publishing-calendar" element={<PublishingPage />} />
+          <Route path="analytics-center" element={<AnalyticsPage />} />
+          <Route path="brand-settings" element={<BrandProfilePage />} />
+          
           <Route path="audience-segments" element={<AudienceSegmentsPage />} />
           <Route path="intelligence" element={<IntelligencePage />} />
           <Route path="strategy" element={<StrategyPage />} />

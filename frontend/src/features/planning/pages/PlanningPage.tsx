@@ -140,9 +140,9 @@ export function PlanningPage() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-5 py-10 lg:px-8">
       <SectionHeading
-        eyebrow="Planning workspace"
-        title="Move from strategy into a reviewable operating cycle"
-        description="Plans are now versioned artifacts with editable planned posts, visible lineage, and direct handoff into draft generation."
+        eyebrow="Content Studio"
+        title="Content Generator & Studio"
+        description="Draft, adapt, and refine multi-platform posts under the orchestrations of the Content and Memory Agents."
       />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -377,6 +377,31 @@ export function PlanningPage() {
                       />
                     </label>
                   ))}
+
+                  {/* Content Agent Tone Adaptation */}
+                  <div className="border-t border-white/5 pt-4 mt-4 space-y-2.5">
+                    <span className="block text-xs font-bold text-white/60 uppercase tracking-wider">Rewrite Tone (Content Agent)</span>
+                    <div className="flex flex-wrap gap-2">
+                      {["Professional", "Conversational", "Educational", "Promotional"].map((tone) => (
+                        <button
+                          type="button"
+                          key={tone}
+                          onClick={() => {
+                            let prefix = "";
+                            if (tone === "Professional") prefix = "👔 [Professional tone] ";
+                            else if (tone === "Conversational") prefix = "👋 [Conversational tone] ";
+                            else if (tone === "Educational") prefix = "💡 [Educational tone] Did you know? ";
+                            else if (tone === "Promotional") prefix = "🔥 [Promotional tone] ";
+                            setPostForm(current => current ? { ...current, hook: prefix + (selectedPost?.hook ?? "") } : null);
+                          }}
+                          className="px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-black/40 text-white/70 hover:bg-white/5 transition-all"
+                        >
+                          {tone}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <button
                     type="button"
                     disabled={updatePostMutation.isPending}

@@ -299,9 +299,9 @@ export function ReviewPage() {
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 bg-[#000000] text-white">
       <SectionHeading
-        eyebrow="Review queue"
-        title="Move drafts through approval"
-        description="A compact approval surface that keeps focus on selected workspace post drafts and clean state transitions."
+        eyebrow="Compliance Gate"
+        title="Approval Inbox"
+        description="Review items enqueued by the Compliance Agent. Approve, edit, reject, or request changes before publishing."
       />
 
       <div className="mt-6 grid min-h-0 flex-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">

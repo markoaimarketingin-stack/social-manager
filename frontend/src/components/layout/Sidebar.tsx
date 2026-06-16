@@ -105,11 +105,11 @@ const NAV_GROUPS = (wid: string): Array<{ title: string; items: NavItem[] }> => 
     title: "TASK WORKSPACES",
     items: [
       { label: "Dashboard", to: `/workspaces/${wid}/dashboard`, icon: IC.grid },
-      { label: "Content Studio", to: `/workspaces/${wid}/copywriter`, icon: IC.pen },
-      { label: "Approval Inbox", to: `/workspaces/${wid}/ab-copy-tester`, icon: IC.flask },
-      { label: "Publishing Calendar", to: `/workspaces/${wid}/community`, icon: IC.chat },
-      { label: "Analytics Center", to: `/workspaces/${wid}/trends`, icon: IC.trend },
-      { label: "Brand Settings", to: `/workspaces/${wid}/brand-profile`, icon: IC.settings },
+      { label: "Content Studio", to: `/workspaces/${wid}/content-studio`, icon: IC.pen },
+      { label: "Approval Inbox", to: `/workspaces/${wid}/approval-inbox`, icon: IC.flask },
+      { label: "Publishing Calendar", to: `/workspaces/${wid}/publishing-calendar`, icon: IC.chat },
+      { label: "Analytics Center", to: `/workspaces/${wid}/analytics-center`, icon: IC.trend },
+      { label: "Brand Settings", to: `/workspaces/${wid}/brand-settings`, icon: IC.settings },
     ],
   },
 ];
