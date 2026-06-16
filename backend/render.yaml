@@ -1,30 +1,68 @@
 services:
   - type: web
-    name: social-manager-ai-backend
-    runtime: python:3.12
+    name: social-manager-backend
+    runtime: python
+    plan: free
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.0
+        value: 3.11.0
       - key: PORT
-        value: "8088"
+        value: "10000"
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: SOCIAL_MANAGER_DB_URL
+        value: sqlite:///./social_manager.db
       - key: GROQ_API_KEY
         sync: false
-      - key: GOOGLE_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
-      - key: TWILIO_KEY
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_ACCESS_TOKEN
+        sync: false
+      - key: FACEBOOK_PAGE_ID
+        sync: false
+      - key: INSTAGRAM_ACCESS_TOKEN
+        sync: false
+      - key: INSTAGRAM_BUSINESS_ACCOUNT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_API_KEY
+        sync: false
+      - key: TWITTER_API_SECRET
+        sync: false
+      - key: TWITTER_BEARER_TOKEN
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
-      - key: SOCIAL_MANAGER_DB_URL
-        value: sqlite:///./social_manager.db
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXP_MINUTES
+        value: "10080"
       - key: CORS_ORIGINS
-        # Use a comma-separated string (not JSON) so Settings.cors_origins parses it correctly.
-        value: "http://localhost:3000,http://localhost:5173,http://localhost:8088,https://social-manager-deployment.onrender.com,https://social-manager-7i2w44eww-markoaimarketingin-stacks-projects.vercel.app"
+        value: "https://social-manager-frontend.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: FRONTEND_URL
-        value: "https://social-manager-7i2w44eww-markoaimarketingin-stacks-projects.vercel.app"
+        value: "https://social-manager-frontend.vercel.app"
       - key: BACKEND_URL
-        value: "https://social-manager-deployment.onrender.com"
+        value: "https://social-manager-backend.onrender.com"
