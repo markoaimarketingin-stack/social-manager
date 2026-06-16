@@ -219,7 +219,7 @@ async def connect_platform(platform: str, current_user=Depends(get_current_user)
 
     if not SUPPORTED_PROVIDERS[platform]["configured"]():
         if SUPPORTED_PROVIDERS[platform]["env_token_configured"]():
-            return await import_env_connection(platform, user_id, db)
+            return await import_env_connection(platform, current_user.id, db)
         return provider_config_redirect(platform)
 
     redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
