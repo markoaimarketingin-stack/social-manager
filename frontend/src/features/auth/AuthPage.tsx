@@ -166,7 +166,14 @@ export default function AuthPage() {
             </div>
 
             {/* Info Box */}
-            <div className="rounded-[1rem] border border-[#f5c35f]/15 bg-[#f5c35f]/[0.06] px-4 py-3 text-sm leading-6 text-white/70">
+            <div
+              className="rounded-[1rem] border px-4 py-3 text-sm leading-6"
+              style={{
+                borderColor: "rgba(245, 195, 95, 0.15)",
+                backgroundColor: "rgba(245, 195, 95, 0.06)",
+                color: "rgba(255, 255, 255, 0.7)",
+              }}
+            >
               {isLogin
                 ? "Your workspace, platform connections, and assistant settings resolve automatically after email login."
                 : "After registration you will be redirected to connect your social media platforms."}
