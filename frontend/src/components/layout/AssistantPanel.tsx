@@ -404,6 +404,7 @@ export function AssistantPanel({ workspaceId }: Props) {
               <div
                 key={msg.id}
                 className={`flex ${msg.role === "user" ? "justify-end animate-fade-up" : "justify-start animate-fade-up"} ${msg.role === "system" ? "justify-center" : ""}`}
+                style={{ zIndex: activeMenuMessageId === msg.id ? 9999 : 1, position: "relative" }}
               >
                 {msg.role === "system" ? (
                   <div className="px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">
@@ -416,7 +417,7 @@ export function AssistantPanel({ workspaceId }: Props) {
                       <button
                         type="button"
                         onClick={() => setActiveMenuMessageId(activeMenuMessageId === msg.id ? null : msg.id)}
-                        className="transition-all p-1.5 text-white/70 hover:text-white rounded-lg border-2 border-[#1f6feb] hover:bg-[#1f6feb]/10 cursor-pointer flex items-center justify-center"
+                        className="transition-all p-1.5 text-white/70 hover:text-white rounded-lg border-2 border-[#1f6feb] hover:bg-[#1f6feb]/10 cursor-pointer flex items-center justify-center animate-fade-up"
                         title="Options"
                         style={{ width: "30px", height: "30px" }}
                       >
@@ -427,7 +428,7 @@ export function AssistantPanel({ workspaceId }: Props) {
 
                       {/* Dropdown Options Menu */}
                       {activeMenuMessageId === msg.id && (
-                        <div className="absolute right-0 top-9 z-50 w-28 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0d0d0d] py-1 shadow-lg text-left">
+                        <div className="absolute left-0 top-9 z-[9999] w-36 rounded-xl border border-white/10 bg-[#0c0c0e]/95 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.8)] text-left backdrop-blur-md">
                           <button
                             type="button"
                             onClick={() => {
@@ -435,8 +436,11 @@ export function AssistantPanel({ workspaceId }: Props) {
                               setActiveMenuMessageId(null);
                               textareaRef.current?.focus();
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                            className="w-full text-left px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-2"
                           >
+                            <svg className="h-3.5 w-3.5 opacity-70" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
                             Edit Prompt
                           </button>
                           <button
@@ -449,8 +453,11 @@ export function AssistantPanel({ workspaceId }: Props) {
                               }
                               setActiveMenuMessageId(null);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                            className="w-full text-left px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-2"
                           >
+                            <svg className="h-3.5 w-3.5 opacity-70" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                            </svg>
                             Save Prompt
                           </button>
                         </div>
