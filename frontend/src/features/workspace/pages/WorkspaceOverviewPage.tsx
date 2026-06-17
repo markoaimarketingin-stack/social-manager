@@ -529,10 +529,10 @@ export function WorkspaceOverviewPage() {
   const connectedPlatforms = stats?.connected_platforms ?? [];
   const recentPosts = stats?.recent_posts ?? [];
   const statsList = [
-    { label: "Total Posts", value: stats?.stats.total_posts ?? 0, icon: "✍", color: "#388bfd", bg: "rgba(56,139,253,0.08)", border: "rgba(56,139,253,0.25)" },
-    { label: "Published", value: stats?.stats.published ?? 0, icon: "✓", color: "#3fb950", bg: "rgba(63,185,80,0.08)", border: "rgba(63,185,80,0.25)" },
-    { label: "Pending", value: stats?.stats.pending ?? 0, icon: "⌛", color: "#d29922", bg: "rgba(210,153,34,0.08)", border: "rgba(210,153,34,0.25)" },
-    { label: "Failed", value: stats?.stats.failed ?? 0, icon: "×", color: "#f85149", bg: "rgba(248,81,73,0.08)", border: "rgba(248,81,73,0.25)" },
+    { label: "Total Posts", value: stats?.stats?.total_posts ?? 0, icon: "✍", color: "#388bfd", bg: "rgba(56,139,253,0.08)", border: "rgba(56,139,253,0.25)" },
+    { label: "Published", value: stats?.stats?.published ?? 0, icon: "✓", color: "#3fb950", bg: "rgba(63,185,80,0.08)", border: "rgba(63,185,80,0.25)" },
+    { label: "Pending", value: stats?.stats?.pending ?? 0, icon: "⌛", color: "#d29922", bg: "rgba(210,153,34,0.08)", border: "rgba(210,153,34,0.25)" },
+    { label: "Failed", value: stats?.stats?.failed ?? 0, icon: "×", color: "#f85149", bg: "rgba(248,81,73,0.08)", border: "rgba(248,81,73,0.25)" },
   ];
 
   return (
@@ -810,7 +810,7 @@ export function WorkspaceOverviewPage() {
                   <p className="text-xs leading-relaxed text-white/80 line-clamp-2">{post.content || "Untitled post"}</p>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex flex-wrap gap-1">
-                      {post.platforms.map((platform) => (
+                      {post.platforms?.map((platform) => (
                         <span key={`${post.id}-${platform.platform}`} className="px-2 py-0.5 rounded-full text-[9px] font-bold border capitalize" style={{ background: "rgba(56,139,253,0.06)", color: "#388bfd", borderColor: "rgba(56,139,253,0.2)" }}>
                           {formatPlatform(platform.platform)} · {platform.status}
                         </span>
