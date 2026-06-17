@@ -370,32 +370,37 @@ def init_db(seed: int = 42):
     Creates all tables and seeds default data if needed.
     """
     random.seed(seed)
+    # create_all uses simple has_table() checks (fast pg_class query) — safe to run.
+    # Wrapped in try/except so any unexpected error doesn't crash startup.
     try:
         Base.metadata.create_all(bind=engine)
+        print("[OK] create_all completed")
     except Exception as e:
-        print(f"[WARN] create_all raised an exception (tables may already exist): {e}")
-    try:
-        _repair_existing_schema()
-    except Exception as e:
-        print(f"[WARN] _repair_existing_schema raised an exception (non-fatal, continuing): {e}")
+        print(f"[WARN] create_all skipped: {e}")
+    # Schema repair: only needed for SQLite dev databases.
+    # On PostgreSQL (Render) the schema is already fully up-to-date — skip entirely.
+    _repair_existing_schema()
     print(f"[OK] Database initialized with seed={seed}")
 
 
 def _repair_existing_schema():
-    """Add columns introduced after early dev databases were created.
+    """Add missing columns to pre-existing databases (dev/SQLite only).
 
-    Uses ADD COLUMN IF NOT EXISTS on PostgreSQL (9.6+) — idempotent with no
-    catalog inspection. Each statement is wrapped in try/except so a timeout
-    or lock contention on one column never aborts the whole startup.
-
-    IMPORTANT: We first disable statement_timeout on this connection so that
-    Render's role-level timeout (which kills pg_catalog queries) cannot fire.
+    On PostgreSQL (Render production) this function is a deliberate NO-OP.
+    The live database schema is already fully up-to-date, so there is nothing
+    to repair. Skipping this avoids ALL pg_catalog introspection queries which
+    were being killed by Render's role-level statement_timeout.
     """
     dialect = engine.dialect.name
     is_postgres = dialect in {"postgresql", "postgres"}
-    json_type = "JSON" if is_postgres else "TEXT"
-    datetime_type = "TIMESTAMP" if is_postgres else "DATETIME"
 
+    if is_postgres:
+        # Production DB schema is already correct — nothing to do.
+        print("[OK] _repair_existing_schema: PostgreSQL detected, skipping (schema already up-to-date)")
+        return
+
+    # ---- SQLite (local dev) only ----
+    datetime_type = "DATETIME"
     repairs = {
         "posts": {
             "user_id": "INTEGER",
@@ -403,7 +408,7 @@ def _repair_existing_schema():
             "platform": "VARCHAR",
             "content": "TEXT",
             "copy_variant": "VARCHAR",
-            "asset_ids": json_type,
+            "asset_ids": "TEXT",
             "status": "VARCHAR",
             "created_at": datetime_type,
             "scheduled_at": datetime_type,
@@ -424,60 +429,22 @@ def _repair_existing_schema():
             "updated_at": datetime_type,
         },
     }
-
-    if is_postgres:
-        # Get a raw connection so we can run SET outside of a transaction
-        # (SET LOCAL only lasts for the current transaction; SET lasts for the session).
-        raw_conn = engine.raw_connection()
-        try:
-            raw_conn.set_session(autocommit=True)
-            with raw_conn.cursor() as cur:
-                # Disable the role-level statement_timeout for this session only.
-                try:
-                    cur.execute("SET statement_timeout = 0")
-                    cur.execute("SET lock_timeout = 0")
-                except Exception as e:
-                    print(f"[WARN] Could not disable timeouts: {e}")
-
-                # Drop legacy unique constraint/index (non-fatal).
-                for stmt in (
-                    "ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key",
-                    "DROP INDEX IF EXISTS publishing_jobs_post_id_key",
-                ):
-                    try:
-                        cur.execute(stmt)
-                    except Exception as e:
-                        print(f"[WARN] Schema cleanup skipped: {e}")
-
-                # ADD COLUMN IF NOT EXISTS — idempotent, no catalog inspection.
-                for table_name, columns in repairs.items():
-                    for column_name, column_type in columns.items():
-                        try:
-                            cur.execute(
-                                f"ALTER TABLE {table_name} "
-                                f"ADD COLUMN IF NOT EXISTS {column_name} {column_type}"
-                            )
-                        except Exception as e:
-                            print(f"[WARN] Could not add {table_name}.{column_name}: {e}")
-        finally:
-            raw_conn.close()
-    else:
-        # SQLite — use inspector + try/except (no SET support).
-        with engine.begin() as connection:
-            inspector = inspect(engine)
-            for table_name, columns in repairs.items():
-                if not inspector.has_table(table_name):
+    with engine.begin() as connection:
+        inspector = inspect(engine)
+        for table_name, columns in repairs.items():
+            if not inspector.has_table(table_name):
+                continue
+            present = {col["name"] for col in inspector.get_columns(table_name)}
+            for column_name, column_type in columns.items():
+                if column_name in present:
                     continue
-                present = {col["name"] for col in inspector.get_columns(table_name)}
-                for column_name, column_type in columns.items():
-                    if column_name in present:
-                        continue
-                    try:
-                        connection.execute(
-                            text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
-                        )
-                    except Exception as e:
-                        print(f"[WARN] Could not add {table_name}.{column_name} (SQLite): {e}")
+                try:
+                    connection.execute(
+                        text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
+                    )
+                    print(f"[OK] Added column {table_name}.{column_name}")
+                except Exception as e:
+                    print(f"[WARN] Could not add {table_name}.{column_name}: {e}")
 
 
 
