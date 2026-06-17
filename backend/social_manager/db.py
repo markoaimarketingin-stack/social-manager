@@ -370,21 +370,26 @@ def init_db(seed: int = 42):
     Creates all tables and seeds default data if needed.
     """
     random.seed(seed)
-    Base.metadata.create_all(bind=engine)
-    _repair_existing_schema()
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[WARN] create_all raised an exception (tables may already exist): {e}")
+    try:
+        _repair_existing_schema()
+    except Exception as e:
+        print(f"[WARN] _repair_existing_schema raised an exception (non-fatal, continuing): {e}")
     print(f"[OK] Database initialized with seed={seed}")
 
 
 def _repair_existing_schema():
     """Add columns introduced after early dev databases were created.
 
-    SQLAlchemy's create_all creates missing tables but does not alter existing
-    ones. This keeps local/prototype Postgres and SQLite databases compatible
-    without requiring Alembic setup before development can continue.
+    Uses ADD COLUMN IF NOT EXISTS on PostgreSQL (9.6+) — idempotent with no
+    catalog inspection. Each statement is wrapped in try/except so a timeout
+    or lock contention on one column never aborts the whole startup.
 
-    On PostgreSQL we use ADD COLUMN IF NOT EXISTS (9.6+) which is idempotent
-    and requires NO catalog introspection — avoiding the slow pg_catalog query
-    that was being killed by PostgreSQL's statement_timeout.
+    IMPORTANT: We first disable statement_timeout on this connection so that
+    Render's role-level timeout (which kills pg_catalog queries) cannot fire.
     """
     dialect = engine.dialect.name
     is_postgres = dialect in {"postgresql", "postgres"}
@@ -420,35 +425,45 @@ def _repair_existing_schema():
         },
     }
 
-    with engine.begin() as connection:
-        if is_postgres:
-            # Drop the legacy unique constraint/index that prevented multi-platform posting.
-            # Each statement is wrapped individually so one failure cannot roll back the rest.
-            for stmt in (
-                "ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key",
-                "DROP INDEX IF EXISTS publishing_jobs_post_id_key",
-            ):
+    if is_postgres:
+        # Get a raw connection so we can run SET outside of a transaction
+        # (SET LOCAL only lasts for the current transaction; SET lasts for the session).
+        raw_conn = engine.raw_connection()
+        try:
+            raw_conn.set_session(autocommit=True)
+            with raw_conn.cursor() as cur:
+                # Disable the role-level statement_timeout for this session only.
                 try:
-                    connection.execute(text(stmt))
+                    cur.execute("SET statement_timeout = 0")
+                    cur.execute("SET lock_timeout = 0")
                 except Exception as e:
-                    print(f"[WARN] Schema cleanup skipped (non-fatal): {e}")
+                    print(f"[WARN] Could not disable timeouts: {e}")
 
-            # ADD COLUMN IF NOT EXISTS is idempotent on PostgreSQL 9.6+ — no inspection needed.
-            # This avoids the slow pg_catalog query that was timing out on startup.
-            for table_name, columns in repairs.items():
-                for column_name, column_type in columns.items():
+                # Drop legacy unique constraint/index (non-fatal).
+                for stmt in (
+                    "ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key",
+                    "DROP INDEX IF EXISTS publishing_jobs_post_id_key",
+                ):
                     try:
-                        connection.execute(
-                            text(
+                        cur.execute(stmt)
+                    except Exception as e:
+                        print(f"[WARN] Schema cleanup skipped: {e}")
+
+                # ADD COLUMN IF NOT EXISTS — idempotent, no catalog inspection.
+                for table_name, columns in repairs.items():
+                    for column_name, column_type in columns.items():
+                        try:
+                            cur.execute(
                                 f"ALTER TABLE {table_name} "
                                 f"ADD COLUMN IF NOT EXISTS {column_name} {column_type}"
                             )
-                        )
-                    except Exception as e:
-                        print(f"[WARN] Could not add {table_name}.{column_name}: {e}")
-        else:
-            # SQLite does not support IF NOT EXISTS on ALTER TABLE.
-            # Use the inspector to skip columns that already exist.
+                        except Exception as e:
+                            print(f"[WARN] Could not add {table_name}.{column_name}: {e}")
+        finally:
+            raw_conn.close()
+    else:
+        # SQLite — use inspector + try/except (no SET support).
+        with engine.begin() as connection:
             inspector = inspect(engine)
             for table_name, columns in repairs.items():
                 if not inspector.has_table(table_name):
