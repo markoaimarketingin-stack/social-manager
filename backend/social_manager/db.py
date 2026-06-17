@@ -381,18 +381,15 @@ def _repair_existing_schema():
     SQLAlchemy's create_all creates missing tables but does not alter existing
     ones. This keeps local/prototype Postgres and SQLite databases compatible
     without requiring Alembic setup before development can continue.
+
+    On PostgreSQL we use ADD COLUMN IF NOT EXISTS (9.6+) which is idempotent
+    and requires NO catalog introspection — avoiding the slow pg_catalog query
+    that was being killed by PostgreSQL's statement_timeout.
     """
-    inspector = inspect(engine)
-
-    def has_table(table_name: str) -> bool:
-        return inspector.has_table(table_name)
-
-    def existing_columns(table_name: str) -> set[str]:
-        return {column["name"] for column in inspector.get_columns(table_name)}
-
     dialect = engine.dialect.name
-    json_type = "JSON" if dialect != "sqlite" else "TEXT"
-    datetime_type = "TIMESTAMP" if dialect in {"postgresql", "postgres"} else "DATETIME"
+    is_postgres = dialect in {"postgresql", "postgres"}
+    json_type = "JSON" if is_postgres else "TEXT"
+    datetime_type = "TIMESTAMP" if is_postgres else "DATETIME"
 
     repairs = {
         "posts": {
@@ -423,38 +420,49 @@ def _repair_existing_schema():
         },
     }
 
-    # Gather column repairs outside the transaction block to prevent metadata lock deadlocks
-    actions = []
-    for table_name, columns in repairs.items():
-        if not has_table(table_name):
-            continue
-        present = existing_columns(table_name)
-        for column_name, column_type in columns.items():
-            if column_name in present:
-                continue
-            actions.append((table_name, column_name, column_type))
-
     with engine.begin() as connection:
-        if dialect in {"postgresql", "postgres"}:
-            # Set a low lock timeout (2 seconds) so that if another container holds a lock,
-            # this startup transaction does not hang uvicorn startup.
-            try:
-                connection.execute(text("SET LOCAL lock_timeout = 2000"))
-                connection.execute(text("SET LOCAL statement_timeout = 2000"))
-            except Exception:
-                pass
-            
-            try:
-                connection.execute(text("ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key"))
-            except Exception as e:
-                print(f"[WARN] Failed to drop constraint on startup (possibly locked): {e}")
-                
-            try:
-                connection.execute(text("DROP INDEX IF EXISTS publishing_jobs_post_id_key"))
-            except Exception as e:
-                print(f"[WARN] Failed to drop index on startup (possibly locked): {e}")
-                
-        for table_name, column_name, column_type in actions:
-            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
+        if is_postgres:
+            # Drop the legacy unique constraint/index that prevented multi-platform posting.
+            # Each statement is wrapped individually so one failure cannot roll back the rest.
+            for stmt in (
+                "ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key",
+                "DROP INDEX IF EXISTS publishing_jobs_post_id_key",
+            ):
+                try:
+                    connection.execute(text(stmt))
+                except Exception as e:
+                    print(f"[WARN] Schema cleanup skipped (non-fatal): {e}")
+
+            # ADD COLUMN IF NOT EXISTS is idempotent on PostgreSQL 9.6+ — no inspection needed.
+            # This avoids the slow pg_catalog query that was timing out on startup.
+            for table_name, columns in repairs.items():
+                for column_name, column_type in columns.items():
+                    try:
+                        connection.execute(
+                            text(
+                                f"ALTER TABLE {table_name} "
+                                f"ADD COLUMN IF NOT EXISTS {column_name} {column_type}"
+                            )
+                        )
+                    except Exception as e:
+                        print(f"[WARN] Could not add {table_name}.{column_name}: {e}")
+        else:
+            # SQLite does not support IF NOT EXISTS on ALTER TABLE.
+            # Use the inspector to skip columns that already exist.
+            inspector = inspect(engine)
+            for table_name, columns in repairs.items():
+                if not inspector.has_table(table_name):
+                    continue
+                present = {col["name"] for col in inspector.get_columns(table_name)}
+                for column_name, column_type in columns.items():
+                    if column_name in present:
+                        continue
+                    try:
+                        connection.execute(
+                            text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
+                        )
+                    except Exception as e:
+                        print(f"[WARN] Could not add {table_name}.{column_name} (SQLite): {e}")
+
 
 
