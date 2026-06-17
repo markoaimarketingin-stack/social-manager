@@ -172,7 +172,7 @@ class InstagramAdapter(PlatformAdapter):
             logger.error(f"Instagram Graph API error: {e.response.text}")
             raise Exception(f"Failed to publish to Instagram: {e.response.text}")
         except Exception as e:
-            logger.error(f"Error publishing to Instagram: {e}")
+            logger.exception("Error publishing to Instagram")
             raise
     
     async def fetch_metrics(self, platform_post_id: str) -> Dict[str, Any]:

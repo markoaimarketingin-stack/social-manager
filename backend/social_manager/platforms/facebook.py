@@ -120,7 +120,7 @@ class FacebookAdapter(PlatformAdapter):
             logger.error(f"Facebook Graph API error: {e.response.text}")
             raise Exception(f"Failed to publish to Facebook: {e.response.text}")
         except Exception as e:
-            logger.error(f"Error publishing to Facebook: {e}")
+            logger.exception("Error publishing to Facebook")
             raise
     
     async def fetch_metrics(self, platform_post_id: str) -> Dict[str, Any]:
