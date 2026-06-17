@@ -10,9 +10,9 @@ from social_manager.config import settings
 
 
 # JWT configuration
-SECRET_KEY = getattr(settings, "jwt_secret_key", None) or os.environ.get("JWT_SECRET_KEY") or "dev_change_me"
-ALGORITHM = getattr(settings, "jwt_algorithm", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(getattr(settings, "jwt_exp_minutes", 60 * 24 * 7))
+SECRET_KEY = settings.jwt_secret_key
+ALGORITHM = settings.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.jwt_exp_minutes
 
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
@@ -27,7 +27,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 
 def decode_token(token: str) -> Dict[str, Any]:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], leeway=600)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"leeway": 600})
         return payload
     except JWTError as exc:
         raise

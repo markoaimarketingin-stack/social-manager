@@ -94,6 +94,18 @@ def frontend_redirect(params: dict[str, str], request: Optional[Request] = None)
     return RedirectResponse(f"{frontend_url}/connect?{urllib.parse.urlencode(params)}")
 
 
+def get_base_backend_url(request: Optional[Request] = None) -> str:
+    base_url = settings.backend_url
+    if request:
+        forwarded_proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        forwarded_host = request.headers.get("x-forwarded-host", request.url.netloc)
+        if forwarded_host:
+            base_url = f"{forwarded_proto}://{forwarded_host}"
+        else:
+            base_url = f"{request.url.scheme}://{request.url.netloc}"
+    return base_url.rstrip("/")
+
+
 def provider_config_redirect(platform: str, request: Optional[Request] = None) -> RedirectResponse:
     provider = SUPPORTED_PROVIDERS[platform]
     return frontend_redirect(
@@ -255,9 +267,9 @@ async def connect_platform(platform: str, request: Request, current_user=Depends
         # Always redirect to import/sandbox flow if credentials are not configured
         return await import_env_connection(platform, current_user.id, db, request=request)
 
-    redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
+    redirect_uri = f"{get_base_backend_url(request)}/api/auth/{platform}/callback"
     # create a short-lived signed state token containing the user id and a nonce
-    state_payload = {"sub": int(current_user.id), "nonce": uuid.uuid4().hex}
+    state_payload = {"sub": str(current_user.id), "nonce": uuid.uuid4().hex}
     state = create_state_token(state_payload, expires_minutes=5)
 
     if platform in ("facebook", "instagram"):
@@ -347,7 +359,7 @@ async def platform_callback(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid OAuth state parameter")
 
-    redirect_uri = f"{settings.backend_url}/api/auth/{platform}/callback"
+    redirect_uri = f"{get_base_backend_url(request)}/api/auth/{platform}/callback"
     access_token = None
     refresh_token = None
     access_token_secret = None

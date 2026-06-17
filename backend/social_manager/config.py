@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     instagram_access_token: str | None = Field(default=None, validation_alias=AliasChoices("INSTAGRAM_ACCESS_TOKEN"))
     instagram_business_account_id: str | None = Field(default=None, validation_alias=AliasChoices("INSTAGRAM_BUSINESS_ACCOUNT_ID"))
 
+    # ── JWT / Auth Settings ───────────────────────────────────────────────────
+    jwt_secret_key: str = Field(default="dev_change_me", validation_alias=AliasChoices("JWT_SECRET_KEY"))
+    jwt_algorithm: str = Field(default="HS256", validation_alias=AliasChoices("JWT_ALGORITHM"))
+    jwt_exp_minutes: int = Field(default=60 * 24 * 7, validation_alias=AliasChoices("JWT_EXP_MINUTES", "ACCESS_TOKEN_EXPIRE_MINUTES"))
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
