@@ -60,6 +60,21 @@ export function AssistantPanel({ workspaceId }: Props) {
   const [loading, setLoading] = useState(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("marko-2.0-mini");
+  const [savedPrompts, setSavedPrompts] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("saved_prompts") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(null);
+  const [showSavedPrompts, setShowSavedPrompts] = useState(false);
+
+  const saveToLocalStorage = (prompts: string[]) => {
+    setSavedPrompts(prompts);
+    localStorage.setItem("saved_prompts", JSON.stringify(prompts));
+  };
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -222,9 +237,11 @@ export function AssistantPanel({ workspaceId }: Props) {
           <button
             type="button"
             onClick={() => {
-              window.dispatchEvent(new Event("open-settings-modal"));
+              setShowSavedPrompts(!showSavedPrompts);
             }}
-            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
+            className={`transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000] ${
+              showSavedPrompts ? "text-[#1f6feb]" : "text-[#ffffff]/50 hover:text-white"
+            }`}
             aria-label="Saved prompts"
             title="Saved Prompts"
           >
@@ -295,7 +312,67 @@ export function AssistantPanel({ workspaceId }: Props) {
 
       {/* Main chat list */}
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-        {activeTab === "suggestions" ? (
+        {showSavedPrompts ? (
+          <div className="space-y-4 animate-fade-up">
+            <div className="flex items-center justify-between p-3.5 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#0c0c0c]">
+              <div>
+                <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Saved Prompts</h5>
+                <p className="text-[10px] text-white/40">Autofill prompts directly into your chatbox.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSavedPrompts(false)}
+                className="text-white/40 hover:text-white text-xs font-semibold px-2 py-1 rounded hover:bg-white/5"
+              >
+                Close
+              </button>
+            </div>
+            
+            {savedPrompts.length === 0 ? (
+              <div className="flex h-32 flex-col items-center justify-center text-center text-xs text-white/45 gap-1.5 animate-fade-up">
+                <svg className="h-8 w-8 text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>No saved prompts yet.</span>
+                <span className="text-[10px] text-white/30">Hover over messages to save them.</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {savedPrompts.map((prompt, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-2 rounded-xl p-3.5 bg-[#080808]/80 border border-[rgba(255,255,255,0.04)] text-white/70 hover:border-white/10 transition-colors"
+                  >
+                    <p className="text-xs leading-relaxed text-white/90 whitespace-pre-wrap">{prompt}</p>
+                    <div className="flex justify-end gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInput(prompt);
+                          setShowSavedPrompts(false);
+                          textareaRef.current?.focus();
+                        }}
+                        className="px-3 py-1 rounded-md bg-[#1f6feb] hover:bg-[#388bfd] text-white text-[10px] font-bold transition duration-200"
+                      >
+                        Use
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const list = savedPrompts.filter((_, idx) => idx !== index);
+                          saveToLocalStorage(list);
+                        }}
+                        className="px-3 py-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/15 text-[10px] font-bold transition duration-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : activeTab === "suggestions" ? (
           <div className="space-y-4 animate-fade-up">
             <div className="p-3.5 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000]/60">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Prompt Library</h5>
@@ -326,18 +403,63 @@ export function AssistantPanel({ workspaceId }: Props) {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} ${msg.role === "system" ? "justify-center" : ""}`}
+                className={`flex ${msg.role === "user" ? "justify-end animate-fade-up" : "justify-start animate-fade-up"} ${msg.role === "system" ? "justify-center" : ""}`}
               >
                 {msg.role === "system" ? (
                   <div className="px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">
                     {msg.content}
                   </div>
                 ) : msg.role === "user" ? (
-                  <div className="flex flex-col items-end gap-1 max-w-[88%]">
-                    <div className="rounded-2xl bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[0.85rem] leading-relaxed text-white/90">
-                      {msg.content}
+                  <div className="relative flex items-center gap-1.5 group max-w-[90%] justify-end">
+                    {/* 3-dots button (visible on hover) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenuMessageId(activeMenuMessageId === msg.id ? null : msg.id)}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-white/50 hover:text-white rounded hover:bg-white/5 shrink-0 self-center cursor-pointer"
+                      title="Options"
+                    >
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                      </svg>
+                    </button>
+
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="rounded-2xl bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[0.85rem] leading-relaxed text-white/90 break-words text-right">
+                        {msg.content}
+                      </div>
+                      <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
                     </div>
-                    <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
+
+                    {/* Dropdown Options Menu */}
+                    {activeMenuMessageId === msg.id && (
+                      <div className="absolute left-0 top-8 z-50 mt-1 w-28 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0d0d0d] py-1 shadow-lg text-left">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInput(msg.content);
+                            setActiveMenuMessageId(null);
+                            textareaRef.current?.focus();
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                        >
+                          Edit Prompt
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = [...savedPrompts];
+                            if (!list.includes(msg.content)) {
+                              list.push(msg.content);
+                              saveToLocalStorage(list);
+                            }
+                            setActiveMenuMessageId(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                        >
+                          Save Prompt
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-start gap-1 max-w-[90%] w-full">
