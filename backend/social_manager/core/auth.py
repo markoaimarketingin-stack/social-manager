@@ -27,13 +27,13 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 
 def decode_token(token: str) -> Dict[str, Any]:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], leeway=600)
         return payload
     except JWTError as exc:
         raise
 
 
-def create_state_token(data: Dict[str, Any], expires_minutes: int = 5) -> str:
+def create_state_token(data: Dict[str, Any], expires_minutes: int = 60) -> str:
     expires = timedelta(minutes=expires_minutes)
     return create_access_token(data, expires)
 
