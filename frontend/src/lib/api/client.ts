@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "";
+const DEFAULT_API_BASE_URL = "https://social-manager-1.onrender.com";
 const RAW_API_BASE_URL =
   localStorage.getItem("custom_backend_url") ||
   (import.meta.env.VITE_API_URL?.toString() ??

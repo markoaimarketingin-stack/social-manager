@@ -65,4 +65,4 @@ services:
       - key: FRONTEND_URL
         value: "https://social-manager-frontend.vercel.app"
       - key: BACKEND_URL
-        value: "https://social-manager-backend.onrender.com"
+        value: "https://social-manager-1.onrender.com"

@@ -411,17 +411,51 @@ export function AssistantPanel({ workspaceId }: Props) {
                   </div>
                 ) : msg.role === "user" ? (
                   <div className="relative flex items-center gap-1.5 group max-w-[90%] justify-end">
-                    {/* 3-dots button (visible on hover) */}
-                    <button
-                      type="button"
-                      onClick={() => setActiveMenuMessageId(activeMenuMessageId === msg.id ? null : msg.id)}
-                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-white/50 hover:text-white rounded hover:bg-white/5 shrink-0 self-center cursor-pointer"
-                      title="Options"
-                    >
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                      </svg>
-                    </button>
+                    {/* 3-dots button always visible with blue border */}
+                    <div className="relative shrink-0 self-center">
+                      <button
+                        type="button"
+                        onClick={() => setActiveMenuMessageId(activeMenuMessageId === msg.id ? null : msg.id)}
+                        className="transition-all p-1.5 text-white/70 hover:text-white rounded-lg border-2 border-[#1f6feb] hover:bg-[#1f6feb]/10 cursor-pointer flex items-center justify-center"
+                        title="Options"
+                        style={{ width: "30px", height: "30px" }}
+                      >
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                      </button>
+
+                      {/* Dropdown Options Menu */}
+                      {activeMenuMessageId === msg.id && (
+                        <div className="absolute right-0 top-9 z-50 w-28 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0d0d0d] py-1 shadow-lg text-left">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInput(msg.content);
+                              setActiveMenuMessageId(null);
+                              textareaRef.current?.focus();
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                          >
+                            Edit Prompt
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const list = [...savedPrompts];
+                              if (!list.includes(msg.content)) {
+                                list.push(msg.content);
+                                saveToLocalStorage(list);
+                              }
+                              setActiveMenuMessageId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
+                          >
+                            Save Prompt
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex flex-col items-end gap-1">
                       <div className="rounded-2xl bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[0.85rem] leading-relaxed text-white/90 break-words text-right">
@@ -429,37 +463,6 @@ export function AssistantPanel({ workspaceId }: Props) {
                       </div>
                       <span className="text-[9px] text-white/30">{formatTime(msg.timestamp)}</span>
                     </div>
-
-                    {/* Dropdown Options Menu */}
-                    {activeMenuMessageId === msg.id && (
-                      <div className="absolute left-0 top-8 z-50 mt-1 w-28 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0d0d0d] py-1 shadow-lg text-left">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setInput(msg.content);
-                            setActiveMenuMessageId(null);
-                            textareaRef.current?.focus();
-                          }}
-                          className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
-                        >
-                          Edit Prompt
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const list = [...savedPrompts];
-                            if (!list.includes(msg.content)) {
-                              list.push(msg.content);
-                              saveToLocalStorage(list);
-                            }
-                            setActiveMenuMessageId(null);
-                          }}
-                          className="w-full text-left px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 hover:text-white cursor-pointer"
-                        >
-                          Save Prompt
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-start gap-1 max-w-[90%] w-full">
