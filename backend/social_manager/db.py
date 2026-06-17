@@ -370,6 +370,30 @@ def init_db(seed: int = 42):
     Creates all tables and seeds default data if needed.
     """
     random.seed(seed)
+    
+    # Pre-check: if publishing_jobs table has unique constraint/index on post_id, drop the table so it gets rebuilt
+    dialect = engine.dialect.name
+    if dialect in {"postgresql", "postgres"}:
+        try:
+            inspector = inspect(engine)
+            if inspector.has_table("publishing_jobs"):
+                has_unique_post_id = False
+                for constraint in inspector.get_unique_constraints("publishing_jobs"):
+                    if "post_id" in constraint.get("column_names", []):
+                        has_unique_post_id = True
+                        break
+                if not has_unique_post_id:
+                    for index in inspector.get_indexes("publishing_jobs"):
+                        if index.get("unique") and "post_id" in index.get("column_names", []):
+                            has_unique_post_id = True
+                            break
+                if has_unique_post_id:
+                    print("[INFO] Rebuilding publishing_jobs table to remove legacy post_id unique constraint.")
+                    with engine.begin() as connection:
+                        connection.execute(text("DROP TABLE IF EXISTS publishing_jobs CASCADE"))
+        except Exception as e:
+            print(f"[WARN] Failed to inspect or drop legacy table constraints: {e}")
+
     Base.metadata.create_all(bind=engine)
     _repair_existing_schema()
     print(f"[OK] Database initialized with seed={seed}")
