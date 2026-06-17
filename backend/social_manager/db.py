@@ -424,6 +424,8 @@ def _repair_existing_schema():
     }
 
     with engine.begin() as connection:
+        if dialect in {"postgresql", "postgres"}:
+            connection.execute(text("ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key"))
         for table_name, columns in repairs.items():
             if not has_table(table_name):
                 continue
