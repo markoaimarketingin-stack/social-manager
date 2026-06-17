@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useRef } from "react";
 
 import { useAuth } from "../../../features/auth/AuthContext";
-import { apiFetch } from "../../../lib/api/client";
+import { apiFetch, apiBaseUrl } from "../../../lib/api/client";
 import { useWorkspaceChrome } from "../components/WorkspaceChromeContext";
 
 type DashboardStats = {
@@ -65,6 +66,16 @@ export function WorkspaceOverviewPage() {
   const [runningAnalysis, setRunningAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<SupervisorAnalysis | null>(null);
 
+  // New features state
+  const [mediaFiles, setMediaFiles] = useState<Array<{ id: number; url: string; file_type: string; name: string }>>([]);
+  const [uploading, setUploading] = useState(false);
+  const [generatingHashtags, setGeneratingHashtags] = useState(false);
+  const [previewPlatform, setPreviewPlatform] = useState<"instagram" | "facebook" | "linkedin">("instagram");
+  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const fetchStats = async () => {
     setLoading(true);
     setLoadError(null);
@@ -98,6 +109,88 @@ export function WorkspaceOverviewPage() {
     );
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (mediaFiles.length + files.length > 10) {
+      pushToast("Cannot upload more than 10 files (Instagram limit).");
+      return;
+    }
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    setUploading(true);
+    try {
+      const res = await apiFetch("/api/publishing/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.detail ?? "Upload failed");
+      }
+
+      const data = await res.json();
+      setMediaFiles((prev) => [
+        ...prev,
+        ...data.map((item: any, idx: number) => ({ ...item, name: files[idx].name })),
+      ]);
+      setActiveCarouselIndex(mediaFiles.length);
+      pushToast(`Successfully uploaded ${data.length} files.`);
+    } catch (err: any) {
+      pushToast(`Upload error: ${err.message}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeMedia = (id: number) => {
+    setMediaFiles((prev) => prev.filter((item) => item.id !== id));
+    setActiveCarouselIndex(0);
+  };
+
+  const handleGenerateHashtags = async () => {
+    if (!composeText.trim()) {
+      pushToast("Please enter a description first.");
+      return;
+    }
+
+    setGeneratingHashtags(true);
+    try {
+      const res = await apiFetch("/api/publishing/generate-hashtags", {
+        method: "POST",
+        body: JSON.stringify({
+          description: composeText,
+          platform: previewPlatform,
+        }),
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.detail ?? "Failed to generate hashtags");
+      }
+
+      const data = await res.json();
+      if (data.hashtags && data.hashtags.length > 0) {
+        const tagsString = " " + data.hashtags.join(" ");
+        setComposeText((prev) => prev.trim() + tagsString);
+        pushToast("Hashtags generated!");
+      } else {
+        pushToast("No hashtags generated. Try a different description.");
+      }
+    } catch (err: any) {
+      pushToast(`Hashtag error: ${err.message}`);
+    } finally {
+      setGeneratingHashtags(false);
+    }
+  };
+
   const handleQuickPost = async () => {
     if (!composeText.trim() || selectedPlatforms.length === 0) {
       pushToast("Enter post content and select at least one platform.");
@@ -114,6 +207,7 @@ export function WorkspaceOverviewPage() {
           platforms: selectedPlatforms,
           content: composeText,
           scheduled_at: null,
+          asset_ids: mediaFiles.map((m) => m.id),
         }),
       });
 
@@ -124,6 +218,8 @@ export function WorkspaceOverviewPage() {
 
       setPostResult("✓ Post queued for publishing.");
       setComposeText("");
+      setMediaFiles([]);
+      setShowConfirmModal(false);
       pushToast("Post queued for publishing.");
       window.setTimeout(fetchStats, 1000);
     } catch (error: any) {
@@ -194,6 +290,229 @@ export function WorkspaceOverviewPage() {
     }
   };
 
+  const handlePrevMedia = () => {
+    setActiveCarouselIndex((prev) => (prev > 0 ? prev - 1 : mediaFiles.length - 1));
+  };
+
+  const handleNextMedia = () => {
+    setActiveCarouselIndex((prev) => (prev < mediaFiles.length - 1 ? prev + 1 : 0));
+  };
+
+  const renderPlatformPreview = (platform: "instagram" | "facebook" | "linkedin") => {
+    const brandName = stats?.user?.name || "Your Brand";
+    const brandHandle = brandName.toLowerCase().replace(/\s+/g, "");
+
+    if (platform === "instagram") {
+      const currentMedia = mediaFiles[activeCarouselIndex];
+      const hasMedia = mediaFiles.length > 0;
+
+      return (
+        <div className="w-full max-w-[340px] rounded-xl border border-white/10 bg-[#000000] text-white overflow-hidden text-xs">
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-yellow-500 to-purple-600 flex items-center justify-center font-bold text-[10px] text-white">
+                M
+              </div>
+              <div>
+                <p className="font-bold text-white leading-none">@{brandHandle}</p>
+                <p className="text-[9px] text-white/40 mt-0.5">Sponsored</p>
+              </div>
+            </div>
+            <span className="text-white/60 font-black text-sm">•••</span>
+          </div>
+
+          {/* Media View */}
+          <div className="relative aspect-square w-full bg-neutral-950 flex items-center justify-center border-b border-white/5">
+            {hasMedia && currentMedia ? (
+              currentMedia.file_type === "video" ? (
+                <video
+                  src={`${apiBaseUrl}${currentMedia.url}`}
+                  controls
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={`${apiBaseUrl}${currentMedia.url}`}
+                  alt="Preview"
+                  className="h-full w-full object-cover"
+                />
+              )
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 text-center text-white/30 space-y-2">
+                <span className="text-2xl">📸</span>
+                <p className="font-semibold text-[11px]">No Media Attached</p>
+                <p className="text-[10px] text-red-500/80 max-w-[200px]">
+                  ⚠️ Instagram requires at least one image/video.
+                </p>
+              </div>
+            )}
+
+            {/* Carousel Navigation */}
+            {mediaFiles.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevMedia}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black text-white h-6 w-6 rounded-full flex items-center justify-center font-bold text-xs"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={handleNextMedia}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black text-white h-6 w-6 rounded-full flex items-center justify-center font-bold text-xs"
+                >
+                  ›
+                </button>
+                <span className="absolute bottom-3 right-3 px-2 py-0.5 bg-black/75 rounded-full text-[9px] text-white">
+                  {activeCarouselIndex + 1}/{mediaFiles.length}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Action Icons */}
+          <div className="flex items-center justify-between p-3">
+            <div className="flex items-center gap-3 text-lg">
+              <span>♡</span>
+              <span>💬</span>
+              <span>⚡</span>
+            </div>
+            <span className="text-lg">📥</span>
+          </div>
+
+          {/* Likes & Caption */}
+          <div className="px-3 pb-3 space-y-1 leading-relaxed">
+            <p className="font-bold">1,482 likes</p>
+            <p className="text-white/80">
+              <span className="font-bold text-white mr-1.5">@{brandHandle}</span>
+              {composeText || "Write a description..."}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (platform === "facebook") {
+      const firstMedia = mediaFiles[0];
+      const hasMedia = mediaFiles.length > 0;
+
+      return (
+        <div className="w-full max-w-[360px] rounded-xl border border-white/10 bg-[#18191a] text-white p-4 text-xs space-y-3">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm text-white">
+              F
+            </div>
+            <div>
+              <h5 className="font-bold">{brandName}</h5>
+              <p className="text-[10px] text-white/40 flex items-center gap-1">
+                Just now · 🌎
+              </p>
+            </div>
+          </div>
+
+          {/* Caption */}
+          <p className="text-white/95 leading-relaxed break-words whitespace-pre-wrap">
+            {composeText || "Write a description..."}
+          </p>
+
+          {/* Media box */}
+          {hasMedia && firstMedia ? (
+            <div className="rounded-lg overflow-hidden border border-white/5 bg-black">
+              {firstMedia.file_type === "video" ? (
+                <video
+                  src={`${apiBaseUrl}${firstMedia.url}`}
+                  controls
+                  className="w-full object-cover max-h-[200px]"
+                />
+              ) : (
+                <img
+                  src={`${apiBaseUrl}${firstMedia.url}`}
+                  alt="Facebook attachment"
+                  className="w-full object-cover max-h-[200px]"
+                />
+              )}
+              {mediaFiles.length > 1 && (
+                <div className="bg-white/5 px-3 py-2 text-[10px] text-white/50 border-t border-white/5 text-center">
+                  + {mediaFiles.length - 1} more media files
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* Footer Bar */}
+          <div className="flex items-center justify-between text-white/40 border-t border-white/5 pt-2.5 text-[10px] font-bold">
+            <span>👍 Like</span>
+            <span>💬 Comment</span>
+            <span>🔁 Share</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (platform === "linkedin") {
+      const firstMedia = mediaFiles[0];
+      const hasMedia = mediaFiles.length > 0;
+
+      return (
+        <div className="w-full max-w-[360px] rounded-xl border border-white/10 bg-[#1d2226] text-white p-4 text-xs space-y-3">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-sky-700 flex items-center justify-center font-bold text-sm text-white">
+              L
+            </div>
+            <div>
+              <h5 className="font-bold flex items-center gap-1">
+                {brandName} <span className="text-[9px] text-white/30 font-normal">· 1st</span>
+              </h5>
+              <p className="text-[10px] text-white/40 leading-none mt-0.5">Marketing Specialist at Marko AI</p>
+              <p className="text-[9px] text-white/40 mt-0.5">1m · Edited · 🌐</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p className="text-white/90 leading-relaxed break-words whitespace-pre-wrap">
+            {composeText || "Write a description..."}
+          </p>
+
+          {/* Media box */}
+          {hasMedia && firstMedia ? (
+            <div className="rounded-lg overflow-hidden border border-white/5 bg-[#000000]">
+              {firstMedia.file_type === "video" ? (
+                <video
+                  src={`${apiBaseUrl}${firstMedia.url}`}
+                  controls
+                  className="w-full object-cover max-h-[180px]"
+                />
+              ) : (
+                <img
+                  src={`${apiBaseUrl}${firstMedia.url}`}
+                  alt="LinkedIn media"
+                  className="w-full object-cover max-h-[180px]"
+                />
+              )}
+              {mediaFiles.length > 1 && (
+                <div className="bg-white/5 px-3 py-1.5 text-[9px] text-white/50 border-t border-white/5">
+                  Carousel ({mediaFiles.length} pages)
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* Actions */}
+          <div className="flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-white/50 font-semibold">
+            <span>👍 Like</span>
+            <span>💬 Comment</span>
+            <span>🔁 Repost</span>
+            <span>📤 Send</span>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center" style={{ background: "#0a0a0a" }}>
@@ -237,13 +556,9 @@ export function WorkspaceOverviewPage() {
           </div>
         )}
 
-        {/* Hero Section — matches Performance Marketer style */}
+        {/* Hero Section */}
         <section className="flex flex-col items-center justify-center py-16 text-center space-y-5">
-          {/* Bar chart icon like the screenshot */}
-          <div
-            className="flex items-end gap-1 mb-2"
-            style={{ color: "rgba(255,255,255,0.7)" }}
-          >
+          <div className="flex items-end gap-1 mb-2" style={{ color: "rgba(255,255,255,0.7)" }}>
             <div className="w-2 rounded-sm" style={{ height: "14px", background: "rgba(255,255,255,0.25)" }} />
             <div className="w-2 rounded-sm" style={{ height: "22px", background: "rgba(255,255,255,0.5)" }} />
             <div className="w-2 rounded-sm" style={{ height: "32px", background: "rgba(255,255,255,0.9)" }} />
@@ -305,95 +620,260 @@ export function WorkspaceOverviewPage() {
           </section>
         )}
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div
-            className="rounded-xl p-5 border flex flex-col justify-between"
-            style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
-          >
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Quick Post Publisher</h4>
-                <p className="text-[10px] text-white/40">Draft and dispatch content to connected platforms.</p>
-              </div>
-              <textarea
-                value={composeText}
-                onChange={(event) => setComposeText(event.target.value)}
-                disabled={posting}
-                placeholder="What would you like to post?"
-                className="w-full min-h-24 rounded-xl px-4 py-3 text-xs bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
-              />
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">Target Platforms</span>
-                <div className="flex flex-wrap gap-2">
-                  {connectedPlatforms.map((connection) => {
-                    const selected = selectedPlatforms.includes(connection.platform);
-                    return (
-                      <button
-                        key={connection.platform}
-                        onClick={() => togglePlatform(connection.platform)}
-                        className="px-3 py-1 rounded-full text-xs font-semibold transition-all border"
-                        style={{
-                          background: selected ? "rgba(56,139,253,0.08)" : "transparent",
-                          color: selected ? "#388bfd" : "#8b949e",
-                          borderColor: selected ? "rgba(56,139,253,0.25)" : "rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        {selected ? "✓ " : "+ "}{formatPlatform(connection.platform)}
-                      </button>
-                    );
-                  })}
-                  {connectedPlatforms.length === 0 && (
-                    <span className="text-xs text-[#f85149]">No platforms connected. Connect a platform first.</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.04)] mt-4">
-              <span className="text-xs" style={{ color: postResult?.startsWith("✓") ? "#3fb950" : "#f85149" }}>{postResult}</span>
-              <button
-                onClick={handleQuickPost}
-                disabled={posting || !composeText.trim() || selectedPlatforms.length === 0}
-                className="px-4 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-40 shadow-[0_4px_12px_rgba(35,134,54,0.2)]"
-                style={{ background: "#238636", color: "#fff", border: "1px solid rgba(255,255,255,0.05)" }}
-              >
-                {posting ? "Publishing..." : "Publish Post"}
-              </button>
-            </div>
+        {/* Enhanced Publisher Section */}
+        <section
+          className="rounded-xl p-6 border space-y-6"
+          style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+        >
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Quick Post Publisher</h4>
+            <p className="text-[10px] text-white/40">Draft, preview, and dispatch multi-media content with AI optimizations.</p>
           </div>
 
-          <div
-            className="rounded-xl p-5 border flex flex-col"
-            style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
-          >
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Recent Operations</h4>
-                <p className="text-[10px] text-white/40">Audit trail of generated, scheduled, and published posts.</p>
-              </div>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
-                {recentPosts.map((post) => (
-                  <div key={post.id} className="p-3 rounded-xl bg-[#000000] border border-[rgba(255,255,255,0.04)] space-y-2.5 hover:border-[#388bfd]/30 transition-all duration-200">
-                    <p className="text-xs leading-relaxed text-white/80 line-clamp-2">{post.content || "Untitled post"}</p>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex flex-wrap gap-1">
-                        {post.platforms.map((platform) => (
-                          <span key={`${post.id}-${platform.platform}`} className="px-2 py-0.5 rounded-full text-[9px] font-bold border capitalize" style={{ background: "rgba(56,139,253,0.06)", color: "#388bfd", borderColor: "rgba(56,139,253,0.2)" }}>
-                            {formatPlatform(platform.platform)} · {platform.status}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-[10px] text-white/30 shrink-0">{timeAgo(post.created_at)}</span>
-                    </div>
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* Left Column: Post Form */}
+            <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
+              <div className="space-y-4">
+                {/* Text Description */}
+                <div className="space-y-2">
+                  <label htmlFor="post-desc" className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                    Post Description
+                  </label>
+                  <textarea
+                    id="post-desc"
+                    value={composeText}
+                    onChange={(event) => setComposeText(event.target.value)}
+                    disabled={posting}
+                    placeholder="Enter post description here..."
+                    className="w-full min-h-24 rounded-xl px-4 py-3 text-xs bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors outline-none resize-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGenerateHashtags}
+                    disabled={generatingHashtags || !composeText.trim()}
+                    className="rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 text-[10px] font-semibold text-white transition-colors disabled:opacity-40"
+                  >
+                    {generatingHashtags ? "Generating AI Hashtags..." : "⚡ Generate AI Hashtags"}
+                  </button>
+                </div>
+
+                {/* File Attachments */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">
+                    Media Attachments (Max 10)
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      multiple
+                      accept="image/*,video/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading || mediaFiles.length >= 10}
+                      className="px-4 py-2 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors disabled:opacity-40"
+                    >
+                      {uploading ? "Uploading..." : "📁 Attach Photos/Videos"}
+                    </button>
+                    <span className="text-[10px] text-white/40">
+                      {mediaFiles.length} / 10 attached
+                    </span>
                   </div>
+
+                  {mediaFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {mediaFiles.map((media) => (
+                        <div key={media.id} className="relative h-12 w-12 rounded-lg overflow-hidden border border-white/10 bg-black group">
+                          {media.file_type === "video" ? (
+                            <div className="h-full w-full flex items-center justify-center bg-white/5 text-[9px] text-white/60">
+                              📹 video
+                            </div>
+                          ) : (
+                            <img
+                              src={`${apiBaseUrl}${media.url}`}
+                              alt={media.name}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeMedia(media.id)}
+                            className="absolute top-0.5 right-0.5 bg-black/60 hover:bg-black text-white rounded-full p-0.5 text-[8px] h-3.5 w-3.5 flex items-center justify-center transition-colors"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Target Platforms */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">
+                    Target Platforms
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {connectedPlatforms.map((connection) => {
+                      const selected = selectedPlatforms.includes(connection.platform);
+                      return (
+                        <button
+                          key={connection.platform}
+                          onClick={() => togglePlatform(connection.platform)}
+                          className="px-3 py-1 rounded-full text-xs font-semibold transition-all border"
+                          style={{
+                            background: selected ? "rgba(56,139,253,0.08)" : "transparent",
+                            color: selected ? "#388bfd" : "#8b949e",
+                            borderColor: selected ? "rgba(56,139,253,0.25)" : "rgba(255,255,255,0.08)",
+                          }}
+                        >
+                          {selected ? "✓ " : "+ "}{formatPlatform(connection.platform)}
+                        </button>
+                      );
+                    })}
+                    {connectedPlatforms.length === 0 && (
+                      <span className="text-xs text-[#f85149]">No platforms connected. Connect a platform first.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.04)] mt-4">
+                <span className="text-xs" style={{ color: postResult?.startsWith("✓") ? "#3fb950" : "#f85149" }}>{postResult}</span>
+                <button
+                  onClick={() => setShowConfirmModal(true)}
+                  disabled={posting || !composeText.trim() || selectedPlatforms.length === 0}
+                  className="px-5 py-2.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 shadow-[0_4px_12px_rgba(35,134,54,0.2)]"
+                  style={{ background: "#238636", color: "#fff", border: "1px solid rgba(255,255,255,0.05)" }}
+                >
+                  Publish Post
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Platform Preview */}
+            <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-white/5 pt-6 lg:pt-0 lg:pl-6 flex flex-col space-y-4">
+              <div>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">
+                  Platform Feed Preview
+                </span>
+                <p className="text-[9px] text-white/30 mt-0.5">Toggle preview matching selected platforms.</p>
+              </div>
+
+              {/* Preview Platform Tabs */}
+              <div className="flex gap-1.5 border-b border-white/5 pb-2">
+                {(["instagram", "facebook", "linkedin"] as const).map((plat) => (
+                  <button
+                    key={plat}
+                    onClick={() => {
+                      setPreviewPlatform(plat);
+                      setActiveCarouselIndex(0);
+                    }}
+                    className={`px-3 py-1 rounded-md text-[10px] font-semibold border transition-all ${
+                      previewPlatform === plat
+                        ? "bg-white/5 border-white/10 text-white"
+                        : "border-transparent text-white/40 hover:text-white/70"
+                    }`}
+                  >
+                    {plat === "instagram" ? "Instagram" : plat === "facebook" ? "Facebook" : "LinkedIn"}
+                  </button>
                 ))}
-                {recentPosts.length === 0 && (
-                  <p className="text-xs text-white/40 text-center py-6">No recent operations yet.</p>
-                )}
+              </div>
+
+              {/* Render Preview Frame */}
+              <div className="flex-1 flex items-center justify-center p-2 rounded-xl bg-black/40 min-h-[300px]">
+                {renderPlatformPreview(previewPlatform)}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Operations */}
+        <section
+          className="rounded-xl p-5 border flex flex-col"
+          style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+        >
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Recent Operations</h4>
+              <p className="text-[10px] text-white/40">Audit trail of generated, scheduled, and published posts.</p>
+            </div>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+              {recentPosts.map((post) => (
+                <div key={post.id} className="p-3 rounded-xl bg-[#000000] border border-[rgba(255,255,255,0.04)] space-y-2.5 hover:border-[#388bfd]/30 transition-all duration-200">
+                  <p className="text-xs leading-relaxed text-white/80 line-clamp-2">{post.content || "Untitled post"}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap gap-1">
+                      {post.platforms.map((platform) => (
+                        <span key={`${post.id}-${platform.platform}`} className="px-2 py-0.5 rounded-full text-[9px] font-bold border capitalize" style={{ background: "rgba(56,139,253,0.06)", color: "#388bfd", borderColor: "rgba(56,139,253,0.2)" }}>
+                          {formatPlatform(platform.platform)} · {platform.status}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/30 shrink-0">{timeAgo(post.created_at)}</span>
+                  </div>
+                </div>
+              ))}
+              {recentPosts.length === 0 && (
+                <p className="text-xs text-white/40 text-center py-6">No recent operations yet.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Confirmation Modal overlay */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="w-full max-w-[440px] rounded-2xl border border-white/10 bg-[#0c0c0c] p-6 shadow-2xl space-y-5">
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Review & Confirm Post</h3>
+              <p className="text-[10px] text-white/40 mt-1">Check post mockup and target platforms before scheduling.</p>
+            </div>
+
+            {/* Simulated Live Preview */}
+            <div className="flex items-center justify-center py-4 bg-black/60 border border-white/5 rounded-xl">
+              {renderPlatformPreview(previewPlatform)}
+            </div>
+
+            {/* Validation checks */}
+            {selectedPlatforms.includes("instagram") && mediaFiles.length === 0 ? (
+              <div className="p-3 rounded-xl border border-red-500/25 bg-red-500/10 text-[10px] text-red-200 leading-relaxed">
+                ⚠️ **Instagram posting limit**: Instagram requires at least one image or video attachment to publish. Please close this window, select a media file, and try again.
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl border border-green-500/25 bg-green-500/10 text-[10px] text-green-200 leading-relaxed">
+                ✓ Post format is valid for selected platforms. Ready to post.
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/5 text-[10px]">
+              <span className="text-white/40 font-bold uppercase tracking-wider">
+                Platforms: {selectedPlatforms.map(formatPlatform).join(", ")}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 font-bold text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleQuickPost}
+                  disabled={posting || (selectedPlatforms.includes("instagram") && mediaFiles.length === 0)}
+                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-40 font-bold text-white transition-colors shadow-lg shadow-green-600/20"
+                >
+                  {posting ? "Publishing..." : "Confirm & Post"}
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

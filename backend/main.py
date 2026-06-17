@@ -86,6 +86,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Social Manager Agent", version="0.1.0", lifespan=lifespan)
 
+# Ensure static directory exists and mount it
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # CORS: Permissive for debugging — allows all origins and headers.
 # WARNING: This is insecure. Use only for local debugging or short-term troubleshooting.
 allowed_origins = list(dict.fromkeys(settings.cors_origins + [settings.frontend_url, settings.backend_url]))

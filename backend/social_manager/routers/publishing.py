@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional, Any
 from datetime import datetime
 
-from social_manager.db import SessionLocal, PostRepository, SocialConnectionRepository, Post, PublishingJob, SocialStrategyLogRepository
+from social_manager.db import SessionLocal, PostRepository, SocialConnectionRepository, Post, PublishingJob, SocialStrategyLogRepository, Asset
 from social_manager.routers.users import get_current_user
 from social_manager.platforms.hub import get_user_platform_hub
 from social_manager.approvals import policy_engine, approval_workflow
+from social_manager.copy_generator import CopyGenerator
 
 router = APIRouter(prefix="/api/publishing", tags=["Publishing"])
 
@@ -23,8 +26,12 @@ def get_db():
 class PostCreate(BaseModel):
     platforms: List[str]
     content: str
-    asset_ids: Optional[Any] = None
+    asset_ids: Optional[List[int]] = None
     scheduled_at: Optional[Any] = None
+
+class HashtagGenerateRequest(BaseModel):
+    description: str
+    platform: str = "instagram"
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
@@ -76,7 +83,8 @@ async def schedule_post(
         content=post_data.content,
         scheduled_at=post_data.scheduled_at,
         status=status,
-        approval_status=approval_status
+        approval_status=approval_status,
+        asset_ids=post_data.asset_ids
     )
     
     strategy_log_repo = SocialStrategyLogRepository(db)
@@ -174,6 +182,63 @@ async def get_queue(current_user = Depends(get_current_user), db: Session = Depe
         })
     return results
 
+@router.post("/upload")
+async def upload_media(
+    files: List[UploadFile] = File(...),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if len(files) > 10:
+        raise HTTPException(status_code=400, detail="Cannot upload more than 10 files (Instagram limit).")
+        
+    saved_assets = []
+    upload_dir = "static/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    for file in files:
+        file_ext = file.filename.split(".")[-1].lower()
+        if file_ext not in ["jpg", "jpeg", "png", "gif", "webp", "mp4", "mov", "avi", "mkv"]:
+            raise HTTPException(status_code=400, detail=f"Unsupported file format: {file.filename}")
+            
+        unique_filename = f"{uuid.uuid4().hex}.{file_ext}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+            
+        file_type = "video" if file_ext in ["mp4", "mov", "avi", "mkv"] else "image"
+        db_asset = Asset(
+            file_type=file_type,
+            url=f"/static/uploads/{unique_filename}",
+            alt_text=file.filename
+        )
+        db.add(db_asset)
+        db.flush()
+        
+        saved_assets.append({
+            "id": db_asset.id,
+            "url": db_asset.url,
+            "file_type": db_asset.file_type
+        })
+        
+    db.commit()
+    return saved_assets
+
+@router.post("/generate-hashtags")
+async def generate_hashtags(
+    req: HashtagGenerateRequest,
+    current_user = Depends(get_current_user)
+):
+    if not req.description.strip():
+        raise HTTPException(status_code=400, detail="Description cannot be empty.")
+    try:
+        generator = CopyGenerator()
+        hashtags = generator.generate_hashtag_set(topic=req.description, platform=req.platform, size=10)
+        return {"hashtags": hashtags}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate hashtags: {str(e)}")
+
 # ── Background Task Logic ─────────────────────────────────────────────────────
 
 async def execute_publishing_job(job_id: int):
@@ -193,11 +258,16 @@ async def execute_publishing_job(job_id: int):
         # Get the hub for this specific user
         user_hub = get_user_platform_hub(post.user_id, db_session)
 
+        # Fetch actual assets
+        assets_list = []
+        if post.asset_ids:
+            assets_list = db_session.query(Asset).filter(Asset.id.in_(post.asset_ids)).all()
+
         # 1. Prepare
         prepared = await user_hub.prepare_post_for_platform(
             platform=job.platform,
             content=post.content,
-            assets=[]
+            assets=[{"url": a.url, "file_type": a.file_type} for a in assets_list]
         )
         
         # 2. Publish
