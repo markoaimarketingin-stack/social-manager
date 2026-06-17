@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiFetch } from '../../lib/api/client';
 
 interface Connection {
   platform: string;
@@ -23,7 +24,7 @@ export default function ComposePage() {
 
   const fetchConnections = async () => {
     try {
-      const res = await fetch('http://localhost:8088/api/auth/connections', {
+      const res = await apiFetch('/api/auth/connections', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -50,10 +51,9 @@ export default function ComposePage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8088/api/publishing/schedule', {
+      const res = await apiFetch('/api/publishing/schedule', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ platforms, content, scheduled_at: null })
