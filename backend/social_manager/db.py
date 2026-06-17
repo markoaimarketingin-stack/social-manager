@@ -447,18 +447,22 @@ def _repair_existing_schema():
         },
     }
 
+    # Gather column repairs outside the transaction block to prevent metadata lock deadlocks
+    actions = []
+    for table_name, columns in repairs.items():
+        if not has_table(table_name):
+            continue
+        present = existing_columns(table_name)
+        for column_name, column_type in columns.items():
+            if column_name in present:
+                continue
+            actions.append((table_name, column_name, column_type))
+
     with engine.begin() as connection:
         if dialect in {"postgresql", "postgres"}:
             connection.execute(text("ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key"))
             connection.execute(text("DROP INDEX IF EXISTS publishing_jobs_post_id_key"))
-        for table_name, columns in repairs.items():
-            if not has_table(table_name):
-                continue
-
-            present = existing_columns(table_name)
-            for column_name, column_type in columns.items():
-                if column_name in present:
-                    continue
-                connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
+        for table_name, column_name, column_type in actions:
+            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
 
 
