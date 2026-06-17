@@ -370,15 +370,23 @@ def init_db(seed: int = 42):
     Creates all tables and seeds default data if needed.
     """
     random.seed(seed)
-    # create_all uses simple has_table() checks (fast pg_class query) — safe to run.
-    # Wrapped in try/except so any unexpected error doesn't crash startup.
-    try:
-        Base.metadata.create_all(bind=engine)
-        print("[OK] create_all completed")
-    except Exception as e:
-        print(f"[WARN] create_all skipped: {e}")
-    # Schema repair: only needed for SQLite dev databases.
-    # On PostgreSQL (Render) the schema is already fully up-to-date — skip entirely.
+    dialect = engine.dialect.name
+    is_postgres = dialect in {"postgresql", "postgres"}
+
+    if is_postgres:
+        # On PostgreSQL (Render) all tables already exist — skip create_all.
+        # create_all calls has_table() for every model which fires pg_class queries
+        # that get killed by Render's role-level statement_timeout, crashing startup.
+        print("[OK] PostgreSQL detected — skipping create_all (tables already exist)")
+    else:
+        # SQLite (local dev) — create tables as normal.
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("[OK] create_all completed")
+        except Exception as e:
+            print(f"[WARN] create_all skipped: {e}")
+
+    # Schema repair: no-op on PostgreSQL (returns immediately), runs for SQLite.
     _repair_existing_schema()
     print(f"[OK] Database initialized with seed={seed}")
 
