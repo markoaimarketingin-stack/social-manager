@@ -118,6 +118,8 @@ export function WorkspaceOverviewPage() {
       return;
     }
 
+    const fileNames = Array.from(files).map((f) => f.name);
+
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append("files", files[i]);
@@ -138,7 +140,7 @@ export function WorkspaceOverviewPage() {
       const data = await res.json();
       setMediaFiles((prev) => [
         ...prev,
-        ...data.map((item: any, idx: number) => ({ ...item, name: files[idx].name })),
+        ...data.map((item: any, idx: number) => ({ ...item, name: fileNames[idx] })),
       ]);
       setActiveCarouselIndex(mediaFiles.length);
       pushToast(`Successfully uploaded ${data.length} files.`);
