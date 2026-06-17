@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 import uvicorn
 import logging
 import os
@@ -37,12 +38,29 @@ logger = logging.getLogger(__name__)
 
 # ===== LIFECYCLE MANAGEMENT =====
 
+async def run_db_cleanup_bg():
+    # Wait for the old container to stop during zero-downtime deploy
+    await asyncio.sleep(10)
+    logger.info("Running background database cleanup to remove legacy constraints...")
+    try:
+        from social_manager.db import engine, text
+        dialect = engine.dialect.name
+        if dialect in {"postgresql", "postgres"}:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE publishing_jobs DROP CONSTRAINT IF EXISTS publishing_jobs_post_id_key"))
+                connection.execute(text("DROP INDEX IF EXISTS publishing_jobs_post_id_key"))
+            logger.info("✓ Background database cleanup complete. Legacy constraint removed successfully.")
+    except Exception as e:
+        logger.error(f"Failed to remove legacy constraint in background: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown handling."""
     # Startup
     logger.info("✓ Starting Social Manager...")
     init_db(seed=42)
+    # Run database migrations / repairs in background to prevent zero-downtime deployment locks blocking startup
+    asyncio.create_task(run_db_cleanup_bg())
     await init_workers(
         platform_credentials={
             "twitter_api_key": settings.twitter_api_key or "",
