@@ -122,6 +122,31 @@ class SocialStrategyLog(Base):
 
 # ===== NEW CORE TABLES =====
 
+class ChatSession(Base):
+    """Chat session for storing execution/conversation history."""
+    __tablename__ = "chat_sessions"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("sm_users.id"), index=True, nullable=True)
+    title = Column(String, index=True)
+    mode = Column(String, default="ask") # ask, agent
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+
+class ChatMessage(Base):
+    """Individual message within a chat session."""
+    __tablename__ = "chat_messages"
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey("chat_sessions.id"), index=True)
+    role = Column(String, nullable=False) # user, assistant, system
+    content = Column(Text, nullable=False)
+    published = Column(JSON, nullable=True) # list of published platform details
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    session = relationship("ChatSession", back_populates="messages")
+
+
 class Campaign(Base):
     """Master campaign entity."""
     __tablename__ = "campaigns"
@@ -350,6 +375,20 @@ class ConversationRepository(BaseRepository):
     
     def get_by_platform(self, platform):
         return self.session.query(Conversation).filter(Conversation.platform == platform).all()
+
+
+class ChatSessionRepository(BaseRepository):
+    def __init__(self, session):
+        super().__init__(session, ChatSession)
+        
+    def list_sessions(self, user_id: int | None = None) -> list[ChatSession]:
+        query = self.session.query(ChatSession)
+        if user_id is not None:
+            query = query.filter(ChatSession.user_id == user_id)
+        return query.order_by(ChatSession.updated_at.desc()).all()
+        
+    def get_session_with_messages(self, session_id: int) -> ChatSession | None:
+        return self.session.query(ChatSession).filter(ChatSession.id == session_id).first()
 
 
 class SocialStrategyLogRepository(BaseRepository):

@@ -243,23 +243,7 @@ export function WorkspaceLayout() {
                   Train Model
                 </button>
 
-                <button
-                  type="button"
-                  className="flex h-[31px] items-center gap-[7px] whitespace-nowrap rounded-full border border-[rgba(255,255,255,0.08)] bg-[#000000] px-[12px] text-[13px] font-semibold leading-[16px] text-white transition hover:bg-[rgba(255,255,255,0.05)] btn-press"
-                  onClick={() => pushToast("Workspace refreshed.")}
-                >
-                  <svg
-                    className="h-[14px] w-[14px]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 9a8 8 0 0 0-13.66-3.66L4 7m16 10-2.34 2.34A8 8 0 0 1 4 15" />
-                  </svg>
-                  Refresh
-                </button>
+
 
                 <button
                   type="button"
@@ -316,7 +300,14 @@ export function WorkspaceLayout() {
         )}
       </div>
 
-      <TrainModelModal isOpen={trainOpen} onClose={() => setTrainOpen(false)} />
+      <TrainModelModal
+        isOpen={trainOpen}
+        onClose={() => setTrainOpen(false)}
+        onSuccess={() => {
+          pushToast("Model trained successfully with new document!");
+          window.dispatchEvent(new Event("document-uploaded"));
+        }}
+      />
       <KnowledgeBaseModal isOpen={kbOpen} onClose={() => setKbOpen(false)} />
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ToastViewport items={toasts} />

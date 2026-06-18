@@ -70,6 +70,11 @@ export function AssistantPanel({ workspaceId }: Props) {
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(null);
   const [showSavedPrompts, setShowSavedPrompts] = useState(false);
 
+  // History state
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+
   const saveToLocalStorage = (prompts: string[]) => {
     setSavedPrompts(prompts);
     localStorage.setItem("saved_prompts", JSON.stringify(prompts));
@@ -117,6 +122,91 @@ export function AssistantPanel({ workspaceId }: Props) {
     return msg;
   };
 
+  const fetchSessions = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${apiBaseUrl}/api/chat/sessions`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch chat sessions:", e);
+    }
+  };
+
+  const loadSession = async (sessionId: number) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${apiBaseUrl}/api/chat/sessions/${sessionId}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const loadedMessages: Message[] = data.messages.map((m: any) => ({
+          id: String(m.id),
+          role: m.role,
+          content: m.content,
+          timestamp: new Date(m.created_at),
+          published: m.published || [],
+        }));
+        setMessages(loadedMessages);
+        setActiveSessionId(sessionId);
+        if (data.mode) {
+          setMode(data.mode);
+        }
+        setShowHistory(false);
+      }
+    } catch (e) {
+      console.error("Failed to load chat session:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteSession = async (e: React.MouseEvent, sessionId: number) => {
+    e.stopPropagation();
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${apiBaseUrl}/api/chat/sessions/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+        if (activeSessionId === sessionId) {
+          setActiveSessionId(null);
+          setMessages([]);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to delete chat session:", e);
+    }
+  };
+
+  const toggleHistory = () => {
+    const nextVal = !showHistory;
+    setShowHistory(nextVal);
+    if (nextVal) {
+      fetchSessions();
+    }
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setActiveSessionId(null);
+    setShowHistory(false);
+  };
+
   const sendMessage = async (text?: string) => {
     const prompt = (text ?? input).trim();
     if (!prompt) return;
@@ -133,6 +223,7 @@ export function AssistantPanel({ workspaceId }: Props) {
         history: messages.map((m) => ({ role: m.role, content: m.content })),
         mode,
         model: selectedModel,
+        session_id: activeSessionId,
       };
       if (mode === "agent") {
         body.platforms = selectedPlatforms;
@@ -162,6 +253,21 @@ export function AssistantPanel({ workspaceId }: Props) {
       addMessage("assistant", data.response, {
         published: data.published ?? [],
       });
+
+      if (data.session_id) {
+        setActiveSessionId(data.session_id);
+      }
+
+      if (mode === "agent" && data.draft_content) {
+        window.dispatchEvent(
+          new CustomEvent("autofill-compose", {
+            detail: {
+              content: data.draft_content,
+              platforms: data.platforms || selectedPlatforms,
+            },
+          })
+        );
+      }
 
       if (data.published && data.published.length > 0) {
         for (const p of data.published) {
@@ -223,7 +329,7 @@ export function AssistantPanel({ workspaceId }: Props) {
           {/* New Chat / Clear Chat */}
           <button
             type="button"
-            onClick={() => setMessages([])}
+            onClick={handleNewChat}
             className="text-[#ffffff] transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
             aria-label="New conversation"
             title="Clear Chat"
@@ -253,7 +359,10 @@ export function AssistantPanel({ workspaceId }: Props) {
           {/* History */}
           <button
             type="button"
-            className="text-[#ffffff]/50 hover:text-white transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000]"
+            onClick={toggleHistory}
+            className={`transition-opacity hover:opacity-80 p-1 rounded hover:bg-[#000000] ${
+              showHistory ? "text-[#1f6feb]" : "text-[#ffffff]/50 hover:text-white"
+            }`}
             aria-label="History"
             title="History"
           >
@@ -312,7 +421,63 @@ export function AssistantPanel({ workspaceId }: Props) {
 
       {/* Main chat list */}
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-        {showSavedPrompts ? (
+        {showHistory ? (
+          <div className="space-y-4 animate-fade-up">
+            <div className="flex items-center justify-between p-3.5 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#0c0c0c]">
+              <div>
+                <h5 className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Execution &amp; Chat History</h5>
+                <p className="text-[10px] text-white/40">Select a past conversation to reload it.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHistory(false)}
+                className="text-white/40 hover:text-white text-xs font-semibold px-2 py-1 rounded hover:bg-white/5"
+              >
+                Close
+              </button>
+            </div>
+            
+            {sessions.length === 0 ? (
+              <div className="flex h-32 flex-col items-center justify-center text-center text-xs text-white/45 gap-1.5 animate-fade-up">
+                <svg className="h-8 w-8 text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v5l3 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.05 11A9 9 0 1 1 6 17.3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4v7h7" />
+                </svg>
+                <span>No history sessions found.</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => loadSession(session.id)}
+                    className="flex flex-col gap-2 rounded-xl p-3.5 bg-[#080808]/80 border border-[rgba(255,255,255,0.04)] hover:border-white/10 transition-colors cursor-pointer text-left"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                        session.mode === "agent" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-green-500/10 text-green-400 border-green-500/20"
+                      }`}>
+                        {session.mode || "ask"}
+                      </span>
+                      <span className="text-[9px] text-white/30">{new Date(session.created_at || session.updated_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-white/90 truncate">{session.title || "Untitled Conversation"}</p>
+                    <div className="flex justify-end mt-1">
+                      <button
+                        type="button"
+                        onClick={(e) => deleteSession(e, session.id)}
+                        className="px-3 py-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/15 text-[10px] font-bold transition duration-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : showSavedPrompts ? (
           <div className="space-y-4 animate-fade-up">
             <div className="flex items-center justify-between p-3.5 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#0c0c0c]">
               <div>

@@ -63,7 +63,7 @@ export function WorkspaceOverviewPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
   const [postResult, setPostResult] = useState<string | null>(null);
-  const [runningAnalysis, setRunningAnalysis] = useState(false);
+  const [, setRunningAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<SupervisorAnalysis | null>(null);
 
   // New features state
@@ -102,6 +102,28 @@ export function WorkspaceOverviewPage() {
   useEffect(() => {
     fetchStats();
   }, [token]);
+
+  useEffect(() => {
+    const handleAutofill = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        if (customEvent.detail.content) {
+          setComposeText(customEvent.detail.content);
+        }
+        if (customEvent.detail.platforms) {
+          setSelectedPlatforms(customEvent.detail.platforms);
+        }
+        pushToast("Autofilled draft content into Quick Publisher!");
+        const composeArea = document.getElementById("post-desc");
+        if (composeArea) {
+          composeArea.scrollIntoView({ behavior: "smooth", block: "center" });
+          composeArea.focus();
+        }
+      }
+    };
+    window.addEventListener("autofill-compose", handleAutofill);
+    return () => window.removeEventListener("autofill-compose", handleAutofill);
+  }, [pushToast]);
 
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms((current) =>
@@ -291,6 +313,12 @@ export function WorkspaceOverviewPage() {
       setRunningAnalysis(false);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      handleRunAnalysis();
+    }
+  }, [token]);
 
   const handlePrevMedia = () => {
     setActiveCarouselIndex((prev) => (prev > 0 ? prev - 1 : mediaFiles.length - 1));
@@ -538,26 +566,12 @@ export function WorkspaceOverviewPage() {
   return (
     <div className="flex h-full w-full flex-col" style={{ background: "#0a0a0a", color: "#e2e8f0" }}>
       <div className="mx-auto flex w-full max-w-[940px] flex-1 flex-col space-y-6 overflow-y-auto px-6 py-8 scrollbar-thin">
-        <div className="flex justify-end">
-          <button
-            onClick={handleRunAnalysis}
-            disabled={runningAnalysis}
-            className="rounded-full px-4 py-1.5 text-xs font-medium transition-all"
-            style={{
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.03)",
-              color: "rgba(255,255,255,0.6)",
-            }}
-          >
-            {runningAnalysis ? "Analyzing..." : "▷ Run Analysis"}
-          </button>
-        </div>
         {loadError && (
           <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {loadError}
           </div>
         )}
-
+ 
         {/* Hero Section */}
         <section className="flex flex-col items-center justify-center py-16 text-center space-y-5">
           <div className="flex items-end gap-1 mb-2" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -570,18 +584,18 @@ export function WorkspaceOverviewPage() {
           <h1 className="text-2xl font-semibold text-white tracking-tight">
             I am your Social Media Supervisor
           </h1>
-          <p className="max-w-[440px] text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="max-w-[440px] text-sm leading-relaxed text-white/45">
             Specialized in orchestrating social strategy, audience insights, content direction, publishing workflows, and platform performance for unified, decision-ready growth.
           </p>
         </section>
-
+ 
         {/* Stats Grid */}
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          {statsList.map((stat) => (
+          {statsList.map((stat, idx) => (
             <div
               key={stat.label}
-              className="p-4 rounded-xl border flex items-center justify-between"
-              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+              className={`p-4 rounded-xl border flex items-center justify-between glass-panel hover-glow animate-fade-up stagger-${idx + 1}`}
+              style={{ boxShadow: "0 4px 30px rgba(0, 0, 0, 0.2)" }}
             >
               <div>
                 <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{stat.label}</p>
@@ -596,9 +610,9 @@ export function WorkspaceOverviewPage() {
             </div>
           ))}
         </div>
-
+ 
         {analysis && (
-          <section className="rounded-2xl p-5 border" style={{ background: "#000000", borderColor: analysis.backend === "ok" ? "rgba(63,185,80,0.25)" : "rgba(248,81,73,0.35)" }}>
+          <section className="rounded-2xl p-5 border glass-panel hover-glow animate-fade-up stagger-1" style={{ borderColor: analysis.backend === "ok" ? "rgba(63,185,80,0.25)" : "rgba(248,81,73,0.35)", boxShadow: "0 4px 30px rgba(0, 0, 0, 0.2)" }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Supervisor Analysis</h4>
@@ -614,18 +628,18 @@ export function WorkspaceOverviewPage() {
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {analysis.recommendations.map((item) => (
-                <div key={item} className="rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000] p-3 text-xs leading-6 text-white/65">
+                <div key={item} className="rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#000000]/40 p-3 text-xs leading-6 text-white/65">
                   {item}
                 </div>
               ))}
             </div>
           </section>
         )}
-
+ 
         {/* Enhanced Publisher Section */}
         <section
-          className="rounded-xl p-6 border space-y-6"
-          style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+          className="rounded-xl p-6 border space-y-6 glass-panel hover-glow animate-fade-up stagger-2"
+          style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)" }}
         >
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">Quick Post Publisher</h4>

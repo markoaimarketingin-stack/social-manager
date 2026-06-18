@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../lib/api/client";
+import { useWorkspaceChrome } from "../../features/workspace/components/WorkspaceChromeContext";
 
 type KnowledgeBaseModalProps = {
   isOpen: boolean;
@@ -16,9 +17,11 @@ interface Document {
 }
 
 export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps) {
+  const { openTrainModal } = useWorkspaceChrome();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchDocuments = async () => {
     setLoading(true);
@@ -41,6 +44,14 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleDocumentUploaded = () => {
+      fetchDocuments();
+    };
+    window.addEventListener("document-uploaded", handleDocumentUploaded);
+    return () => window.removeEventListener("document-uploaded", handleDocumentUploaded);
+  }, []);
+
   const handleDelete = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this document from the training context?")) return;
 
@@ -52,6 +63,20 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
       alert(`Error deleting document: ${err.message}`);
     }
   };
+
+  const handleOpenTrain = () => {
+    onClose();
+    openTrainModal();
+  };
+
+  const filteredDocuments = documents.filter((doc) => {
+    const term = searchQuery.toLowerCase();
+    return (
+      doc.filename.toLowerCase().includes(term) ||
+      doc.category.toLowerCase().includes(term) ||
+      doc.file_type.toLowerCase().includes(term)
+    );
+  });
 
   if (!isOpen) return null;
 
@@ -81,8 +106,28 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
           </button>
         </div>
 
+        {/* Search and Action Bar */}
+        <div className="py-3 flex items-center gap-3 shrink-0">
+          <input
+            type="text"
+            placeholder="Search documents by name, category, type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 rounded-lg px-3.5 py-2 text-xs bg-[#000000] border border-[rgba(255,255,255,0.08)] focus:border-[#388bfd] focus:outline-none transition-colors outline-none"
+          />
+          <button
+            onClick={handleOpenTrain}
+            className="px-3.5 py-2 rounded-lg text-xs font-bold transition-all bg-[#1f6feb] hover:bg-[#388bfd] text-white flex items-center gap-1.5"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Train Model
+          </button>
+        </div>
+
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin space-y-4 pr-1 min-h-[250px]">
+        <div className="flex-1 overflow-y-auto py-2 scrollbar-thin space-y-4 pr-1 min-h-[250px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-10 space-y-2">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-blue-400" />
@@ -92,14 +137,14 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
             <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-center text-xs text-[#f85149]">
               {error}
             </div>
-          ) : documents.length === 0 ? (
+          ) : filteredDocuments.length === 0 ? (
             <div className="text-center py-12 space-y-3">
               <svg viewBox="0 0 16 16" className="mx-auto h-12 w-12 text-[rgba(255,255,255,0.08)] fill-current">
                 <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
               </svg>
               <div>
-                <p className="text-sm font-semibold">Knowledge base is empty</p>
-                <p className="text-xs text-white/40 mt-1">Train your model by uploading brand briefs, CSV datasets, or guides.</p>
+                <p className="text-sm font-semibold">No matching documents</p>
+                <p className="text-xs text-white/40 mt-1">Try a different search query or upload documents to train your model.</p>
               </div>
             </div>
           ) : (
@@ -115,7 +160,7 @@ export function KnowledgeBaseModal({ isOpen, onClose }: KnowledgeBaseModalProps)
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
-                  {documents.map((doc) => (
+                  {filteredDocuments.map((doc) => (
                     <tr key={doc.id} className="hover:bg-[#000000] transition-colors">
                       <td className="p-3 font-semibold truncate max-w-[180px]">{doc.filename}</td>
                       <td className="p-3">
