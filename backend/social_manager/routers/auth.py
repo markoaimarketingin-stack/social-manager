@@ -195,8 +195,8 @@ async def import_env_connection(platform: str, user_id: int, db: Session, reques
             platform_account_name = "markoaisocialmanager"
             platform_account_id = "markoaisocialmanager_ig_id"
         elif platform == "linkedin":
-            platform_account_name = "Vivan Naik (LinkedIn)"
-            platform_account_id = "vivan_naik_linkedin_id"
+            platform_account_name = "Marko Ai"
+            platform_account_id = "marko_ai_linkedin_id"
         else:
             platform_account_id = f"sandbox_{platform}_id"
             platform_account_name = f"{platform.capitalize()} Sandbox"
