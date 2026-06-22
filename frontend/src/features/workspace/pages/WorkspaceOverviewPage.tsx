@@ -802,7 +802,7 @@ export function WorkspaceOverviewPage() {
               </div>
 
               {/* Render Preview Frame */}
-              <div className="flex-1 flex items-center justify-center p-2 rounded-xl bg-black/40 min-h-[300px]">
+              <div className="flex-1 flex items-start justify-center p-2 rounded-xl bg-black/40 min-h-[300px] max-h-[500px] overflow-y-auto scrollbar-thin">
                 {renderPlatformPreview(previewPlatform)}
               </div>
             </div>
@@ -853,7 +853,7 @@ export function WorkspaceOverviewPage() {
             </div>
 
             {/* Simulated Live Preview */}
-            <div className="flex items-center justify-center py-4 bg-black/60 border border-white/5 rounded-xl">
+            <div className="flex items-start justify-center py-4 bg-black/60 border border-white/5 rounded-xl max-h-[400px] overflow-y-auto scrollbar-thin">
               {renderPlatformPreview(previewPlatform)}
             </div>
 
