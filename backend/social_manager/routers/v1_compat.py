@@ -159,20 +159,123 @@ _workspaces = DbWorkspacesDict()
 def _ensure_workspace(ws_id: str) -> Dict[str, Any]:
     if ws_id not in _workspaces:
         ts = _now()
+        brand_id = _rid("brand")
+        strategy_id = _rid("strategy")
+        plan_id = _rid("plan")
+        
+        default_brand_profile = {
+            "id": brand_id,
+            "workspace_id": ws_id,
+            "brand_name": "Kahani Ghar",
+            "industry": "Kids Audio & Education",
+            "description": "Premium bedtime stories app for kids, enabling screen-free parent-child bonding.",
+            "website_url": "https://kahanighar.app",
+            "voice_summary": "Friendly, warm, comforting, educational, and trustworthy.",
+            "mission": "To make child bedtime transitions peaceful and educational through screen-free storytelling.",
+            "created_at": ts,
+            "updated_at": ts,
+        }
+        
+        default_strategy = {
+            "id": strategy_id,
+            "workspace_id": ws_id,
+            "source_workflow_run_id": None,
+            "parent_strategy_id": None,
+            "version_number": 1,
+            "is_active": True,
+            "status": "approved",
+            "title": "Kahani Ghar Bedtime Launch Strategy",
+            "summary": "AI-generated strategy for Kahani Ghar focusing on parent routine activation.",
+            "positioning_statement": "Kahani Ghar helps parents end the day peacefully with audio stories.",
+            "audience_focus": "Parents of kids aged 2-8 looking for screen-free evening routines.",
+            "channel_focus": "Lead with Instagram Reels, repurpose on X and LinkedIn.",
+            "campaign_note": "Focus on screen-free bonding and evening routines.",
+            "review_notes": "Approved default strategy.",
+            "reviewed_by_member_id": "member-default",
+            "reviewed_at": ts,
+            "approved_at": ts,
+            "superseded_at": None,
+            "platform_plans": [
+                {"id": _rid("pp"), "brand_strategy_id": strategy_id, "platform_name": "Instagram",
+                 "objective": "Build community awareness and Reel saves.", "cadence_summary": "3 posts per week.",
+                 "content_mix": "Parent POV Reels, story teasers.", "success_signal": "Saves and comments.",
+                 "sort_order": 0, "created_at": ts, "updated_at": ts},
+                {"id": _rid("pp"), "brand_strategy_id": strategy_id, "platform_name": "LinkedIn",
+                 "objective": "Founder building in public and parent routines.", "cadence_summary": "2 posts per week.",
+                 "content_mix": "Behind the scenes, growth learnings.", "success_signal": "Likes and comments.",
+                 "sort_order": 1, "created_at": ts, "updated_at": ts}
+            ],
+            "content_pillars": [
+                {"id": _rid("pillar"), "brand_strategy_id": strategy_id, "name": "Bedtime Routines",
+                 "description": "Strategies for parents to establish a smooth night transition.", "channel_angle": "Expert tips and reels.",
+                 "sort_order": 0, "created_at": ts, "updated_at": ts},
+                {"id": _rid("pillar"), "brand_strategy_id": strategy_id, "name": "Story Previews",
+                 "description": "Short snippets of bedtime audio stories to tease content.", "channel_angle": "Audio-only reels.",
+                 "sort_order": 1, "created_at": ts, "updated_at": ts}
+            ],
+            "created_at": ts,
+            "updated_at": ts,
+        }
+        
+        default_content_plan = {
+            "id": plan_id,
+            "workspace_id": ws_id,
+            "brand_strategy_id": strategy_id,
+            "source_workflow_run_id": None,
+            "parent_plan_id": None,
+            "version_number": 1,
+            "is_active": True,
+            "title": "Kahani Ghar Initial Content Plan",
+            "planning_horizon_label": "Next 2 weeks",
+            "summary": "Initial paced content calendar focused on routines and stories.",
+            "status": "approved",
+            "review_notes": "Approved default content plan.",
+            "reviewed_by_member_id": "member-default",
+            "reviewed_at": ts,
+            "approved_at": ts,
+            "superseded_at": None,
+            "planned_posts": [
+                {
+                    "id": _rid("post"),
+                    "content_plan_id": plan_id,
+                    "workspace_id": ws_id,
+                    "brand_strategy_id": strategy_id,
+                    "content_pillar_id": None,
+                    "sequence_number": 1,
+                    "scheduled_for": _add_days(1),
+                    "platform": "Instagram",
+                    "format": "Reel",
+                    "title": "Emotional bonding through audio bedtime stories",
+                    "hook": "Bedtime doesn't have to be a screen struggle.",
+                    "angle": "Contrast blue light screens with cozy audio stories.",
+                    "call_to_action": "Try Kahani Ghar bedtime stories tonight.",
+                    "status": "planned",
+                    "notes": "Use soothing visual templates.",
+                    "approved_at": ts,
+                    "publish_ready_at": ts,
+                    "published_at": None,
+                    "created_at": ts,
+                    "updated_at": ts,
+                }
+            ],
+            "created_at": ts,
+            "updated_at": ts,
+        }
+
         _workspaces[ws_id] = {
             "id": ws_id,
             "name": "Default Workspace",
             "slug": "default-workspace",
-            "brand_profile_id": None,
+            "brand_profile_id": brand_id,
             "member_count": 1,
             "audience_segment_count": 0,
             "created_at": ts,
             "updated_at": ts,
             # sub-collections
-            "brand_profile": None,
+            "brand_profile": default_brand_profile,
             "audience_segments": [],
-            "strategies": [],
-            "content_plans": [],
+            "strategies": [default_strategy],
+            "content_plans": [default_content_plan],
             "drafts": [],
             "workflow_runs": [],
             "activity": [],
