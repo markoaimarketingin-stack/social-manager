@@ -256,7 +256,13 @@ def get_auth_providers():
 
 
 @router.get("/{platform}/connect")
-async def connect_platform(platform: str, request: Request, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def connect_platform(
+    platform: str, 
+    request: Request, 
+    sandbox: Optional[str] = None, 
+    current_user=Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     """Start the OAuth flow for the requested platform."""
     platform = platform.lower()
     if platform not in SUPPORTED_PROVIDERS:
@@ -273,8 +279,8 @@ async def connect_platform(platform: str, request: Request, current_user=Depends
         bool(settings.facebook_app_secret) if platform in ("facebook", "instagram") else bool(settings.linkedin_client_secret) if platform == "linkedin" else False
     )
 
-    if not is_configured:
-        # Always redirect to import/sandbox flow if credentials are not configured
+    if sandbox == "true" or not is_configured:
+        # Always redirect to import/sandbox flow if credentials are not configured or sandbox is requested
         return await import_env_connection(platform, current_user.id, db, request=request)
 
     redirect_uri = f"{get_base_backend_url(request)}/api/auth/{platform}/callback"

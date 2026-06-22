@@ -120,7 +120,7 @@ export default function ConnectPage() {
       setMessage({ type: "error", text: "Please sign in before connecting a platform." });
       return;
     }
-    window.location.href = `${apiBaseUrl}/api/auth/${platform}/connect?user_id=${token}`;
+    window.location.href = `${apiBaseUrl}/api/auth/${platform}/connect?user_id=${token}&sandbox=true`;
   };
 
   const handleDisconnect = async (platform: string) => {
