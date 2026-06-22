@@ -138,17 +138,23 @@ def get_user_platform_hub(user_id: int, db_session) -> PlatformAdapterHub:
     from social_manager.config import settings
     
     for conn in connections:
+        is_sandbox = (
+            not conn.access_token 
+            or conn.access_token.startswith("sandbox") 
+            or "sandbox" in conn.access_token.lower()
+        )
+        
         if conn.platform == "facebook":
             hub.register_adapter("facebook", FacebookAdapter(
                 api_key=conn.access_token,
                 page_id=conn.platform_account_id or "",
-                sandbox=False
+                sandbox=is_sandbox
             ))
         elif conn.platform == "instagram":
             hub.register_adapter("instagram", InstagramAdapter(
                 api_key=conn.access_token,
                 ig_user_id=conn.platform_account_id or "",
-                sandbox=False
+                sandbox=is_sandbox
             ))
         elif conn.platform == "x":
             hub.register_adapter("x", XAdapter(
@@ -156,7 +162,7 @@ def get_user_platform_hub(user_id: int, db_session) -> PlatformAdapterHub:
                 api_secret=settings.twitter_api_secret or "",
                 access_token=conn.access_token,
                 access_token_secret=conn.access_token_secret or "",
-                sandbox=False
+                sandbox=is_sandbox
             ))
         elif conn.platform == "linkedin":
             hub.register_adapter("linkedin", LinkedInAdapter(
@@ -165,12 +171,12 @@ def get_user_platform_hub(user_id: int, db_session) -> PlatformAdapterHub:
                 access_token=conn.access_token,
                 client_id=settings.linkedin_client_id or "",
                 client_secret=settings.linkedin_client_secret or "",
-                sandbox=False
+                sandbox=is_sandbox
             ))
         elif conn.platform == "youtube":
             hub.register_adapter("youtube", YouTubeAdapter(
                 api_key=conn.access_token,
-                sandbox=False
+                sandbox=is_sandbox
             ))
             
     return hub
