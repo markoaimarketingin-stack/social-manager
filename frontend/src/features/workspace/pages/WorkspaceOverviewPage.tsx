@@ -685,6 +685,23 @@ export function WorkspaceOverviewPage() {
               </button>
             </div>
 
+            {/* Diagnostics Warnings */}
+            {kgData.diagnostics && kgData.diagnostics.length > 0 && (
+              <div className="p-4 rounded-xl border border-red-500/25 bg-red-500/10 text-xs text-red-200 space-y-1.5 leading-relaxed">
+                <p className="font-bold flex items-center gap-1.5 text-red-400">
+                  <span>⚠️</span> Meta Graph API Connections Diagnostic Warning
+                </p>
+                <p className="text-[10px] text-white/50 mb-2">
+                  The following issues occurred while trying to fetch live data from Facebook and Instagram APIs. Ensure permissions are granted.
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-[10px] text-red-300/90">
+                  {kgData.diagnostics.map((diag: string, idx: number) => (
+                    <li key={idx}>{diag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Live Campaign Insights Grid */}
             <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               <div className="p-3.5 rounded-xl border border-white/5 bg-black/40">

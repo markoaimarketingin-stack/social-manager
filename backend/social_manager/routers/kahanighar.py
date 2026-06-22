@@ -51,6 +51,7 @@ async def get_kahanighar_data(db: Session = Depends(get_db)):
 
     instagram_posts = []
     meta_campaigns = []
+    diagnostics = []
     
     # 2. Fetch organic Instagram Media Feed
     if ig_token and ig_user_id:
@@ -67,8 +68,15 @@ async def get_kahanighar_data(db: Session = Depends(get_db)):
                     instagram_posts = resp.json().get("data", [])
                 else:
                     logger.error(f"Instagram fetch failed: {resp.status_code} - {resp.text}")
+                    try:
+                        err_msg = resp.json().get("error", {}).get("message")
+                        if err_msg:
+                            diagnostics.append(f"Instagram: {err_msg}")
+                    except Exception:
+                        diagnostics.append(f"Instagram: HTTP {resp.status_code}")
         except Exception as e:
             logger.exception("Error fetching Instagram posts")
+            diagnostics.append(f"Instagram client error: {str(e)}")
 
     # 3. Fetch live Campaigns & Insights from Meta Ads Manager
     if fb_token:
@@ -123,8 +131,15 @@ async def get_kahanighar_data(db: Session = Depends(get_db)):
                         })
                 else:
                     logger.error(f"Meta Ads fetch failed: {resp.status_code} - {resp.text}")
+                    try:
+                        err_msg = resp.json().get("error", {}).get("message")
+                        if err_msg:
+                            diagnostics.append(f"Meta Ads: {err_msg}")
+                    except Exception:
+                        diagnostics.append(f"Meta Ads: HTTP {resp.status_code}")
         except Exception as e:
             logger.exception("Error fetching Meta Ads")
+            diagnostics.append(f"Meta Ads client error: {str(e)}")
 
     # 4. Generate LLM-assisted review of organic feed & paid campaigns
     total_spend = sum(c["spend"] for c in meta_campaigns)
@@ -186,5 +201,6 @@ Keep the tone premium, expert, and action-oriented. Respond in markdown."""
             "total_clicks": total_clicks,
             "avg_ctr": avg_ctr
         },
-        "review": analysis_result
+        "review": analysis_result,
+        "diagnostics": diagnostics
     }
