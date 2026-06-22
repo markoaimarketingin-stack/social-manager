@@ -23,6 +23,13 @@ Base = declarative_base()
 
 # ===== CORE AUTHENTICATION TABLES =====
 
+class WorkspaceStore(Base):
+    """Store workspace-scoped compatibility/mock data in Postgres."""
+    __tablename__ = "workspace_store"
+    workspace_id = Column(String, primary_key=True, index=True)
+    data = Column(JSON, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class User(Base):
     """User account."""
     __tablename__ = "sm_users"

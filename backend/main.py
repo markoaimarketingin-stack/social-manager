@@ -27,10 +27,12 @@ from social_manager.routers.users import router as users_router, get_current_use
 from social_manager.routers.publishing import router as publishing_router
 from social_manager.routers.strategy import router as strategy_router
 from social_manager.routers.chat import router as chat_router
-from social_manager.routers.v1_compat import router as v1_compat_router
+from social_manager.routers.v1_compat import router as v1_compat_router, WorkspaceStoreMiddleware
 from social_manager.routers.dashboard import router as dashboard_router
 from social_manager.routers.kahanighar import router as kahanighar_router
 from social_manager.db import SocialConnectionRepository, SessionLocal
+from social_manager.llm import client
+from typing import Any
 
 from fastapi import UploadFile, File
 import shutil
@@ -102,6 +104,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(WorkspaceStoreMiddleware)
 # ===== REQUEST/RESPONSE MODELS =====
 
 class RunRequest(BaseModel):
@@ -141,92 +144,147 @@ async def run_graph(req: RunRequest):
     out = build_social_strategy(req.state)
     return RunResponse(state=out)
 
+class StateAdjustments(BaseModel):
+    active_platforms: Optional[List[str]] = None
+    posting_frequency: Optional[Dict[str, int]] = None
+    pillar_weights: Optional[Dict[str, float]] = None
+    structured_context_updates: Optional[Dict[str, Any]] = None
+    engagement_plan_updates: Optional[Dict[str, Any]] = None
+    reasoning: str
+
 @app.post("/api/social_manager/adjust", response_model=RunResponse)
 async def adjust_and_run(req: AdjustRequest):
-    """Apply conversational adjustments and re-run."""
+    """Apply conversational adjustments and re-run using LLM-assistance (with fallback to heuristics)."""
     inst = req.instruction.lower()
     st = req.state
     st.conversation_history.append({"role": "user", "content": req.instruction})
     
-    # === POSTING FREQUENCY ADJUSTMENTS ===
-    if "focus more on instagram" in inst or "instagram" in inst and "more" in inst:
-        if "Instagram" not in st.active_platforms:
-            st.active_platforms.append("Instagram")
-        st.posting_frequency["Instagram"] = max(st.posting_frequency.get("Instagram", 3), 5)
-        # Boost Instagram-aligned pillars
-        for pillar in st.content_pillars:
-            if pillar.name in ["Product usage", "Offers & launches", "Community highlights"]:
-                pillar.weight = min(pillar.weight * 1.3, 2.0)
-    
-    if "focus more on linkedin" in inst or "linkedin" in inst and "more" in inst:
-        if "LinkedIn" not in st.active_platforms:
-            st.active_platforms.append("LinkedIn")
-        st.posting_frequency["LinkedIn"] = max(st.posting_frequency.get("LinkedIn", 2), 4)
-        # Boost LinkedIn-aligned pillars
-        for pillar in st.content_pillars:
-            if pillar.name in ["Education", "Behind-the-scenes", "Transformation stories"]:
-                pillar.weight = min(pillar.weight * 1.3, 2.0)
-    
-    if "focus more on x" in inst or "twitter" in inst or ("x" in inst and "more" in inst):
-        if "X" not in st.active_platforms:
-            st.active_platforms.append("X")
-        st.posting_frequency["X"] = max(st.posting_frequency.get("X", 3), 5)
-        # Boost X-aligned pillars (engagement, quick tips)
-        for pillar in st.content_pillars:
-            if pillar.name in ["Education", "Community highlights"]:
-                pillar.weight = min(pillar.weight * 1.3, 2.0)
-    
-    # === CONTENT STRATEGY ADJUSTMENTS ===
-    if "reduce promotional posts" in inst:
-        st.structured_context["promo_reduce"] = True
-        # Lower promotional pillar weight
-        for pillar in st.content_pillars:
-            if pillar.name == "Offers & launches":
-                pillar.weight = max(pillar.weight * 0.5, 0.3)
-    
-    if "increase engagement" in inst:
-        st.structured_context["engagement_boost"] = True
-        # Boost engagement-focused pillars
-        for pillar in st.content_pillars:
-            if pillar.name in ["Community highlights", "Education", "Behind-the-scenes"]:
-                pillar.weight = min(pillar.weight * 1.3, 2.0)
-        if st.engagement_plan:
-            st.engagement_plan.poll_ideas.append("This or That weekly")
-            st.engagement_plan.weekly_live = "Twice weekly live with co-host"
-    
-    if "aggressive brand building" in inst:
-        st.structured_context["aggressive_mode"] = True
-        # Increase all frequencies
-        for k in st.active_platforms:
-            st.posting_frequency[k] = max(st.posting_frequency.get(k, 3), 6)
-        # Boost all pillars
-        for pillar in st.content_pillars:
-            pillar.weight = min(pillar.weight * 1.4, 2.0)
-        if st.engagement_metrics:
-            st.engagement_metrics.post_consistency_score = 0.9
-    
-    if "festive" in inst or "season" in inst or "holiday" in inst:
-        st.structured_context["seasonal_bias"] = True
-        # Boost conversion and community pillars for holidays
-        for pillar in st.content_pillars:
-            if pillar.name in ["Offers & launches", "Community highlights"]:
+    applied_llm = False
+    if client.available:
+        try:
+            current_pillars = [{"name": p.name, "weight": p.weight} for p in st.content_pillars]
+            prompt = f"""
+You are the Social Media Manager supervisor. The user wants to adjust the social media strategy.
+User's Instruction: "{req.instruction}"
+
+Current State Summary:
+- Active Platforms: {st.active_platforms}
+- Posting Frequency: {st.posting_frequency}
+- Content Pillars and Weights: {current_pillars}
+- Structured Context: {st.structured_context}
+
+Please output the required updates to adjust the strategy according to the user's instructions.
+If the user wants to focus more on a platform (like Instagram, LinkedIn, X, YouTube, Facebook), ensure that platform is in active_platforms, and its posting frequency is increased or maintained.
+If the user wants to focus on or reduce a particular pillar/topic, adjust the weight for that pillar accordingly (standard weight is 1.0, range is 0.1 to 2.0).
+Update structured_context with any flags (e.g. promotional bias, seasonal bias, tone updates).
+If there are engagement plan updates, suggest poll ideas or weekly live topics.
+"""
+            adjustments = await client.generate_structured(
+                prompt, 
+                StateAdjustments, 
+                system_instruction="You are an expert Social Media Planner adjusting social media strategies based on conversational requests."
+            )
+            
+            if adjustments.active_platforms is not None:
+                st.active_platforms = adjustments.active_platforms
+            if adjustments.posting_frequency is not None:
+                for k, v in adjustments.posting_frequency.items():
+                    st.posting_frequency[k] = v
+            if adjustments.pillar_weights is not None:
+                for pillar in st.content_pillars:
+                    if pillar.name in adjustments.pillar_weights:
+                        pillar.weight = adjustments.pillar_weights[pillar.name]
+            if adjustments.structured_context_updates is not None:
+                st.structured_context.update(adjustments.structured_context_updates)
+            if adjustments.engagement_plan_updates is not None and st.engagement_plan is not None:
+                for k, v in adjustments.engagement_plan_updates.items():
+                    if hasattr(st.engagement_plan, k):
+                        setattr(st.engagement_plan, k, v)
+            logger.info(f"LLM Adjustments applied successfully: {adjustments.reasoning}")
+            applied_llm = True
+        except Exception as ex:
+            logger.error(f"LLM adjustments failed, falling back to heuristics: {ex}")
+
+    if not applied_llm:
+        # === POSTING FREQUENCY ADJUSTMENTS ===
+        if "focus more on instagram" in inst or "instagram" in inst and "more" in inst:
+            if "Instagram" not in st.active_platforms:
+                st.active_platforms.append("Instagram")
+            st.posting_frequency["Instagram"] = max(st.posting_frequency.get("Instagram", 3), 5)
+            # Boost Instagram-aligned pillars
+            for pillar in st.content_pillars:
+                if pillar.name in ["Product usage", "Offers & launches", "Community highlights"]:
+                    pillar.weight = min(pillar.weight * 1.3, 2.0)
+        
+        if "focus more on linkedin" in inst or "linkedin" in inst and "more" in inst:
+            if "LinkedIn" not in st.active_platforms:
+                st.active_platforms.append("LinkedIn")
+            st.posting_frequency["LinkedIn"] = max(st.posting_frequency.get("LinkedIn", 2), 4)
+            # Boost LinkedIn-aligned pillars
+            for pillar in st.content_pillars:
+                if pillar.name in ["Education", "Behind-the-scenes", "Transformation stories"]:
+                    pillar.weight = min(pillar.weight * 1.3, 2.0)
+        
+        if "focus more on x" in inst or "twitter" in inst or ("x" in inst and "more" in inst):
+            if "X" not in st.active_platforms:
+                st.active_platforms.append("X")
+            st.posting_frequency["X"] = max(st.posting_frequency.get("X", 3), 5)
+            # Boost X-aligned pillars (engagement, quick tips)
+            for pillar in st.content_pillars:
+                if pillar.name in ["Education", "Community highlights"]:
+                    pillar.weight = min(pillar.weight * 1.3, 2.0)
+        
+        # === CONTENT STRATEGY ADJUSTMENTS ===
+        if "reduce promotional posts" in inst:
+            st.structured_context["promo_reduce"] = True
+            # Lower promotional pillar weight
+            for pillar in st.content_pillars:
+                if pillar.name == "Offers & launches":
+                    pillar.weight = max(pillar.weight * 0.5, 0.3)
+        
+        if "increase engagement" in inst:
+            st.structured_context["engagement_boost"] = True
+            # Boost engagement-focused pillars
+            for pillar in st.content_pillars:
+                if pillar.name in ["Community highlights", "Education", "Behind-the-scenes"]:
+                    pillar.weight = min(pillar.weight * 1.3, 2.0)
+            if st.engagement_plan:
+                st.engagement_plan.poll_ideas.append("This or That weekly")
+                st.engagement_plan.weekly_live = "Twice weekly live with co-host"
+        
+        if "aggressive brand building" in inst:
+            st.structured_context["aggressive_mode"] = True
+            # Increase all frequencies
+            for k in st.active_platforms:
+                st.posting_frequency[k] = max(st.posting_frequency.get(k, 3), 6)
+            # Boost all pillars
+            for pillar in st.content_pillars:
                 pillar.weight = min(pillar.weight * 1.4, 2.0)
-    
-    # === TONE & APPROACH ADJUSTMENTS ===
-    if "educational" in inst or "expert" in inst or "thought leader" in inst:
-        for pillar in st.content_pillars:
-            if pillar.name == "Education":
-                pillar.weight = min(pillar.weight * 1.5, 2.0)
-    
-    if "casual" in inst or "fun" in inst or "entertaining" in inst:
-        for pillar in st.content_pillars:
-            if pillar.name in ["Community highlights", "Behind-the-scenes"]:
-                pillar.weight = min(pillar.weight * 1.3, 2.0)
-    
-    if "conversions" in inst or "sales" in inst or "revenue" in inst:
-        for pillar in st.content_pillars:
-            if pillar.name in ["Offers & launches", "Product usage"]:
-                pillar.weight = min(pillar.weight * 1.4, 2.0)
+            if st.engagement_metrics:
+                st.engagement_metrics.post_consistency_score = 0.9
+        
+        if "festive" in inst or "season" in inst or "holiday" in inst:
+            st.structured_context["seasonal_bias"] = True
+            # Boost conversion and community pillars for holidays
+            for pillar in st.content_pillars:
+                if pillar.name in ["Offers & launches", "Community highlights"]:
+                    pillar.weight = min(pillar.weight * 1.4, 2.0)
+        
+        # === TONE & APPROACH ADJUSTMENTS ===
+        if "educational" in inst or "expert" in inst or "thought leader" in inst:
+            for pillar in st.content_pillars:
+                if pillar.name == "Education":
+                    pillar.weight = min(pillar.weight * 1.5, 2.0)
+        
+        if "casual" in inst or "fun" in inst or "entertaining" in inst:
+            for pillar in st.content_pillars:
+                if pillar.name in ["Community highlights", "Behind-the-scenes"]:
+                    pillar.weight = min(pillar.weight * 1.3, 2.0)
+        
+        if "conversions" in inst or "sales" in inst or "revenue" in inst:
+            for pillar in st.content_pillars:
+                if pillar.name in ["Offers & launches", "Product usage"]:
+                    pillar.weight = min(pillar.weight * 1.4, 2.0)
     
     # Regenerate strategy with adjusted weights
     out = build_social_strategy(st)

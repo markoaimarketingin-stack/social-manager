@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import uuid
 import copy
+import contextvars
 from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -33,10 +34,127 @@ def _add_days(days: int) -> str:
     return (datetime.utcnow() + timedelta(days=days)).isoformat() + "Z"
 
 # ---------------------------------------------------------------------------
-# In-memory workspace store (demo-grade persistence)
+# Database-backed workspace store (WorkspaceStoreMiddleware & DbWorkspacesDict)
 # ---------------------------------------------------------------------------
 
-_workspaces: Dict[str, Dict[str, Any]] = {}
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from sqlalchemy.orm.attributes import flag_modified
+from social_manager.db import SessionLocal, WorkspaceStore
+
+_request_db_session = contextvars.ContextVar("request_db_session", default=None)
+_request_workspaces_cache = contextvars.ContextVar("request_workspaces_cache", default=None)
+
+class WorkspaceStoreMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        session = SessionLocal()
+        cache = {}
+        token_db = _request_db_session.set(session)
+        token_cache = _request_workspaces_cache.set(cache)
+        try:
+            response = await call_next(request)
+            for ws_id, data in cache.items():
+                row = session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == ws_id).first()
+                if row:
+                    row.data = data
+                    row.updated_at = datetime.utcnow()
+                    flag_modified(row, "data")
+                else:
+                    row = WorkspaceStore(workspace_id=ws_id, data=data)
+                    session.add(row)
+            session.commit()
+            return response
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+            _request_db_session.reset(token_db)
+            _request_workspaces_cache.reset(token_cache)
+
+class DbWorkspacesDict(dict):
+    def values(self):
+        session = _request_db_session.get()
+        if session is None:
+            with SessionLocal() as db_session:
+                rows = db_session.query(WorkspaceStore).all()
+                return [r.data for r in rows]
+        cache = _request_workspaces_cache.get()
+        rows = session.query(WorkspaceStore).all()
+        for r in rows:
+            if r.workspace_id not in cache:
+                cache[r.workspace_id] = r.data
+        return list(cache.values())
+
+    def items(self):
+        session = _request_db_session.get()
+        if session is None:
+            with SessionLocal() as db_session:
+                rows = db_session.query(WorkspaceStore).all()
+                return [(r.workspace_id, r.data) for r in rows]
+        cache = _request_workspaces_cache.get()
+        rows = session.query(WorkspaceStore).all()
+        for r in rows:
+            if r.workspace_id not in cache:
+                cache[r.workspace_id] = r.data
+        return list(cache.items())
+
+    def __getitem__(self, key):
+        session = _request_db_session.get()
+        if session is None:
+            with SessionLocal() as db_session:
+                row = db_session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == key).first()
+                if row:
+                    return row.data
+                raise KeyError(key)
+        cache = _request_workspaces_cache.get()
+        if key in cache:
+            return cache[key]
+        row = session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == key).first()
+        if row:
+            cache[key] = row.data
+            return cache[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        session = _request_db_session.get()
+        if session is None:
+            with SessionLocal() as db_session:
+                row = db_session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == key).first()
+                if row:
+                    row.data = value
+                    row.updated_at = datetime.utcnow()
+                    flag_modified(row, "data")
+                else:
+                    row = WorkspaceStore(workspace_id=key, data=value)
+                    db_session.add(row)
+                db_session.commit()
+            return
+        cache = _request_workspaces_cache.get()
+        cache[key] = value
+
+    def __contains__(self, key):
+        session = _request_db_session.get()
+        if session is None:
+            with SessionLocal() as db_session:
+                return db_session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == key).first() is not None
+        cache = _request_workspaces_cache.get()
+        if key in cache:
+            return True
+        row = session.query(WorkspaceStore).filter(WorkspaceStore.workspace_id == key).first()
+        if row:
+            cache[key] = row.data
+            return True
+        return False
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+_workspaces = DbWorkspacesDict()
 
 def _ensure_workspace(ws_id: str) -> Dict[str, Any]:
     if ws_id not in _workspaces:
