@@ -66,10 +66,6 @@ export function WorkspaceOverviewPage() {
   const [, setRunningAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<SupervisorAnalysis | null>(null);
 
-  // Kahani Ghar Live Data State
-  const [kgData, setKgData] = useState<any | null>(null);
-  const [kgLoading, setKgLoading] = useState(false);
-
   // New features state
   const [mediaFiles, setMediaFiles] = useState<Array<{ id: number; url: string; file_type: string; name: string }>>([]);
   const [uploading, setUploading] = useState(false);
@@ -103,24 +99,8 @@ export function WorkspaceOverviewPage() {
     }
   };
 
-  const fetchKgData = async () => {
-    setKgLoading(true);
-    try {
-      const res = await apiFetch("/api/social_manager/kahanighar/data");
-      if (res.ok) {
-        const data = await res.json();
-        setKgData(data);
-      }
-    } catch (err) {
-      console.error("Failed to load Kahani Ghar data", err);
-    } finally {
-      setKgLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchStats();
-    fetchKgData();
   }, [token]);
 
   useEffect(() => {
@@ -656,149 +636,6 @@ export function WorkspaceOverviewPage() {
           </section>
         )}
 
-        {/* Kahani Ghar Live Data Section */}
-        {kgLoading && (
-          <section className="p-6 rounded-2xl border glass-panel text-center space-y-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <div className="h-5 w-5 animate-spin rounded-full border border-white/20 border-t-white/70 mx-auto" />
-            <p className="text-xs text-white/40">Fetching Kahani Ghar Meta Graph API & Ad Manager data...</p>
-          </section>
-        )}
-
-        {!kgLoading && kgData && (
-          <section
-            className="rounded-2xl p-6 border space-y-6 glass-panel hover-glow animate-fade-up stagger-2"
-            style={{ borderColor: "rgba(139, 92, 246, 0.25)", boxShadow: "0 8px 32px rgba(139, 92, 246, 0.05)" }}
-          >
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-purple-500 animate-pulse" />
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-white/75">Kahani Ghar Live Marketing Hub</h4>
-                </div>
-                <p className="text-[10px] text-white/45 mt-1">Organic Instagram Media Graph API & Paid Meta Ads Manager integration.</p>
-              </div>
-              <button
-                onClick={fetchKgData}
-                className="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-300 transition-all"
-              >
-                🔄 Refresh Live API Data
-              </button>
-            </div>
-
-            {/* Diagnostics Warnings */}
-            {kgData.diagnostics && kgData.diagnostics.length > 0 && (
-              <div className="p-4 rounded-xl border border-red-500/25 bg-red-500/10 text-xs text-red-200 space-y-1.5 leading-relaxed">
-                <p className="font-bold flex items-center gap-1.5 text-red-400">
-                  <span>⚠️</span> Meta Graph API Connections Diagnostic Warning
-                </p>
-                <p className="text-[10px] text-white/50 mb-2">
-                  The following issues occurred while trying to fetch live data from Facebook and Instagram APIs. Ensure permissions are granted.
-                </p>
-                <ul className="list-disc pl-4 space-y-1 text-[10px] text-red-300/90">
-                  {kgData.diagnostics.map((diag: string, idx: number) => (
-                    <li key={idx}>{diag}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Live Campaign Insights Grid */}
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-              <div className="p-3.5 rounded-xl border border-white/5 bg-black/40">
-                <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Meta Ads Spend (30D)</p>
-                <h5 className="text-base font-bold mt-1 text-purple-300">₹{kgData.summary.total_spend.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h5>
-              </div>
-              <div className="p-3.5 rounded-xl border border-white/5 bg-black/40">
-                <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Ad Impressions</p>
-                <h5 className="text-base font-bold mt-1 text-sky-400">{kgData.summary.total_impressions.toLocaleString()}</h5>
-              </div>
-              <div className="p-3.5 rounded-xl border border-white/5 bg-black/40">
-                <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Ad Click Volume</p>
-                <h5 className="text-base font-bold mt-1 text-emerald-400">{kgData.summary.total_clicks.toLocaleString()}</h5>
-              </div>
-              <div className="p-3.5 rounded-xl border border-white/5 bg-black/40">
-                <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Average CTR</p>
-                <h5 className="text-base font-bold mt-1 text-yellow-400">{kgData.summary.avg_ctr.toFixed(2)}%</h5>
-              </div>
-            </div>
-
-            {/* Carousel Deck & Campaigns List */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Organic IG Posts */}
-              <div className="space-y-3">
-                <h5 className="text-[10px] font-bold uppercase tracking-wider text-white/50">Recent Organic Instagram Feed</h5>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin max-h-[300px]">
-                  {kgData.instagram_posts.map((post: any) => (
-                    <div key={post.id} className="min-w-[200px] max-w-[200px] rounded-xl border border-white/5 bg-black/50 p-2.5 space-y-2">
-                      <div className="aspect-square rounded-lg bg-neutral-900 overflow-hidden relative">
-                        {post.media_url ? (
-                          <img src={post.media_url} alt="IG Feed" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-white/20">🎥 Reel</div>
-                        )}
-                        <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[8px] text-white/60">
-                          {post.media_type === "VIDEO" ? "Reel" : "Post"}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-white/70 line-clamp-2 leading-relaxed">{post.caption || "No caption"}</p>
-                      <div className="flex justify-between items-center text-[9px] text-white/40">
-                        <span>❤️ {post.like_count}</span>
-                        <span>💬 {post.comments_count}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {kgData.instagram_posts.length === 0 && (
-                    <p className="text-xs text-white/40 py-6 text-center w-full">No live Instagram posts found.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Paid Meta Campaigns */}
-              <div className="space-y-3">
-                <h5 className="text-[10px] font-bold uppercase tracking-wider text-white/50">Meta Ads Manager Campaigns</h5>
-                <div className="rounded-xl border border-white/5 bg-black/50 overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin">
-                  <table className="w-full text-left text-[10px]">
-                    <thead className="bg-white/5 text-white/40 font-bold uppercase tracking-wider">
-                      <tr>
-                        <th className="p-2.5">Name</th>
-                        <th className="p-2.5">Status</th>
-                        <th className="p-2.5">Spend</th>
-                        <th className="p-2.5">Clicks</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-white/80">
-                      {kgData.meta_campaigns.map((c: any) => (
-                        <tr key={c.id} className="hover:bg-white/5">
-                          <td className="p-2.5 font-semibold truncate max-w-[120px]">{c.name}</td>
-                          <td className="p-2.5">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase ${c.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-white/10 text-white/50"}`}>
-                              {c.status}
-                            </span>
-                          </td>
-                          <td className="p-2.5">₹{c.spend.toFixed(0)}</td>
-                          <td className="p-2.5">{c.clicks}</td>
-                        </tr>
-                      ))}
-                      {kgData.meta_campaigns.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="p-6 text-center text-white/40">No active Meta Ads campaigns found.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* LLM Audit Summary */}
-            <div className="p-4 rounded-xl border border-purple-500/15 bg-purple-500/5 space-y-2">
-              <h5 className="text-[10px] font-bold uppercase tracking-wider text-purple-300">Auditor AI Analysis</h5>
-              <div className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap font-sans">
-                {kgData.review}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Enhanced Publisher Section */}
         <section

@@ -29,7 +29,6 @@ from social_manager.routers.strategy import router as strategy_router
 from social_manager.routers.chat import router as chat_router
 from social_manager.routers.v1_compat import router as v1_compat_router, WorkspaceStoreMiddleware
 from social_manager.routers.dashboard import router as dashboard_router
-from social_manager.routers.kahanighar import router as kahanighar_router
 from social_manager.db import SocialConnectionRepository, SessionLocal
 from social_manager.llm import client
 from typing import Any
@@ -660,7 +659,6 @@ app.include_router(publishing_router)
 app.include_router(strategy_router)
 app.include_router(chat_router)
 app.include_router(dashboard_router)
-app.include_router(kahanighar_router)
 
 # ===== V1 COMPATIBILITY ROUTER (FOR NEW FRONTEND) =====
 app.include_router(v1_compat_router)
