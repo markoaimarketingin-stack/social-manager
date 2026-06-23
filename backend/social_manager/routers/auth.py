@@ -83,14 +83,19 @@ SUPPORTED_PROVIDERS = {
 
 
 def frontend_redirect(params: dict[str, str], request: Optional[Request] = None) -> RedirectResponse:
-    frontend_url = settings.frontend_url
+    frontend_url = settings.frontend_url.rstrip("/")
     if request:
+        origins = settings.cors_origins
         referer = request.headers.get("referer")
         if referer:
             parsed = urllib.parse.urlparse(referer)
-            frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+            ref_origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+            if any(ref_origin == o.rstrip("/") for o in origins):
+                frontend_url = ref_origin
         elif request.headers.get("origin"):
-            frontend_url = request.headers.get("origin")
+            origin = request.headers.get("origin").rstrip("/")
+            if any(origin == o.rstrip("/") for o in origins):
+                frontend_url = origin
     return RedirectResponse(f"{frontend_url}/connect?{urllib.parse.urlencode(params)}")
 
 
