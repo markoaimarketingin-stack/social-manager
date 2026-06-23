@@ -109,6 +109,15 @@ class InstagramAdapter(PlatformAdapter):
             assets = prepared_post.get("assets", [])
             caption = prepared_post.get("caption", "")
             
+            # Resolve relative asset URLs to absolute URLs using backend_url settings
+            if assets:
+                from social_manager.config import settings
+                base = settings.backend_url.rstrip("/")
+                for asset in assets:
+                    url = asset.get("url", "")
+                    if url.startswith("/"):
+                        asset["url"] = f"{base}{url}"
+            
             if format_type == "text" or not assets:
                 raise ValueError("Instagram requires at least one media asset (image/video).")
             

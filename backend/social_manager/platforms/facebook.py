@@ -87,17 +87,25 @@ class FacebookAdapter(PlatformAdapter):
                     params = {"message": message, "access_token": self.api_key}
                     
                 elif format_type == "photo":
+                    asset_url = assets[0]["url"]
+                    if asset_url.startswith("/"):
+                        from social_manager.config import settings
+                        asset_url = f"{settings.backend_url.rstrip('/')}{asset_url}"
                     endpoint = f"{self.GRAPH_API_BASE}/{self.page_id}/photos"
                     params = {
-                        "url": assets[0]["url"],
+                        "url": asset_url,
                         "message": message,
                         "access_token": self.api_key
                     }
                     
                 elif format_type == "video":
+                    asset_url = assets[0]["url"]
+                    if asset_url.startswith("/"):
+                        from social_manager.config import settings
+                        asset_url = f"{settings.backend_url.rstrip('/')}{asset_url}"
                     endpoint = f"{self.GRAPH_API_BASE}/{self.page_id}/videos"
                     params = {
-                        "file_url": assets[0]["url"],
+                        "file_url": asset_url,
                         "description": message,
                         "access_token": self.api_key
                     }
