@@ -294,7 +294,7 @@ async def connect_platform(
     state = create_state_token(state_payload, expires_minutes=5)
 
     if platform in ("facebook", "instagram"):
-        scopes = ["pages_manage_posts", "pages_read_engagement", "pages_show_list", "business_management"]
+        scopes = ["pages_manage_posts", "pages_read_engagement", "pages_show_list"]
         if platform == "instagram":
             scopes.extend(["instagram_basic", "instagram_content_publish"])
         params = {
