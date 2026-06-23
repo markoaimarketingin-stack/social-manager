@@ -303,6 +303,8 @@ async def connect_platform(
             "state": state,
             "scope": ",".join(scopes),
         }
+        if settings.facebook_config_id:
+            params["config_id"] = settings.facebook_config_id
         auth_url = f"https://www.facebook.com/v18.0/dialog/oauth?{urllib.parse.urlencode(params)}"
 
     elif platform == "linkedin":

@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     # ── Meta / Facebook + Instagram (App-level — kept in .env) ───────────────
     facebook_app_id: str | None = Field(default=None, validation_alias=AliasChoices("FACEBOOK_APP_ID"))
     facebook_app_secret: str | None = Field(default=None, validation_alias=AliasChoices("FACEBOOK_APP_SECRET"))
+    facebook_config_id: str | None = Field(default=None, validation_alias=AliasChoices("FACEBOOK_CONFIG_ID"))
     # Legacy single-tenant fallbacks (per-user tokens live in SocialConnection DB)
     facebook_access_token: str | None = Field(default=None, validation_alias=AliasChoices("FACEBOOK_ACCESS_TOKEN"))
     facebook_page_id: str | None = Field(default=None, validation_alias=AliasChoices("FACEBOOK_PAGE_ID"))
