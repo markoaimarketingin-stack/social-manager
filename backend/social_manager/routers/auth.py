@@ -289,14 +289,14 @@ async def connect_platform(
     state = create_state_token(state_payload, expires_minutes=5)
 
     if platform in ("facebook", "instagram"):
+        scopes = ["pages_manage_posts", "pages_read_engagement", "pages_show_list", "business_management"]
+        if platform == "instagram":
+            scopes.extend(["instagram_basic", "instagram_content_publish"])
         params = {
             "client_id": settings.facebook_app_id,
             "redirect_uri": redirect_uri,
             "state": state,
-            "scope": (
-                "pages_manage_posts,pages_read_engagement,pages_show_list,"
-                "instagram_basic,instagram_content_publish,business_management"
-            ),
+            "scope": ",".join(scopes),
         }
         auth_url = f"https://www.facebook.com/v18.0/dialog/oauth?{urllib.parse.urlencode(params)}"
 
@@ -344,11 +344,13 @@ async def connect_platform(
 @router.get("/{platform}/callback")
 async def platform_callback(
     platform: str,
-    state: str,
     request: Request,
+    state: Optional[str] = None,
     code: Optional[str] = None,
     error: Optional[str] = None,
     error_description: Optional[str] = None,
+    error_message: Optional[str] = None,
+    error_code: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     """Exchange an OAuth authorization code and save the resulting connection."""
@@ -356,13 +358,26 @@ async def platform_callback(
     if platform not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
 
-    if error or not code:
-        logger.error("OAuth error from %s: %s - %s", platform, error, error_description)
+    if error or error_message or not code:
+        err_msg = error or error_message or "missing_code"
+        err_desc = error_description or error_message or (f"Authorization failed (code: {error_code})." if error_code else "Authorization was cancelled.")
+        logger.error("OAuth error from %s: %s - %s", platform, err_msg, err_desc)
         return frontend_redirect(
             {
-                "error": error or "missing_code",
+                "error": err_msg,
                 "platform": platform,
-                "description": error_description or "Authorization was cancelled.",
+                "description": err_desc,
+            },
+            request=request
+        )
+
+    if not state:
+        logger.error("OAuth error from %s: Missing state parameter", platform)
+        return frontend_redirect(
+            {
+                "error": "missing_state",
+                "platform": platform,
+                "description": "Missing OAuth state parameter.",
             },
             request=request
         )
